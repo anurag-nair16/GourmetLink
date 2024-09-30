@@ -1,11 +1,13 @@
 import React from 'react';
 import { Route, Routes } from 'react-router-dom';
+import "./index.css";
 import Navbar from './components/Navbar'; // Adjust the path based on your file structure
 import SubmitRecipe from './components/SubmitRecipe'; // Example of your submit recipe component
 import Footer from './components/Footer';
 import Home from './components/Home';
 import Login from './components/Login';
 import SignUp from './components/Signup';
+import ProtectedRoute from './components/ProtectedRoute';
 
 
 const App = () => {

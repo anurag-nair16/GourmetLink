@@ -1,10 +1,10 @@
-body {
+/* body {
   font-family: 'Arial', sans-serif;
   line-height: 1.6;
   margin: 0;
   padding: 0;
-  background-color: #1e1e1e; /* Dark background for dark mode */
-  color: #ffffff; /* White text for contrast */
+  background-color: #1e1e1e;
+  color: #ffffff;
 }
 
 header {
@@ -12,14 +12,6 @@ header {
   color: #ffffff;
   padding: 20px 0;
   text-align: center;
-}
-
-.logo {
-  width: 200px; /* Adjust width as needed */
-  height: auto; /* Maintain aspect ratio */
-  margin-right: 15px; /* Space between logo and text */
-  vertical-align: middle; /* Align with text */
-  border-radius: 50%;
 }
 
 nav ul {
@@ -39,298 +31,31 @@ nav ul li a {
 }
 
 nav ul li a:hover {
-  color: #bb86fc; /* Light purple on hover */
+  color: #bb86fc;
 }
 
 .hero {
   background-image: linear-gradient(to right, rgba(91, 78, 78, 0.8), rgba(147, 144, 144, 0.4));
-  background-size: cover; /* Cover the entire hero area */
+  background-size: cover;
   color: #ffffff;
-  padding: 30px 20px; /* Increased padding for a spacious feel */
+  padding: 30px 20px;
   text-align: center;
   border-radius: 5px;
 }
 
 .hero h2 {
   margin: 0;
-  font-size: 1.4em; /* Larger font for emphasis */
+  font-size: 1.4em;
   font-weight: bold;
 }
 
 .hero p {
   margin: 10px 0;
-  font-size: 1em; /* Slightly larger for better readability */
-}
-
-.cta-button {
-  background: #bb86fc; /* Purple button */
-  color: #121212; /* Dark text for button */
-  padding: 12px 24px;
-  border: none;
-  border-radius: 5px;
-  text-decoration: none;
-  font-size: 1em; /* Larger font for the button */
-  transition: background 0.3s;
-}
-
-.cta-button:hover {
-  background: #3700b3; /* Darker purple on hover */
-}
-
-.featured-recipes {
-  padding: 40px 20px; /* More padding for spacious layout */
-  text-align: center;
-  background-image: linear-gradient(to bottom, rgba(30, 30, 30, 0.9), rgba(50, 50, 50, 0.8)); /* Slight gradient */
-}
-
-.recipe-list {
-  padding: 20px;
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); /* Smaller minimum size for cards */
-  gap: 20px;
-}
-
-.recipe-card {
-  border: 1px solid #3a3a3a; /* Dark grey border */
-  border-radius: 5px;
-  background: #1e1e1e; /* Dark background for cards */
-  text-align: center;
-  padding: 20px; /* Increased padding */
-  transition: transform 0.2s, box-shadow 0.2s;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5); /* Darker shadow for cards */
-}
-
-.recipe-card img {
-  width: 200px;
-  height: 200px;
-  border-radius: 5px;
-}
-
-.recipe-card h3 {
-  color: #bb86fc; /* Purple for titles */
-  font-size: 1.5em; /* Slightly larger font for titles */
-}
-
-.recipe-card p {
-  color: #e0e0e0; /* Light grey for descriptions */
-  margin: 10px 0;
-}
-
-.recipe-card .view-recipe {
-  display: inline-block;
-  margin-top: 10px;
-  background: #bb86fc; /* Match button to hero */
-  color: #121212; /* Dark text for button */
-  padding: 10px 15px;
-  text-decoration: none;
-  border-radius: 5px;
-  transition: background 0.3s;
-}
-
-/* .form-wrapper {
-  max-width: 600px;
-  margin: auto;
-  padding: 20px;
-  background: #1e1e1e; 
-  border-radius: 5px;
-  border: solid 2px #292828;
-  box-shadow: 4px 4px 10px 4px rgba(0.5, 0.5, 0.5, 0.5);
+  font-size: 1em;
 } */
 
-.recipe-card .view-recipe:hover {
-  background: #3700b3; /* Darker purple on hover */
-}
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+@tailwind preflight;
 
-.recipe-card:hover {
-  transform: scale(1.05);
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.7); /* Enhanced shadow on hover */
-}
-
-.recipe-search {
-  background: #1e1e1e; /* Dark background to match the theme */
-  padding: 10px 10px;
-  text-align: center;
-  border-radius: 5px;
-  margin-bottom: 30px; /* Space below the section */
-}
-
-.recipe-search h2 {
-  color: #bb86fc; /* Purple heading to maintain consistency */
-  font-size: 1.7em; /* Larger font for emphasis */
-  margin-bottom: 10px; /* Space below heading */
-}
-
-.recipe-search p {
-  color: #e0e0e0; /* Light grey for contrast */
-  font-size: 1.2em; /* Slightly larger text */
-  margin-bottom: 20px; /* Space below paragraph */
-}
-
-.recipe-search input[type="text"] {
-  width: 100%;
-  max-width: 400px;
-  padding: 12px;
-  border: 1px solid #3a3a3a; /* Dark grey border */
-  border-radius: 5px;
-  background: #121212; /* Dark input background */
-  color: #ffffff; /* White text for inputs */
-  font-size: 1.1em; /* Slightly larger text */
-  margin-bottom: 20px; /* Space below the input */
-}
-
-.filter-buttons {
-  display: flex;
-  justify-content: center;
-  flex-wrap: wrap;
-  gap: 10px; /* Space between buttons */
-}
-
-.filter-buttons button {
-  background: #bb86fc; /* Purple buttons */
-  color: #121212; /* Dark text on buttons */
-  border: none;
-  border-radius: 5px;
-  padding: 10px 20px;
-  font-size: 1em; /* Consistent button font size */
-  cursor: pointer;
-  transition: background 0.3s;
-}
-
-.filter-buttons button:hover {
-  background: #3700b3; /* Darker purple on hover */
-}
-
-
-.categories {
-  padding: 20px;
-  text-align: center;
-  background-image: linear-gradient(to bottom, rgba(30, 30, 30, 0.9), rgba(50, 50, 50, 0.8)); /* Slight gradient */
-}
-
-.category-grid {
-  display: flex; /* Change to flex to center items */
-  justify-content: center; /* Center items horizontally */
-  flex-wrap: wrap; /* Allow items to wrap */
-  gap: 15px; /* Maintain spacing between items */
-}
-
-.category-card {
-  background: #1e1e1e; /* Dark background for categories */
-  color: #ffffff;
-  padding: 15px;
-  border-radius: 5px;
-  text-decoration: none;
-  text-align: center;
-  transition: background 0.3s;
-  font-size: 1.1em; /* Slightly larger font for categories */
-}
-
-.category-card:hover {
-  background: #3a3a3a; /* Slightly lighter on hover */
-}
-
-footer {
-  text-align: center;
-  padding: 10px 0;
-  background: #1e1e1e; /* Same as header */
-  color: #ffffff;
-  position: relative;
-  bottom: 0;
-  width: 100%;
-}
-
-.submit-recipe,
-.contact {
-  max-width: 600px;
-  margin: auto;
-  padding: 20px;
-  background: #1e1e1e; /* Dark background for forms */
-  border-radius: 5px;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
-}
-
-.submit-recipe h2,
-.contact h2 {
-  color: #bb86fc; /* Purple for headings */
-  margin-bottom: 10px;
-}
-
-.submit-recipe p,
-.contact p {
-  color: #e0e0e0; /* Light grey for description */
-  margin-bottom: 20px;
-}
-
-form {
-  display: flex;
-  flex-direction: column;
-}
-
-form label {
-  margin-top: 10px;
-  font-weight: bold;
-  color: #ffffff; /* White text for labels */
-}
-
-form input,
-form textarea {
-  padding: 10px;
-  border: 1px solid #3a3a3a; /* Dark grey border */
-  border-radius: 5px;
-  margin-top: 5px;
-  font-size: 16px;
-  background: #121212; /* Dark background for inputs */
-  color: #ffffff; /* White text for inputs */
-}
-
-form button {
-  margin-top: 15px;
-  background: #bb86fc; /* Purple button */
-  color: #121212; /* Dark text for button */
-  padding: 10px;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-  transition: background 0.3s;
-}
-
-form button:hover {
-  background: #3700b3; /* Darker purple on hover */
-}
-
-
-.submit-recipe h2 {
-  text-align: center; /* Center the heading */
-  margin-bottom: 20px; /* More space below the heading */
-}
-
-
-/* Message styling */
-.messages {
-  list-style: none;
-  padding: 0;
-  margin-top: 20px; /* Space above messages */
-}
-
-.messages li {
-  color: #ffcc00; /* Color for messages (yellow for visibility) */
-  text-align: left; /* Center align messages */
-}
-
-#link{
-  color: #2e5dfa;
-}
-
-#link:hover {
-  color: rgb(141, 110, 254);
-}
-
-.login {
-  max-width: 300px;
-  margin: auto;
-  padding: 20px;
-  background: #1e1e1e; /* Dark background for forms */
-  border-radius: 5px;
-  border: solid 2px #292828;
-  box-shadow: 4px 4px 10px 4px rgba(0.5, 0.5, 0.5, 0.5);
-}
