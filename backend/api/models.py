@@ -1,6 +1,8 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.contrib.auth.models import BaseUserManager
+from django.contrib.auth.models import User
+from django.conf import settings
 
 class CustomUserManager(BaseUserManager):
     def create_user(self, email, username, password=None, **extra_fields):
@@ -32,3 +34,28 @@ class CustomUser(AbstractUser):
 
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['username']  # Add 'username' to the required fields
+
+class Recipe(models.Model):
+    name = models.CharField(max_length=255)
+    ingredients = models.TextField()
+    instructions = models.TextField()
+    image = models.ImageField(upload_to='images/')
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='recipes'
+    )
+    created_at = models.DateTimeField(auto_now_add=True)  # Automatically set on creation
+    updated_at = models.DateTimeField(auto_now=True)  # Automatically updated on save
+    prep_time = models.PositiveIntegerField(null=True, blank=True, help_text="Preparation time in minutes")
+    # cook_time = models.PositiveIntegerField(null=True, blank=True, help_text="Cooking time in minutes")
+    servings = models.PositiveIntegerField(null=True, blank=True, help_text="Number of servings")
+    tags = models.TextField(default=list, blank=True)
+
+    def __str__(self):
+        return self.name
+
+    class Meta:
+        verbose_name = "Recipe"
+        verbose_name_plural = "Recipes"
+        ordering = ['-created_at']  # Order by the newest recipes first

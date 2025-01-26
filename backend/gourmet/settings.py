@@ -11,6 +11,9 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 """
 
 from pathlib import Path
+from datetime import timedelta
+import cloudinary_storage
+import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -41,12 +44,20 @@ INSTALLED_APPS = [
     'api',
     'rest_framework_simplejwt',
     'corsheaders',
+    'cloudinary_storage',
 ]
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ),
+}
+
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=150),  # Access token expiration time
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=1),     # Refresh token expiration time
+    'ROTATE_REFRESH_TOKENS': True,  # If True, it will rotate refresh tokens on each refresh
+    'BLACKLIST_AFTER_ROTATION': True,  # Blacklist old refresh tokens after rotation
 }
 
 MIDDLEWARE = [
@@ -88,12 +99,24 @@ WSGI_APPLICATION = 'gourmet.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.sqlite3',
+#         'NAME': BASE_DIR / 'db.sqlite3',
+#     }
+# }
+
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql_psycopg2',
+        'NAME': 'gourmetlink',
+        'USER': 'postgres',
+        'PASSWORD': 'chaosdevil',
+        'HOST': 'localhost',  
+        'PORT': '5432',       
     }
 }
+
 
 
 # Password validation
@@ -136,9 +159,19 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
 
-STATIC_URL = 'static/'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+CLOUDINARY_STORAGE = {
+    'CLOUD_NAME': 'dhmmausdb',
+    'API_KEY': '211566653991499',
+    'API_SECRET': 'cXLmsNnv-XLli5fC9bmpa9wbRuk'
+}
+
+STATIC_URL = 'static/'
+# Media files settings
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, "media")
+DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.RawMediaCloudinaryStorage'

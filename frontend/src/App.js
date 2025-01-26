@@ -8,6 +8,7 @@ import Home from './components/Home';
 import Login from './components/Login';
 import SignUp from './components/Signup';
 import ProtectedRoute from './components/ProtectedRoute';
+import Profile from './components/Profile';
 
 
 const App = () => {
@@ -20,6 +21,7 @@ const App = () => {
           <Route path="/submit-recipe" element={<SubmitRecipe />} />
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<SignUp />} />
+          <Route path="/profile" element={<Profile />} />
           {/* Add other routes here */}
         </Routes>
       </main>
