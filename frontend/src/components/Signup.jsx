@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from "react";
-import { FaUser, FaEnvelope, FaLock, FaEye, FaEyeSlash } from "react-icons/fa";
+import React, { useState, useEffect, useCallback } from "react";
+import {FaLock, FaEye, FaEyeSlash } from "react-icons/fa";
 import { AiOutlineLoading3Quarters } from "react-icons/ai";
 
 const SignupPage = () => {
@@ -15,54 +15,54 @@ const SignupPage = () => {
   const [confirmPasswordError, setConfirmPasswordError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
-  useEffect(() => {
-    validateUsername();
-  }, [username]);
-
-  useEffect(() => {
-    validateEmail();
-  }, [email]);
-
-  useEffect(() => {
-    validatePassword();
-  }, [password]);
-
-  useEffect(() => {
-    validateConfirmPassword();
-  }, [confirmPassword]);
-
-  const validateUsername = () => {
+  const validateUsername = useCallback(() => {
     if (username.length < 3) {
       setUsernameError("Username must be at least 3 characters long");
     } else {
       setUsernameError("");
     }
-  };
+  }, [username]); // Only recreate when 'username' changes
 
-  const validateEmail = () => {
+  const validateEmail = useCallback(() => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (email && !emailRegex.test(email)) {
       setEmailError("Invalid email format");
     } else {
       setEmailError("");
     }
-  };
+  }, [email]); // Only recreate when 'email' changes
 
-  const validatePassword = () => {
+  const validatePassword = useCallback(() => {
     if (password.length < 8) {
       setPasswordError("Password must be at least 8 characters long");
     } else {
       setPasswordError("");
     }
-  };
+  }, [password]); // Only recreate when 'password' changes
 
-  const validateConfirmPassword = () => {
+  const validateConfirmPassword = useCallback(() => {
     if (confirmPassword !== password) {
       setConfirmPasswordError("Passwords do not match");
     } else {
       setConfirmPasswordError("");
     }
-  };
+  }, [confirmPassword, password]);
+
+  useEffect(() => {
+    validateUsername();
+  }, [username, validateUsername]);
+
+  useEffect(() => {
+    validateEmail();
+  }, [email, validateEmail]);
+
+  useEffect(() => {
+    validatePassword();
+  }, [password, validatePassword]);
+
+  useEffect(() => {
+    validateConfirmPassword();
+  }, [confirmPassword, validateConfirmPassword]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();

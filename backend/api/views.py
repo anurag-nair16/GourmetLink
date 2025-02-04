@@ -1,18 +1,16 @@
-from rest_framework import generics
+from rest_framework import viewsets, permissions, generics, status
 from rest_framework.response import Response
-from .serializers import UserSerializer
-from django.contrib.auth import authenticate, login
-from .models import CustomUser  # Import CustomUser
-from rest_framework import status
-from rest_framework.response import Response
-from rest_framework.decorators import api_view
-from django.http import JsonResponse
-from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework.decorators import action, api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated, IsAuthenticatedOrReadOnly
 from rest_framework.views import APIView
-from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import IsAuthenticated
-from .models import Recipe
-from .serializers import RecipeSerializer
+from rest_framework.parsers import MultiPartParser, FormParser
+from rest_framework_simplejwt.tokens import RefreshToken
+from django.contrib.auth import authenticate, login
+from django.http import JsonResponse
+
+from .models import Post, Rating, Comment, CustomUser, Recipe
+from .serializers import PostSerializer, RatingSerializer, CommentSerializer, UserSerializer, RecipeSerializer
+from rest_framework import status
 
 class SignupView(generics.CreateAPIView):
     serializer_class = UserSerializer
@@ -53,67 +51,7 @@ def user_profile(request):
         })
     return Response({"error": "Not authenticated"}, status=401)
 
-
-# class RecipeSubmitView(APIView):
-#     permission_classes = [IsAuthenticated]  # Ensure the user is authenticated
-
-#     def post(self, request, *args, **kwargs):
-#         # Create a mutable copy of request.data
-#         data = request.data.copy()
-
-#         # Add the logged-in user to the request data
-#         data['user'] = request.user.id
-
-#         # Pass the mutable copy to the serializer
-#         serializer = RecipeSerializer(data=data)
-#         if serializer.is_valid():
-#             serializer.save(user=request.user)  # Associate the recipe with the logged-in user
-#             return Response(serializer.data, status=status.HTTP_201_CREATED)
-#         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-
-from rest_framework import status
-from rest_framework.response import Response
-from rest_framework.views import APIView
-from rest_framework.permissions import IsAuthenticated
-from .models import Recipe
-from .serializers import RecipeSerializer
-from rest_framework.parsers import MultiPartParser, FormParser
-
 class RecipeSubmitView(APIView):
-    # permission_classes = [IsAuthenticated]  # Ensure the user is authenticated
-
-    # def post(self, request, *args, **kwargs):
-    #     # Create a mutable copy of request.data
-    #     data = request.data.copy()
-
-    #     # Add the logged-in user to the request data
-    #     data['user'] = request.user.id
-
-    #     # Validate ingredients - ensuring it's a non-empty string
-    #     ingredients = data.get('ingredients', '').strip()
-    #     if not ingredients or all(ingredient.strip() == "" for ingredient in ingredients.split(',')):
-    #         return Response({"ingredients": "At least one valid ingredient is required."}, status=status.HTTP_400_BAD_REQUEST)
-    #     data['ingredients'] = ingredients  # Cleaned ingredients
-
-    #     # Add more field validations if needed (for example, cooking time or servings)
-    #     if 'cookingTime' in data and not data['cookingTime'].isdigit():
-    #         return Response({"cookingTime": "Cooking time must be a valid integer."}, status=status.HTTP_400_BAD_REQUEST)
-    #     if 'servings' in data and not data['servings'].isdigit():
-    #         return Response({"servings": "Servings must be a valid integer."}, status=status.HTTP_400_BAD_REQUEST)
-
-    #     # Pass the mutable copy to the serializer
-    #     serializer = RecipeSerializer(data=data)
-
-    #     if serializer.is_valid():
-    #         # Save the recipe, associating it with the logged-in user
-    #         recipe = serializer.save(user=request.user)
-
-    #         # Return the created recipe's data in the response
-    #         return Response(serializer.data, status=status.HTTP_201_CREATED)
-
-    #     # If the serializer is not valid, return errors
-    #     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     permission_classes = [IsAuthenticated]
     parser_classes = (MultiPartParser, FormParser)
 
@@ -122,41 +60,14 @@ class RecipeSubmitView(APIView):
         serializer = RecipeSerializer(data=data)
         
         if serializer.is_valid():
-            serializer.save(user=request.user)
+            recipe = serializer.save(user=request.user)
+            Post.objects.create(recipe=recipe, user=request.user)
             return Response({'message': 'Recipe submitted successfully!', 'data': serializer.data}, status=201)
         return Response({'errors': serializer.errors}, status=400)
-
     
-# @api_view(['POST'])
-# def submit_recipe(request):
-#     print(request.data)
-#     try:
-#         # Split ingredients string into a list
-#         ingredients = request.data.get('ingredients', '').strip()
-
-#         # Ensure ingredients is not an empty string or just spaces/comma
-#         if not ingredients or all(ingredient.strip() == "" for ingredient in ingredients.split(',')):
-#             return Response({"ingredients": "At least one valid ingredient is required."}, status=status.HTTP_400_BAD_REQUEST)
-
-#         # Create a new dictionary with updated ingredients
-#         data = request.data.copy()  # Copy the original request data
-#         data['ingredients'] = ingredients  # Update ingredients field with the split list
-#         user_id = request.user.id  # Get the authenticated user's ID
-#         data['user'] = user_id 
-
-#         print(f"Data being submitted: {data}")
-#         # Proceed with serializer validation and saving
-#         serializer = RecipeSerializer(data=data)
-#         if serializer.is_valid():
-#             serializer.save()
-#             return Response({"message": "Recipe submitted successfully!"}, status=status.HTTP_201_CREATED)
-#         else:
-#             print(serializer.errors)  # Log the errors to check what's wrong
-#             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-#     except Exception as e:
-#         return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 @api_view(['GET'])
+@permission_classes([IsAuthenticated])
 def get_user_recipes(request):
     if request.user.is_authenticated:
         recipes = Recipe.objects.filter(user=request.user)
@@ -164,3 +75,47 @@ def get_user_recipes(request):
         return Response(serializer.data)
     else:
         return Response({"detail": "Authentication credentials were not provided."}, status=401)
+    
+
+
+class PostViewSet(viewsets.ModelViewSet):
+    queryset = Post.objects.all().order_by('-created_at')
+    serializer_class = PostSerializer
+    permission_classes = [IsAuthenticatedOrReadOnly]
+
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
+
+    @action(detail=True, methods=['post'])
+    def like(self, request, pk=None):
+        post = self.get_object()
+        user = request.user
+        if user in post.likes.all():
+            post.likes.remove(user)
+        else:
+            post.likes.add(user)
+        return Response({'likes_count': post.total_likes()})
+
+class RatingViewSet(viewsets.ModelViewSet):
+    queryset = Rating.objects.all()
+    serializer_class = RatingSerializer
+    permission_classes = [IsAuthenticated]
+
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
+        serializer.instance.post.update_average_rating()
+
+class CommentViewSet(viewsets.ModelViewSet):
+    queryset = Comment.objects.all().order_by('-created_at')
+    serializer_class = CommentSerializer
+    permission_classes = [IsAuthenticatedOrReadOnly]
+
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticatedOrReadOnly])  # Allow everyone to view, but only authenticated users can post
+def get_all_posts(request):
+    posts = Post.objects.all().order_by('-created_at')  # Get all posts, ordered by creation date
+    serializer = PostSerializer(posts, many=True)  # Serialize the posts
+    return Response(serializer.data)  # Return the serialized data as a response

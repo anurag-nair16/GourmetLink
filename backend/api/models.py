@@ -59,3 +59,45 @@ class Recipe(models.Model):
         verbose_name = "Recipe"
         verbose_name_plural = "Recipes"
         ordering = ['-created_at']  # Order by the newest recipes first
+
+
+class Post(models.Model):
+    recipe = models.OneToOneField(Recipe, on_delete=models.CASCADE, related_name='post')
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='posts')
+    likes = models.ManyToManyField(settings.AUTH_USER_MODEL, related_name='liked_posts', blank=True)
+    average_rating = models.FloatField(default=0.0)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def update_average_rating(self):
+        ratings = self.ratings.all()
+        self.average_rating = ratings.aggregate(models.Avg('value'))['value__avg'] or 0.0
+        self.save()
+
+    def total_likes(self):
+        return self.likes.count()
+
+    def __str__(self):
+        return f"Post for {self.recipe.name}"  
+
+class Rating(models.Model):
+    post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name='ratings')
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='ratings')
+    value = models.PositiveSmallIntegerField()  # e.g., 1 to 5 stars
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('post', 'user')  # Ensure a user rates a post only once
+
+    def __str__(self):
+        return f"{self.user.username} rated {self.post.recipe.name}: {self.value} stars"
+
+class Comment(models.Model):
+    post = models.ForeignKey(Post, on_delete=models.CASCADE, related_name='comments')
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='comments')
+    text = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Comment by {self.user.username} on {self.post.recipe.name}"
+

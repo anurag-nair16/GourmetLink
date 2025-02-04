@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback  } from "react";
 import { FaEnvelope, FaLock, FaEye, FaEyeSlash } from "react-icons/fa";
 import { AiOutlineLoading3Quarters } from "react-icons/ai";
 import { GoogleOAuthProvider, GoogleLogin } from '@react-oauth/google'; // Add Google login
@@ -12,7 +12,7 @@ const LoginPage = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
 
-  const validateEmail = () => {
+  const validateEmail = useCallback(() => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!email) {
       setEmailError("");
@@ -21,9 +21,9 @@ const LoginPage = () => {
     } else {
       setEmailError("");
     }
-  };
+  }, [email]);
 
-  const validatePassword = () => {
+  const validatePassword = useCallback(() => {
     if (!password) {
       setPasswordError("");
     } else if (password.length < 8) {
@@ -31,15 +31,15 @@ const LoginPage = () => {
     } else {
       setPasswordError("");
     }
-  };
+  }, [password])
 
   useEffect(() => {
     validateEmail();
-  }, [email]);
+  }, [email, validateEmail]);
 
   useEffect(() => {
     validatePassword();
-  }, [password]);
+  }, [password, validatePassword]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -162,7 +162,7 @@ const LoginPage = () => {
                 />
                 <span className="ml-2">Remember me</span>
               </label>
-              <a href="#" className="text-sm text-blue-400 hover:underline">Forgot password?</a>
+              <a href="www.google.com" className="text-sm text-blue-400 hover:underline">Forgot password?</a>
             </div>
 
             {/* Submit button */}

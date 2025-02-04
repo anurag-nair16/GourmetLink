@@ -35,22 +35,19 @@ const Navbar = () => {
 
   return (
     <nav className="bg-gradient-to-r from-gray-900 to-gray-800 p-4 shadow-lg">
-      <div className="container mx-auto flex justify-between items-center">
+      <div className="container mx-auto flex justify-between items-center px-4 xl:px-56">      {/* Adjusted padding for desktop */}
+        {/* Logo and Name */}
         <div className="flex items-center space-x-4">
-          <div className="flex-shrink-0">
-            <FaUtensils className="h-8 w-8 text-yellow-500" aria-hidden="true" />
-          </div>
+          <FaUtensils className="h-8 w-8 text-yellow-500" aria-hidden="true" />
           <span className="text-white text-xl font-bold">Gourmet Link</span>
         </div>
 
         {/* Desktop Menu */}
-        <div className="hidden md:flex space-x-6">
-          <NavItem icon={<FaHome />} text="Home" to="/home" />
-          <NavItem icon={<FaUtensils />} text="Submit Recipe" to="/submit-recipe" />
-
-          {/* Conditional Rendering based on Authentication */}
+        <div className="hidden md:flex items-center space-x-9">
           {isAuthenticated ? (
             <>
+              <NavItem icon={<FaHome />} text="Home" to="/home" />
+              <NavItem icon={<FaUtensils />} text="Submit Recipe" to="/submit-recipe" />
               <NavItem icon={<FaUser />} text="Profile" to="/profile" />
               <button onClick={handleLogoutClick} className="flex items-center text-white">
                 <FaSignOutAlt />
@@ -78,12 +75,10 @@ const Navbar = () => {
       {/* Mobile Menu */}
       {isOpen && (
         <div className="md:hidden bg-gray-900 p-4">
-          <NavItem icon={<FaHome />} text="Home" to="/home" onClick={toggleMenu} />
-          <NavItem icon={<FaUtensils />} text="Submit Recipe" to="/submit-recipe" onClick={toggleMenu} />
-
-          {/* Conditional Rendering based on Authentication */}
           {isAuthenticated ? (
             <>
+              <NavItem icon={<FaHome />} text="Home" to="/home" onClick={toggleMenu} />
+              <NavItem icon={<FaUtensils />} text="Submit Recipe" to="/submit-recipe" onClick={toggleMenu} />
               <NavItem icon={<FaUser />} text="Profile" to="/profile" onClick={toggleMenu} />
               <NavItem
                 icon={<FaSignOutAlt />}
@@ -102,8 +97,6 @@ const Navbar = () => {
           )}
         </div>
       )}
-
-
 
       {/* Logout Popup */}
       <LogoutPopup

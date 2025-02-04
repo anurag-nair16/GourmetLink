@@ -1,4 +1,23 @@
 import React, { useState } from "react";
+import { createTheme, ThemeProvider } from "@mui/material/styles";
+import { Box, Container } from "@mui/material";
+
+const darkBlueTheme = createTheme({
+  palette: {
+    mode: "dark",
+    primary: {
+      main: "#1E3A8A",
+    },
+    background: {
+      default: "#1e293b",
+      paper: "#1e2a47",
+    },
+    text: {
+      primary: "#ffffff",
+      secondary: "#a3b1c6",
+    },
+  },
+});
 
 const RecipePostCreator = () => {
   const [recipe, setRecipe] = useState({
@@ -138,11 +157,20 @@ const RecipePostCreator = () => {
   
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <ThemeProvider theme={darkBlueTheme}>
+    <Box
+      sx={{
+        width: "100%",
+        backgroundColor: "#233554", // Lighter shade for the background
+        padding: { xs: "0", md: "0 10%" }, // No padding on xs (phones), 10% on md (desktops)
+      }}
+    >
+    <Container maxWidth="100%" sx={{ padding: "50px 16px", backgroundColor: "#1e293b" }}>
+    <div className="min-h-screen py-8">
       <div className="max-w-6xl mx-auto px-4 flex flex-col lg:flex-row gap-8">
         {/* Main Content */}
         <div className="flex-1">
-          <div className="bg-white shadow-md rounded-lg mb-6 p-6">
+          <div className="bg-[#2a3a4c] shadow-md rounded-lg mb-6 p-6">
             <div className="flex flex-wrap items-center gap-4 mb-6">
               <div
                 className="w-24 h-24 rounded-full bg-indigo-100 flex items-center justify-center cursor-pointer relative overflow-hidden"
@@ -181,7 +209,7 @@ const RecipePostCreator = () => {
                     value={recipe.name}
                     onChange={handleChange}
                     placeholder="Recipe Name"
-                    className="w-full text-2xl font-semibold bg-transparent border-none focus:outline-none focus:ring-0 p-0 whitespace-nowrap overflow-x-auto"
+                    className="w-full text-2xl font-semibold bg-transparent border-none focus:outline-none focus:ring-0 p-0 whitespace-nowrap overflow-x-auto text-white"
                     style={{
                       maxWidth: "100%", // Ensure it stays within the container
                     }}
@@ -334,29 +362,24 @@ const RecipePostCreator = () => {
         {/* Preview Card */}
         <div className="lg:w-96">
           <div className="sticky top-8">
-            <div className="bg-white shadow-md rounded-lg p-6">
-              <h3 className="text-lg font-semibold mb-4">Preview</h3>
+            <div className="bg-[#2a3a4c] shadow-md rounded-lg p-6">
+              <h3 className="text-lg font-semibold mb-4 text-white">Preview</h3>
               <div className="space-y-4">
                 {recipe.image && (
-                  // <img
-                  //   src={recipe.image}
-                  //   alt="Recipe preview"
-                  //   className="w-full h-48 object-cover rounded-lg"
-                  // />
                   <img
-                    src={URL.createObjectURL(recipe.image)}  // Create a preview URL for the uploaded file
+                    src={URL.createObjectURL(recipe.image)} // Create a preview URL for the uploaded file
                     alt="Recipe"
                     className="w-full h-full object-cover"
                   />
                 )}
                 <div>
-                  <h4 className="text-xl font-semibold">{recipe.name || "Recipe Name"}</h4>
+                  <h4 className="text-xl font-semibold text-white">{recipe.name || "Recipe Name"}</h4>
                   {recipe.cuisine && (
-                    <p className="text-gray-500 text-sm">{recipe.cuisine} Cuisine</p>
+                    <p className="text-gray-300 text-sm">{recipe.cuisine} Cuisine</p>
                   )}
                 </div>
                 {(recipe.cookingTime || recipe.servings) && (
-                  <div className="flex gap-4 text-sm text-gray-600">
+                  <div className="flex gap-4 text-sm text-gray-300">
                     {recipe.cookingTime && <span>🕒 {recipe.cookingTime} mins</span>}
                     {recipe.servings && <span>🍽 {recipe.servings} servings</span>}
                   </div>
@@ -366,7 +389,7 @@ const RecipePostCreator = () => {
                     {recipe.tags.map((tag, index) => (
                       <span
                         key={index}
-                        className="bg-gray-100 text-gray-600 px-3 py-1 rounded-full text-sm"
+                        className="bg-gray-600 text-gray-100 px-3 py-1 rounded-full text-sm"
                       >
                         {tag}
                       </span>
@@ -375,8 +398,8 @@ const RecipePostCreator = () => {
                 )}
                 {recipe.ingredients.length > 0 && (
                   <div>
-                    <h5 className="font-semibold mb-1">Ingredients</h5>
-                    <ul className="list-disc list-inside text-sm text-gray-600">
+                    <h5 className="font-semibold mb-1 text-white">Ingredients</h5>
+                    <ul className="list-disc list-inside text-sm text-gray-300">
                       {recipe.ingredients.map((ingredient, index) => (
                         <li key={index}>{ingredient}</li>
                       ))}
@@ -385,8 +408,8 @@ const RecipePostCreator = () => {
                 )}
                 {recipe.instructions && (
                   <div>
-                    <h5 className="font-semibold mb-1">Instructions</h5>
-                    <p className="text-sm text-gray-600 whitespace-pre-wrap">
+                    <h5 className="font-semibold mb-1 text-white">Instructions</h5>
+                    <p className="text-sm text-gray-300 whitespace-pre-wrap">
                       {recipe.instructions}
                     </p>
                   </div>
@@ -395,8 +418,12 @@ const RecipePostCreator = () => {
             </div>
           </div>
         </div>
+
       </div>
     </div>
+    </Container>
+    </Box>
+    </ThemeProvider>
   );
 };
 
