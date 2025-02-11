@@ -34,12 +34,12 @@ const Navbar = () => {
   };
 
   return (
-    <nav className="bg-gradient-to-r from-gray-900 to-gray-800 p-4 shadow-lg">
-      <div className="container mx-auto flex justify-between items-center px-4 xl:px-56">      {/* Adjusted padding for desktop */}
+    <nav className="bg-gradient-to-r from-gray-900 to-teal-700 p-4 shadow-lg transition-all duration-300 ease-in-out">
+      <div className="container mx-auto flex justify-between items-center px-4 xl:px-56">
         {/* Logo and Name */}
         <div className="flex items-center space-x-4">
           <FaUtensils className="h-8 w-8 text-yellow-500" aria-hidden="true" />
-          <span className="text-white text-xl font-bold">Gourmet Link</span>
+          <span className="text-white text-2xl font-extrabold tracking-wider">Gourmet Link</span>
         </div>
 
         {/* Desktop Menu */}
@@ -49,7 +49,7 @@ const Navbar = () => {
               <NavItem icon={<FaHome />} text="Home" to="/home" />
               <NavItem icon={<FaUtensils />} text="Submit Recipe" to="/submit-recipe" />
               <NavItem icon={<FaUser />} text="Profile" to="/profile" />
-              <button onClick={handleLogoutClick} className="flex items-center text-white">
+              <button onClick={handleLogoutClick} className="flex items-center text-white hover:text-gray-300 transition-all duration-300 ease-in-out">
                 <FaSignOutAlt />
                 <span className="ml-2">Logout</span>
               </button>
@@ -74,7 +74,7 @@ const Navbar = () => {
 
       {/* Mobile Menu */}
       {isOpen && (
-        <div className="md:hidden bg-gray-900 p-4">
+        <div className="md:hidden bg-gray-900 p-4 transition-all duration-300 ease-in-out transform">
           {isAuthenticated ? (
             <>
               <NavItem icon={<FaHome />} text="Home" to="/home" onClick={toggleMenu} />
@@ -84,8 +84,8 @@ const Navbar = () => {
                 icon={<FaSignOutAlt />}
                 text="Logout"
                 onClick={() => {
-                  handleLogoutClick(); // Call the logout handler
-                  toggleMenu(); // Then toggle the menu
+                  handleLogoutClick();
+                  toggleMenu();
                 }}
               />
             </>
@@ -113,7 +113,7 @@ const NavItem = ({ icon, text, to, onClick }) => {
     <Link
       to={to}
       onClick={onClick} // Handle logout if necessary
-      className="flex items-center space-x-2 text-white hover:text-gray-300 transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none p-2"
+      className="flex items-center space-x-2 text-white hover:text-emerald-400 transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none p-2"
     >
       {icon}
       <span>{text}</span>

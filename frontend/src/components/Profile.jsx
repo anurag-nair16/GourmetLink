@@ -1,35 +1,14 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import axios from "axios";
-import { Container, Box, Typography, Avatar, Grid, Card, CardContent, CardMedia, CircularProgress } from "@mui/material";
-import { createTheme, ThemeProvider } from "@mui/material/styles";
-import { useNavigate } from "react-router-dom"; // Corrected import for useNavigate
-import AccessTimeIcon from "@mui/icons-material/AccessTime";
-import KitchenIcon from "@mui/icons-material/Kitchen";
-import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
-
-// Create custom dark theme
-const darkBlueTheme = createTheme({
-  palette: {
-    mode: "dark",
-    primary: {
-      main: "#1E3A8A",
-    },
-    background: {
-      default: "#1e293b",
-      paper: "#1e2a47",
-    },
-    text: {
-      primary: "#ffffff",
-      secondary: "#a3b1c6",
-    },
-  },
-});
+import { useNavigate } from "react-router-dom";
+import Avatar from "react-avatar";
+import { FaClock, FaUtensils, FaCalendarAlt } from "react-icons/fa";
 
 const Profile = () => {
   const [profileData, setProfileData] = useState({});
   const [userRecipes, setUserRecipes] = useState([]);
   const [loading, setLoading] = useState(true);
-  const navigate = useNavigate(); // Use navigate for route navigation
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -59,199 +38,121 @@ const Profile = () => {
     fetchProfile();
   }, []);
 
-  // Handle recipe click to show detailed info
   const handleRecipeClick = (recipeId) => {
-    navigate(`/recipe/${recipeId}`); // Navigate to the detailed recipe page
+    navigate(`/recipe/${recipeId}`);
   };
 
   if (loading) {
     return (
-      <Box
-        sx={{
-          height: "100vh",
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          backgroundColor: "#1e293b", // Dark background for the full screen
-        }}
-      >
-        <Box
-          sx={{
-            width: "100%", 
-            backgroundColor: "#233554",  // Lighter background color on the sides
-            padding: { xs: "0", md: "0 10%" },  // Padding for the left and right sides
-          }}
-        >
-          <Box
-            sx={{
-              width: "100%",
-              display: "flex",
-              justifyContent: "center",
-              alignItems: "center",
-              height: "100vh",
-            }}
-          >
-            <CircularProgress color="primary" size={60} />
-          </Box>
-        </Box>
-      </Box>
+      <div className="min-h-screen bg-gray-900 flex justify-center items-center">
+        <div className="text-emerald-500">Loading...</div>
+      </div>
     );
   }
-  
-  
 
   return (
-    <ThemeProvider theme={darkBlueTheme}>
-      <Box 
-        sx={{ 
-          width: "100%", 
-          backgroundColor: "#233554", 
-          padding: { xs: "0", md: "0 10%" } // No padding on xs (phones) and 5% on md and above (desktops)
-        }}
-      >
+    <div className="min-h-screen bg-gray-900">
+      {/* Header */}
+      <header className="bg-gray-800 py-6 px-4 shadow-lg">
+        <h1 className="text-3xl font-bold text-center text-gray-100">
+          Profile
+          <span className="text-emerald-500 ml-2">👤</span>
+        </h1>
+      </header>
 
-        <Box sx={{ width: "100%", backgroundColor: "#1e293b" }}> {/* Original dark background color */}
-          <Container maxWidth="lg" sx={{ padding: "50px 16px" }}>
-            {/* Profile Section */}
-            <Box
-              textAlign="center"
-              mb={4}
-              sx={{
-                display: "flex",
-                justifyContent: "center",
-                alignItems: "center",
-                flexDirection: "column", // Center vertically
-              }}
-            >
-              {/* Profile Image and Information */}
-              <Box sx={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
-                <Avatar
-                  src={profileData.profile_image}
-                  alt="Profile"
-                  sx={{
-                    width: 100,
-                    height: 100,
-                    border: "3px solid #ffffff",
-                    marginRight: 2, // Spacing between the image and text
-                  }}
-                />
-                <Box sx={{ textAlign: "left" }}>
-                  <Typography variant="h6" color="text.primary" sx={{ fontWeight: "bold" }}>
-                    {profileData.username}
-                  </Typography>
-                  <Typography variant="body1" color="text.secondary">
-                    {profileData.email}
-                  </Typography>
-                </Box>
-              </Box>
-            </Box>
+      {/* Main Content */}
+      <main className="container mx-auto px-4 py-8">
+        {/* Profile Section */}
+        <div className="bg-gray-800 rounded-xl shadow-lg p-6 mb-8">
+          <div className="flex flex-col md:flex-row items-center justify-center md:justify-start gap-6">
+            <Avatar
+              name={profileData.username}
+              src={profileData.profile_image}
+              size="120"
+              round={true}
+              className="border-4 border-emerald-500"
+            />
+            <div className="text-center md:text-left">
+              <h2 className="text-2xl font-bold text-gray-100 mb-2">
+                {profileData.username}
+              </h2>
+              <p className="text-gray-400">{profileData.email}</p>
+            </div>
+          </div>
+        </div>
 
-            {/* Recipes Section */}
-            <Box>
-              <Typography variant="h5" color="text.primary" gutterBottom textAlign="center">
-                Your Recipes
-              </Typography>
-              {userRecipes.length === 0 ? (
-                <Typography variant="body1" color="text.secondary" textAlign="center">
-                  You haven't added any recipes yet.
-                </Typography>
-              ) : (
-                <Grid container spacing={4} justifyContent="flex-start">
-                  {userRecipes.map((recipe) => (
-                    <Grid item xs={12} sm={6} md={4} key={recipe.id}>
-                      <Card
-                        onClick={() => handleRecipeClick(recipe.id)} // Handle click for recipe detail
-                        sx={{
-                          borderRadius: "12px",
-                          overflow: "hidden",
-                          transition: "transform 0.3s, box-shadow 0.3s",
-                          cursor: "pointer",
-                          "&:hover": {
-                            transform: "scale(1.05)",
-                            boxShadow: "0 4px 20px rgba(0, 0, 0, 0.3)",
-                          },
-                          backgroundColor: "#1e2a47",
-                          height: "100%",
-                        }}
-                      >
-                        {/* Recipe Image */}
-                        {recipe.image && (
-                          <CardMedia
-                            component="img"
-                            alt={recipe.name}
-                            image={recipe.image}
-                            title={recipe.name}
-                            sx={{
-                              objectFit: "cover",
-                              width: "100%",
-                              height: 220, // Increased height for better image visibility
-                            }}
-                          />
-                        )}
-                        {/* Recipe Info */}
-                        <CardContent>
-                          <Typography variant="h6" color="text.primary" gutterBottom>
-                            {recipe.name}
-                          </Typography>
+        {/* Recipes Section */}
+        <div>
+          <h2 className="text-2xl font-bold text-gray-100 mb-6 text-center">
+            Your Recipes
+          </h2>
+          
+          {userRecipes.length === 0 ? (
+            <div className="text-center text-gray-400 bg-gray-800 rounded-xl p-8">
+              You haven't added any recipes yet.
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {userRecipes.map((recipe) => (
+                <div
+                  key={recipe.id}
+                  onClick={() => handleRecipeClick(recipe.id)}
+                  className="bg-gray-800 rounded-xl shadow-lg hover:shadow-emerald-500/10 transition-all duration-300 overflow-hidden cursor-pointer"
+                >
+                  {/* Recipe Image */}
+                  <div className="relative aspect-video">
+                    {recipe.image && (
+                      <img
+                        src={recipe.image}
+                        alt={recipe.name}
+                        className="w-full h-full object-cover"
+                      />
+                    )}
+                  </div>
 
-                          {/* Created At */}
-                          <Box sx={{ display: "flex", alignItems: "center", marginBottom: 1 }}>
-                            <CalendarTodayIcon sx={{ marginRight: 1 }} />
-                            <Typography variant="body2" color="text.secondary">
-                              {new Date(recipe.created_at).toLocaleDateString()}
-                            </Typography>
-                          </Box>
+                  {/* Recipe Content */}
+                  <div className="p-4">
+                    <h3 className="text-xl font-semibold text-gray-100 mb-4">
+                      {recipe.name}
+                    </h3>
 
-                          {/* Servings */}
-                          <Box sx={{ display: "flex", alignItems: "center", marginBottom: 1 }}>
-                            <KitchenIcon sx={{ marginRight: 1 }} />
-                            <Typography variant="body2" color="text.secondary">
-                              {recipe.servings || "N/A"} servings
-                            </Typography>
-                          </Box>
+                    {/* Recipe Metrics */}
+                    <div className="space-y-2 mb-4">
+                      <div className="flex items-center text-gray-400">
+                        <FaCalendarAlt className="mr-2" />
+                        <span>{new Date(recipe.created_at).toLocaleDateString()}</span>
+                      </div>
+                      
+                      <div className="flex items-center text-gray-400">
+                        <FaUtensils className="mr-2" />
+                        <span>{recipe.servings || "N/A"} servings</span>
+                      </div>
+                      
+                      <div className="flex items-center text-gray-400">
+                        <FaClock className="mr-2" />
+                        <span>{recipe.prep_time || "N/A"} mins</span>
+                      </div>
+                    </div>
 
-                          {/* Cooking Time */}
-                          <Box sx={{ display: "flex", alignItems: "center", marginBottom: 1 }}>
-                            <AccessTimeIcon sx={{ marginRight: 1 }} />
-                            <Typography variant="body2" color="text.secondary">
-                              {recipe.prep_time || "N/A"} mins
-                            </Typography>
-                          </Box>
-
-                          {/* Tags */}
-                          <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
-                            {/* <TagIcon sx={{ marginRight: 1 }} /> */}
-                            {recipe.tags ? (
-                              recipe.tags.split(",").map((tag, index) => (
-                                <Typography
-                                  key={index}
-                                  variant="body2"
-                                  sx={{
-                                    display: "inline-block",
-                                    backgroundColor: "#1E3A8A", // Blue background
-                                    color: "#ffffff", // White text color
-                                    padding: "2px 8px",
-                                    borderRadius: "12px",
-                                  }}
-                                >
-                                  #{tag.trim()}
-                                </Typography>
-                              ))
-                            ) : (
-                              <Typography variant="body2" color="text.secondary">N/A</Typography>
-                            )}
-                          </Box>
-                        </CardContent>
-                      </Card>
-                    </Grid>
-                  ))}
-                </Grid>
-              )}
-            </Box>
-          </Container>
-        </Box>
-      </Box>
-    </ThemeProvider>
+                    {/* Tags */}
+                    <div className="flex flex-wrap gap-2">
+                      {recipe.tags?.split(",").map((tag, idx) => (
+                        <span
+                          key={idx}
+                          className="px-2 py-1 bg-emerald-600/20 text-emerald-400 rounded-full text-xs"
+                        >
+                          #{tag.trim()}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </main>
+    </div>
   );
 };
 

@@ -10,6 +10,7 @@ import SignUp from './components/Signup';
 import ProtectedRoute from './components/ProtectedRoute';
 import Profile from './components/Profile';
 import HomePage from './components/HomePage';
+import PostDetailPage from './components/PostDetailPage';
 
 
 const App = () => {
@@ -41,6 +42,10 @@ const App = () => {
           <Route 
             path="/home" 
             element={<ProtectedRoute element={<HomePage />} />} 
+          />
+          <Route 
+            path="/post/:postId" 
+            element={<ProtectedRoute element={<PostDetailPage />} />} 
           />
           {/* Add other routes here */}
         </Routes>

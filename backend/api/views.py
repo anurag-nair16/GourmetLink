@@ -7,6 +7,7 @@ from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import authenticate, login
 from django.http import JsonResponse
+from django.contrib.auth.models import User
 
 from .models import Post, Rating, Comment, CustomUser, Recipe
 from .serializers import PostSerializer, RatingSerializer, CommentSerializer, UserSerializer, RecipeSerializer
@@ -50,6 +51,17 @@ def user_profile(request):
             "email": user.email,
         })
     return Response({"error": "Not authenticated"}, status=401)
+
+class UserByEmailView(APIView):
+    def get(self, request):
+        email = request.query_params.get('email')
+        if not email:
+            return Response({'error': 'Email parameter is required'}, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            user = User.objects.get(email=email)
+            return Response({'username': user.username})
+        except User.DoesNotExist:
+            return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
 
 class RecipeSubmitView(APIView):
     permission_classes = [IsAuthenticated]
@@ -119,3 +131,56 @@ def get_all_posts(request):
     posts = Post.objects.all().order_by('-created_at')  # Get all posts, ordered by creation date
     serializer = PostSerializer(posts, many=True)  # Serialize the posts
     return Response(serializer.data)  # Return the serialized data as a response
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def like_post(request, post_id):
+    try:
+        post = Post.objects.get(id=post_id)
+    except Post.DoesNotExist:
+        return Response({"error": "Post not found"}, status=status.HTTP_404_NOT_FOUND)
+
+    if request.user in post.likes.all():
+        post.likes.remove(request.user)
+        liked = False
+    else:
+        post.likes.add(request.user)
+        liked = True
+
+    post.save()
+    return Response({"liked": liked, "total_likes": post.total_likes()}, status=status.HTTP_200_OK)
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def add_comment(request, post_id):
+    try:
+        post = Post.objects.get(id=post_id)
+    except Post.DoesNotExist:
+        return Response({"error": "Post not found"}, status=status.HTTP_404_NOT_FOUND)
+
+    serializer = CommentSerializer(data=request.data)
+    if serializer.is_valid():
+        serializer.save(post=post, user=request.user)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def rate_post(request, post_id):
+    print("hello")
+    post = Post.objects.get(recipe_id=post_id)
+    print(post)
+    user = request.user
+    value = request.data.get('value')
+    print("post",post, user, value)
+    if value is None or not (1 <= int(value) <= 5):
+        return Response({'error': 'Invalid rating value'}, status=400)
+
+    rating, created = Rating.objects.get_or_create(post=post, user=user, defaults={'value': value})
+    if not created:
+        rating.value = value
+        rating.save()
+
+    post.update_average_rating()
+    return Response({'average_rating': post.average_rating})

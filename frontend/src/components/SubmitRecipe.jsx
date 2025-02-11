@@ -1,23 +1,5 @@
 import React, { useState } from "react";
-import { createTheme, ThemeProvider } from "@mui/material/styles";
-import { Box, Container } from "@mui/material";
-
-const darkBlueTheme = createTheme({
-  palette: {
-    mode: "dark",
-    primary: {
-      main: "#1E3A8A",
-    },
-    background: {
-      default: "#1e293b",
-      paper: "#1e2a47",
-    },
-    text: {
-      primary: "#ffffff",
-      secondary: "#a3b1c6",
-    },
-  },
-});
+import { FaCamera, FaPlus, FaTimes, FaClock, FaUsers, FaChevronRight } from "react-icons/fa";
 
 const RecipePostCreator = () => {
   const [recipe, setRecipe] = useState({
@@ -153,277 +135,334 @@ const RecipePostCreator = () => {
       });
   };
   
-  
-  
+  const sections = [
+    { id: "basic", label: "Basic Info" },
+    { id: "ingredients", label: "Ingredients" },
+    { id: "instructions", label: "Instructions" },
+  ];
+
+  const cuisineTypes = [
+    "Italian",
+    "Indian",
+    "Mexican",
+    "Chinese",
+    "Japanese",
+    "Thai",
+    "Mediterranean",
+    "French",
+    "American",
+  ];
 
   return (
-    <ThemeProvider theme={darkBlueTheme}>
-    <Box
-      sx={{
-        width: "100%",
-        backgroundColor: "#233554", // Lighter shade for the background
-        padding: { xs: "0", md: "0 10%" }, // No padding on xs (phones), 10% on md (desktops)
-      }}
-    >
-    <Container maxWidth="100%" sx={{ padding: "50px 16px", backgroundColor: "#1e293b" }}>
-    <div className="min-h-screen py-8">
-      <div className="max-w-6xl mx-auto px-4 flex flex-col lg:flex-row gap-8">
-        {/* Main Content */}
-        <div className="flex-1">
-          <div className="bg-[#2a3a4c] shadow-md rounded-lg mb-6 p-6">
-            <div className="flex flex-wrap items-center gap-4 mb-6">
-              <div
-                className="w-24 h-24 rounded-full bg-indigo-100 flex items-center justify-center cursor-pointer relative overflow-hidden"
-                onClick={() => document.getElementById("image-upload").click()}
-              >
-                {recipe.image ? (
-                  // <img
-                  //   src={recipe.image}
-                  //   alt="Recipe"
-                  //   className="w-full h-full object-cover"
-                  // />
-                  <img
-                    src={URL.createObjectURL(recipe.image)}  // Create a preview URL for the uploaded file
-                    alt="Recipe"
-                    className="w-full h-full object-cover"
+    <div className="min-h-screen bg-gray-900">
+      {/* Header */}
+      <header className="bg-gray-800 py-6 px-4 shadow-lg">
+        <h1 className="text-3xl font-bold text-center text-gray-100">
+          Create Recipe
+          <span className="text-emerald-500 ml-2">✨</span>
+        </h1>
+      </header>
+
+      {/* Main Content */}
+      <main className="container mx-auto px-4 py-8">
+        <div className="max-w-7xl mx-auto flex flex-col lg:flex-row gap-8">
+          {/* Form Section */}
+          <div className="flex-1">
+            {/* Image Upload and Basic Info */}
+            <div className="bg-gray-800 rounded-xl shadow-lg p-6 mb-6">
+              <div className="flex flex-col md:flex-row gap-6 items-start md:items-center mb-6">
+                {/* Image Upload */}
+                <div
+                  onClick={() => document.getElementById("image-upload").click()}
+                  className="w-full md:w-48 h-48 rounded-lg bg-gray-700 flex items-center justify-center cursor-pointer overflow-hidden relative group"
+                >
+                  {recipe.image ? (
+                    <>
+                      <img
+                        src={URL.createObjectURL(recipe.image)}
+                        alt="Recipe"
+                        className="w-full h-full object-cover"
+                      />
+                      <div className="absolute inset-0 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                        <FaCamera className="text-white text-2xl" />
+                      </div>
+                    </>
+                  ) : (
+                    <div className="text-center">
+                      <FaCamera className="text-emerald-500 text-3xl mb-2" />
+                      <p className="text-gray-400 text-sm">Upload Photo</p>
+                    </div>
+                  )}
+                  <input
+                    type="file"
+                    id="image-upload"
+                    className="hidden"
+                    accept="image/*"
+                    onChange={handleImageUpload}
                   />
-                ) : (
-                  <div className="text-center">
-                    <div className="text-indigo-500 text-sm">Add Photo</div>
-                  </div>
-                )}
-                <input
-                  type="file"
-                  id="image-upload"
-                  className="hidden"
-                  accept="image/*"
-                  onChange={handleImageUpload}
-                />
-              </div>
-              <div className="flex-1">
-                {/* Recipe Name Input */}
-                <div className="w-full overflow-x-auto">
+                </div>
+
+                {/* Basic Info Fields */}
+                <div className="flex-1 w-full">
                   <input
                     type="text"
                     name="name"
                     value={recipe.name}
                     onChange={handleChange}
                     placeholder="Recipe Name"
-                    className="w-full text-2xl font-semibold bg-transparent border-none focus:outline-none focus:ring-0 p-0 whitespace-nowrap overflow-x-auto text-white"
-                    style={{
-                      maxWidth: "100%", // Ensure it stays within the container
-                    }}
+                    className="w-full text-2xl font-semibold bg-transparent border-b border-gray-700 focus:border-emerald-500 focus:outline-none pb-2 mb-4 text-gray-100 placeholder-gray-500"
                   />
-                </div>
-
-                {/* Cooking Time & Servings Inputs */}
-                <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 mt-2">
-                  <input
-                    type="number"
-                    name="cookingTime"
-                    value={recipe.cookingTime}
-                    onChange={handleChange}
-                    placeholder="Cooking time (in minutes)"
-                    className="flex-1 bg-gray-100 rounded-full px-4 py-1 text-sm"
-                    style={{
-                      maxWidth: "100%", // Ensure it fits within the container
-                    }}
-                  />
-                  <input
-                    type="number"
-                    name="servings"
-                    value={recipe.servings}
-                    onChange={handleChange}
-                    placeholder="Servings"
-                    className="flex-1 bg-gray-100 rounded-full px-4 py-1 text-sm"
-                    style={{
-                      maxWidth: "100%", // Ensure it fits within the container
-                    }}
-                  />
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="relative">
+                      <FaClock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                      <input
+                        type="number"
+                        name="cookingTime"
+                        value={recipe.cookingTime}
+                        onChange={handleChange}
+                        placeholder="Cooking time (mins)"
+                        className="w-full bg-gray-700 rounded-lg pl-10 pr-4 py-2 text-gray-100 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                      />
+                    </div>
+                    <div className="relative">
+                      <FaUsers className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+                      <input
+                        type="number"
+                        name="servings"
+                        value={recipe.servings}
+                        onChange={handleChange}
+                        placeholder="Servings"
+                        className="w-full bg-gray-700 rounded-lg pl-10 pr-4 py-2 text-gray-100 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                      />
+                    </div>
+                  </div>
                 </div>
               </div>
 
-            </div>
-
-            <div className="border-b border-gray-200 mb-6">
-              <div className="flex gap-6">
-                {["basic", "ingredients", "instructions"].map((section) => (
+              {/* Section Navigation */}
+              <div className="flex border-b border-gray-700 mb-6">
+                {sections.map((section) => (
                   <button
-                    key={section}
-                    onClick={() => setActiveSection(section)}
-                    className={`pb-2 px-1 ${
-                      activeSection === section
-                        ? "border-b-2 border-indigo-500 text-indigo-500"
-                        : "text-gray-500"
+                    key={section.id}
+                    onClick={() => setActiveSection(section.id)}
+                    className={`pb-3 px-4 relative ${
+                      activeSection === section.id
+                        ? "text-emerald-500"
+                        : "text-gray-400 hover:text-gray-300"
                     }`}
                   >
-                    {section.charAt(0).toUpperCase() + section.slice(1)}
+                    {section.label}
+                    {activeSection === section.id && (
+                      <div className="absolute bottom-0 left-0 w-full h-0.5 bg-emerald-500" />
+                    )}
                   </button>
                 ))}
               </div>
-            </div>
 
-            {activeSection === "basic" && (
-              <div className="space-y-4">
-                <select
-                  name="cuisine"
-                  value={recipe.cuisine}
-                  onChange={handleChange}
-                  className="w-full p-2 rounded-lg bg-gray-100 border-none"
-                >
-                  <option value="">Select Cuisine Type</option>
-                  <option value="Italian">Italian</option>
-                  <option value="Indian">Indian</option>
-                  <option value="Mexican">Mexican</option>
-                  <option value="Chinese">Chinese</option>
-                </select>
-
-                <div>
-                  <div className="flex items-center gap-2 mb-2">
-                    <input
-                      type="text"
-                      value={tagInput}
-                      onChange={(e) => setTagInput(e.target.value)}
-                      onKeyPress={(e) => e.key === "Enter" && handleTagAdd()}
-                      placeholder="Add tags (press Enter)"
-                      className="flex-1 p-2 rounded-lg bg-gray-100 border-none"
-                    />
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    {recipe.tags.map((tag, index) => (
-                      <span
-                        key={index}
-                        className="bg-indigo-100 text-indigo-600 px-3 py-1 rounded-full text-sm flex items-center gap-2"
+              {/* Section Content */}
+              <div className="min-h-[300px]">
+                {activeSection === "basic" && (
+                  <div className="space-y-6">
+                    <div>
+                      <label className="block text-gray-300 mb-2">Cuisine Type</label>
+                      <select
+                        name="cuisine"
+                        value={recipe.cuisine}
+                        onChange={handleChange}
+                        className="w-full bg-gray-700 rounded-lg px-4 py-2 text-gray-100 focus:outline-none focus:ring-2 focus:ring-emerald-500"
                       >
-                        {tag}
-                        <button
-                          onClick={() => handleTagRemove(tag)}
-                          className="hover:text-indigo-800"
-                        >
-                          ×
-                        </button>
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            )}
+                        <option value="">Select Cuisine Type</option>
+                        {cuisineTypes.map((cuisine) => (
+                          <option key={cuisine} value={cuisine}>
+                            {cuisine}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
 
-            {activeSection === "ingredients" && (
-              <div className="space-y-3">
-                {recipe.ingredients.map((ingredient, index) => (
-                  <div key={index} className="flex items-center gap-2">
-                    <input
-                      type="text"
-                      value={ingredient}
-                      onChange={(e) => handleIngredientChange(index, e.target.value)}
-                      placeholder="Add an ingredient"
-                      className="flex-1 p-2 rounded-lg bg-gray-100 border-none"
-                    />
+                    <div>
+                      <label className="block text-gray-300 mb-2">Tags</label>
+                      <div className="flex items-center gap-2 mb-3">
+                        <input
+                          type="text"
+                          value={tagInput}
+                          onChange={(e) => setTagInput(e.target.value)}
+                          onKeyPress={(e) => e.key === "Enter" && handleTagAdd()}
+                          placeholder="Add tags and press Enter"
+                          className="flex-1 bg-gray-700 rounded-lg px-4 py-2 text-gray-100 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                        />
+                      </div>
+                      <div className="flex flex-wrap gap-2">
+                        {recipe.tags.map((tag, index) => (
+                          <span
+                            key={index}
+                            className="bg-gray-700 text-emerald-400 px-3 py-1 rounded-full text-sm flex items-center gap-2"
+                          >
+                            #{tag}
+                            <button
+                              onClick={() => handleTagRemove(tag)}
+                              className="hover:text-emerald-300"
+                            >
+                              <FaTimes size={14} />
+                            </button>
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {activeSection === "ingredients" && (
+                  <div className="space-y-4">
+                    {recipe.ingredients.map((ingredient, index) => (
+                      <div key={index} className="flex items-center gap-2">
+                        <input
+                          type="text"
+                          value={ingredient}
+                          onChange={(e) => handleIngredientChange(index, e.target.value)}
+                          placeholder="Add an ingredient"
+                          className="flex-1 bg-gray-700 rounded-lg px-4 py-2 text-gray-100 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                        />
+                        <button
+                          onClick={() => removeIngredient(index)}
+                          className="text-gray-400 hover:text-red-500 p-2"
+                        >
+                          <FaTimes size={18} />
+                        </button>
+                      </div>
+                    ))}
                     <button
-                      onClick={() => removeIngredient(index)}
-                      className="text-red-500 hover:text-red-700"
+                      onClick={addIngredient}
+                      className="flex items-center gap-2 text-emerald-500 hover:text-emerald-400 transition-colors"
                     >
-                      ×
+                      <FaPlus size={14} />
+                      Add Ingredient
                     </button>
                   </div>
-                ))}
-                <button
-                  onClick={addIngredient}
-                  className="text-indigo-500 hover:text-indigo-700"
-                >
-                  + Add Ingredient
-                </button>
-              </div>
-            )}
+                )}
 
-            {activeSection === "instructions" && (
-              <textarea
-                name="instructions"
-                value={recipe.instructions}
-                onChange={handleChange}
-                placeholder="Share your cooking instructions..."
-                className="w-full p-4 rounded-lg bg-gray-100 border-none min-h-[200px] resize-none"
-              />
+                {activeSection === "instructions" && (
+                  <textarea
+                    name="instructions"
+                    value={recipe.instructions}
+                    onChange={handleChange}
+                    placeholder="Share your cooking instructions..."
+                    className="w-full bg-gray-700 rounded-lg px-4 py-3 text-gray-100 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 min-h-[300px] resize-none"
+                  />
+                )}
+              </div>
+            </div>
+
+            {/* Submit Button */}
+            <button
+              onClick={handleSubmit}
+              disabled={isLoading}
+              className="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-3 rounded-lg transition-colors flex items-center justify-center gap-2 disabled:opacity-50"
+            >
+              {isLoading ? (
+                "Creating Recipe..."
+              ) : (
+                <>
+                  Share Recipe
+                  <FaChevronRight size={14} />
+                </>
+              )}
+            </button>
+
+            {/* Messages */}
+            {successMessage && (
+              <div className="mt-4 p-4 bg-emerald-900/20 text-emerald-500 rounded-lg">
+                {successMessage}
+              </div>
             )}
           </div>
 
-          <button
-            onClick={handleSubmit}
-            className="w-full bg-indigo-500 text-white py-3 rounded-lg hover:bg-indigo-600 transition-colors"
-          >
-            Share Recipe
-          </button>
-          {isLoading && <p className="text-indigo-500">Submitting your recipe...</p>}
-          {successMessage && <p className="text-green-500">{successMessage}</p>}
+          {/* Preview Section */}
+          <div className="lg:w-96">
+            <div className="sticky top-8">
+              <div className="bg-gray-800 rounded-xl shadow-lg overflow-hidden">
+                <div className="p-4 border-b border-gray-700">
+                  <h3 className="text-lg font-semibold text-gray-100">Preview</h3>
+                </div>
+                <div className="p-4 space-y-4">
+                  {recipe.image && (
+                    <img
+                      src={URL.createObjectURL(recipe.image)}
+                      alt="Recipe"
+                      className="w-full h-48 object-cover rounded-lg"
+                    />
+                  )}
 
-        </div>
+                  <div>
+                    <h4 className="text-xl font-semibold text-gray-100">
+                      {recipe.name || "Recipe Name"}
+                    </h4>
+                    {recipe.cuisine && (
+                      <p className="text-emerald-400 text-sm mt-1">{recipe.cuisine} Cuisine</p>
+                    )}
+                  </div>
 
-        {/* Preview Card */}
-        <div className="lg:w-96">
-          <div className="sticky top-8">
-            <div className="bg-[#2a3a4c] shadow-md rounded-lg p-6">
-              <h3 className="text-lg font-semibold mb-4 text-white">Preview</h3>
-              <div className="space-y-4">
-                {recipe.image && (
-                  <img
-                    src={URL.createObjectURL(recipe.image)} // Create a preview URL for the uploaded file
-                    alt="Recipe"
-                    className="w-full h-full object-cover"
-                  />
-                )}
-                <div>
-                  <h4 className="text-xl font-semibold text-white">{recipe.name || "Recipe Name"}</h4>
-                  {recipe.cuisine && (
-                    <p className="text-gray-300 text-sm">{recipe.cuisine} Cuisine</p>
+                  {(recipe.cookingTime || recipe.servings) && (
+                    <div className="flex gap-4 text-sm text-gray-400">
+                      {recipe.cookingTime && (
+                        <div className="flex items-center gap-2">
+                          <FaClock />
+                          <span>{recipe.cookingTime} mins</span>
+                        </div>
+                      )}
+                      {recipe.servings && (
+                        <div className="flex items-center gap-2">
+                          <FaUsers />
+                          <span>{recipe.servings} servings</span>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {recipe.tags.length > 0 && (
+                    <div className="flex flex-wrap gap-2">
+                      {recipe.tags.map((tag, index) => (
+                        <span
+                          key={index}
+                          className="bg-gray-700 text-emerald-400 px-3 py-1 rounded-full text-sm"
+                        >
+                          #{tag}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+
+                  {recipe.ingredients.some((ing) => ing.trim()) && (
+                    <div>
+                      <h5 className="font-semibold text-gray-100 mb-2">Ingredients</h5>
+                      <ul className="space-y-1 text-gray-400">
+                        {recipe.ingredients
+                          .filter((ing) => ing.trim())
+                          .map((ingredient, index) => (
+                            <li key={index} className="flex items-center gap-2">
+                              <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full" />
+                              {ingredient}
+                            </li>
+                          ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  {recipe.instructions && (
+                    <div>
+                      <h5 className="font-semibold text-gray-100 mb-2">Instructions</h5>
+                      <p className="text-gray-400 whitespace-pre-wrap text-sm">
+                        {recipe.instructions}
+                      </p>
+                    </div>
                   )}
                 </div>
-                {(recipe.cookingTime || recipe.servings) && (
-                  <div className="flex gap-4 text-sm text-gray-300">
-                    {recipe.cookingTime && <span>🕒 {recipe.cookingTime} mins</span>}
-                    {recipe.servings && <span>🍽 {recipe.servings} servings</span>}
-                  </div>
-                )}
-                {recipe.tags.length > 0 && (
-                  <div className="flex flex-wrap gap-2">
-                    {recipe.tags.map((tag, index) => (
-                      <span
-                        key={index}
-                        className="bg-gray-600 text-gray-100 px-3 py-1 rounded-full text-sm"
-                      >
-                        {tag}
-                      </span>
-                    ))}
-                  </div>
-                )}
-                {recipe.ingredients.length > 0 && (
-                  <div>
-                    <h5 className="font-semibold mb-1 text-white">Ingredients</h5>
-                    <ul className="list-disc list-inside text-sm text-gray-300">
-                      {recipe.ingredients.map((ingredient, index) => (
-                        <li key={index}>{ingredient}</li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-                {recipe.instructions && (
-                  <div>
-                    <h5 className="font-semibold mb-1 text-white">Instructions</h5>
-                    <p className="text-sm text-gray-300 whitespace-pre-wrap">
-                      {recipe.instructions}
-                    </p>
-                  </div>
-                )}
               </div>
             </div>
           </div>
         </div>
-
-      </div>
+      </main>
     </div>
-    </Container>
-    </Box>
-    </ThemeProvider>
   );
 };
 
