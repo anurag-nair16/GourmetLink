@@ -29,7 +29,8 @@ class CustomUserManager(BaseUserManager):
 class CustomUser(AbstractUser):
     id = models.AutoField(primary_key=True)  # Add an id field
     email = models.EmailField(unique=True)
-    
+    profile_image = models.ImageField(upload_to='profile_images/', null=True, blank=True)
+
     objects = CustomUserManager()  # Link the custom user manager
 
     USERNAME_FIELD = 'email'
@@ -38,6 +39,7 @@ class CustomUser(AbstractUser):
 class Recipe(models.Model):
     name = models.CharField(max_length=255)
     ingredients = models.TextField()
+    description = models.CharField(max_length=100, blank=False, null=False)
     instructions = models.TextField()
     image = models.ImageField(upload_to='images/')
     user = models.ForeignKey(
@@ -48,7 +50,6 @@ class Recipe(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)  # Automatically set on creation
     updated_at = models.DateTimeField(auto_now=True)  # Automatically updated on save
     prep_time = models.PositiveIntegerField(null=True, blank=True, help_text="Preparation time in minutes")
-    # cook_time = models.PositiveIntegerField(null=True, blank=True, help_text="Cooking time in minutes")
     servings = models.PositiveIntegerField(null=True, blank=True, help_text="Number of servings")
     tags = models.TextField(default=list, blank=True)
 

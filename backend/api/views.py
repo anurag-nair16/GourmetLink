@@ -10,9 +10,18 @@ from django.http import JsonResponse
 from django.contrib.auth.models import User
 
 from .models import Post, Rating, Comment, CustomUser, Recipe
-from .serializers import PostSerializer, RatingSerializer, CommentSerializer, UserSerializer, RecipeSerializer
+from .serializers import PostSerializer, RatingSerializer, CommentSerializer, UserSerializer, RecipeSerializer, CustomUserSerializer
 from rest_framework import status
 
+class UserProfileDetailView(generics.RetrieveAPIView):
+    queryset = CustomUser.objects.all()
+    serializer_class = CustomUserSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_object(self):
+        email = self.kwargs.get('email')
+        return generics.get_object_or_404(CustomUser, email=email)
+    
 class SignupView(generics.CreateAPIView):
     serializer_class = UserSerializer
 
@@ -87,8 +96,6 @@ def get_user_recipes(request):
         return Response(serializer.data)
     else:
         return Response({"detail": "Authentication credentials were not provided."}, status=401)
-    
-
 
 class PostViewSet(viewsets.ModelViewSet):
     queryset = Post.objects.all().order_by('-created_at')

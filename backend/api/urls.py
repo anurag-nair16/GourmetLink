@@ -1,12 +1,13 @@
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from django.urls import path
-from .views import SignupView, LoginView, user_profile, get_user_recipes, RecipeSubmitView, like_post, add_comment, get_all_posts, UserByEmailView, rate_post
+from .views import SignupView, LoginView, user_profile, get_user_recipes, UserProfileDetailView, RecipeSubmitView, like_post, add_comment, get_all_posts, UserByEmailView, rate_post
 from rest_framework_simplejwt.views import TokenRefreshView
 
 urlpatterns = [
     path('signup/', SignupView.as_view(), name='signup'),
     path('login/', LoginView.as_view(), name='login'),
     path('profile/', user_profile, name='user-profile'),
+    path('profile/<str:email>/', UserProfileDetailView.as_view(), name='user-profile-detail'),
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('submit-recipe/', RecipeSubmitView.as_view(), name='submit-recipe'),
     path('recipes/', get_user_recipes, name='get_user_recipes'),

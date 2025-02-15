@@ -1,6 +1,41 @@
+import { motion } from 'framer-motion';
 import React, { useState, useEffect, useCallback } from "react";
-import {FaLock, FaEye, FaEyeSlash } from "react-icons/fa";
+import { FaLock, FaEye, FaEyeSlash, FaUser, FaEnvelope } from "react-icons/fa";
 import { AiOutlineLoading3Quarters } from "react-icons/ai";
+import { Link } from 'react-router-dom';
+
+// Add animation variants
+const containerVariants = {
+  hidden: { 
+    opacity: 0,
+    scale: 0.9
+  },
+  visible: { 
+    opacity: 1,
+    scale: 1,
+    transition: {
+      duration: 0.6,
+      ease: "easeOut",
+      when: "beforeChildren",
+      staggerChildren: 0.1
+    }
+  }
+};
+
+const itemVariants = {
+  hidden: { 
+    opacity: 0,
+    y: 20
+  },
+  visible: { 
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: 0.5,
+      ease: "easeOut"
+    }
+  }
+};
 
 const SignupPage = () => {
   const [username, setUsername] = useState("");
@@ -127,134 +162,193 @@ const SignupPage = () => {
 
   return (
     <div className="relative min-h-screen flex items-center justify-center text-white p-4">
-      <div style={backgroundImageStyle} className="absolute inset-0" /> {/* Background image */}
-      <div className="absolute inset-0 bg-black opacity-50" /> {/* Dark overlay */}
-      <div className="w-full max-w-md bg-gray-800 rounded-lg shadow-lg p-8 backdrop-blur-sm bg-opacity-75 relative z-10"> {/* Relative z-10 for the signup form */}
-        <h2 className="text-3xl font-bold text-center mb-8">Sign Up</h2>
+      {/* Video Background */}
+      <div className="absolute inset-0 w-full h-full">
+        <div className="absolute inset-0 bg-black/60 z-10"></div>
+        <motion.video
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 1 }}
+          autoPlay
+          loop
+          muted
+          playsInline
+          className="w-full h-full object-cover"
+        >
+          <source 
+            src="/videos/mixkit-preparing-a-bowl-with-yogurt-and-fruit-43925-full-hd.mp4" 
+            type="video/mp4"
+          />
+          Your browser does not support the video tag.
+        </motion.video>
+      </div>
+
+      {/* Signup Form */}
+      <motion.div
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
+        className="w-full max-w-md bg-gray-800/80 backdrop-blur-md rounded-lg shadow-lg p-8 relative z-20"
+      >
+        <motion.h2 
+          variants={itemVariants}
+          className="text-3xl font-bold text-center mb-8"
+        >
+          Sign Up
+        </motion.h2>
+
         <form onSubmit={handleSubmit} className="space-y-6">
-          <div>
+          {/* Username Input */}
+          <motion.div variants={itemVariants}>
             <label htmlFor="username" className="block text-sm font-medium mb-2">
               Username
             </label>
-            <input
-              type="text"
-              id="username"
-              name="username"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              className={`w-full px-4 py-2 bg-gray-700 rounded-md focus:outline-none focus:ring-2 ${
-                usernameError ? "border-red-500 focus:ring-red-500" : "focus:ring-blue-500"
-              }`}
-              placeholder="Enter your username"
-              required
-              aria-invalid={usernameError ? "true" : "false"}
-              aria-describedby="username-error"
-            />
+            <div className="relative">
+              <FaUser className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+              <input
+                type="text"
+                id="username"
+                name="username"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                className={`w-full pl-10 py-2 text-black rounded-md focus:ring-2 focus:ring-emerald-500 transition-all duration-300 ${
+                  usernameError ? "border-red-500 focus:ring-red-500" : "focus:ring-emerald-500"
+                }`}
+                placeholder="Enter your username"
+                required
+              />
+            </div>
             {usernameError && (
-              <p id="username-error" className="mt-2 text-sm text-red-500">
+              <motion.p 
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="mt-2 text-sm text-red-500"
+              >
                 {usernameError}
-              </p>
+              </motion.p>
             )}
-          </div>
-          <div>
+          </motion.div>
+
+          {/* Email Input */}
+          <motion.div variants={itemVariants}>
             <label htmlFor="email" className="block text-sm font-medium mb-2">
               Email Address
             </label>
-            <input
-              type="email"
-              id="email"
-              name="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className={`w-full px-4 py-2 bg-gray-700 rounded-md focus:outline-none focus:ring-2 ${
-                emailError ? "border-red-500 focus:ring-red-500" : "focus:ring-blue-500"
-              }`}
-              placeholder="Enter your email"
-              required
-              aria-invalid={emailError ? "true" : "false"}
-              aria-describedby="email-error"
-            />
+            <div className="relative">
+              <FaEnvelope className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+              <input
+                type="email"
+                id="email"
+                name="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className={`w-full pl-10 py-2 text-black rounded-md focus:ring-2 focus:ring-emerald-500 transition-all duration-300 ${
+                  emailError ? "border-red-500 focus:ring-red-500" : "focus:ring-emerald-500"
+                }`}
+                placeholder="Enter your email"
+                required
+              />
+            </div>
             {emailError && (
-              <p id="email-error" className="mt-2 text-sm text-red-500">
+              <motion.p 
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="mt-2 text-sm text-red-500"
+              >
                 {emailError}
-              </p>
+              </motion.p>
             )}
-          </div>
-          <div>
+          </motion.div>
+
+          {/* Password Input */}
+          <motion.div variants={itemVariants}>
             <label htmlFor="password" className="block text-sm font-medium mb-2">
               Password
             </label>
             <div className="relative">
+              <FaLock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
               <input
                 type={showPassword ? "text" : "password"}
                 id="password"
                 name="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className={`w-full px-4 py-2 bg-gray-700 rounded-md pl-10 focus:outline-none focus:ring-2 ${
-                  passwordError ? "border-red-500 focus:ring-red-500" : "focus:ring-blue-500"
+                className={`w-full px-4 py-2 pl-10 bg-gray-700 rounded-md focus:outline-none focus:ring-2 transition-all duration-300 ${
+                  passwordError ? "border-red-500 focus:ring-red-500" : "focus:ring-emerald-500"
                 }`}
                 placeholder="Enter your password"
                 required
                 minLength="8"
-                aria-invalid={passwordError ? "true" : "false"}
-                aria-describedby="password-error"
               />
-              <FaLock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-              <button
+              <motion.button
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.95 }}
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
                 className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 focus:outline-none"
-                aria-label={showPassword ? "Hide password" : "Show password"}
               >
                 {showPassword ? <FaEyeSlash /> : <FaEye />}
-              </button>
+              </motion.button>
             </div>
             {passwordError && (
-              <p id="password-error" className="mt-2 text-sm text-red-500">
+              <motion.p 
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="mt-2 text-sm text-red-500"
+              >
                 {passwordError}
-              </p>
+              </motion.p>
             )}
-          </div>
-          <div>
+          </motion.div>
+
+          {/* Confirm Password Input */}
+          <motion.div variants={itemVariants}>
             <label htmlFor="confirmPassword" className="block text-sm font-medium mb-2">
               Confirm Password
             </label>
             <div className="relative">
+              <FaLock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
               <input
                 type={showConfirmPassword ? "text" : "password"}
                 id="confirmPassword"
                 name="confirmPassword"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
-                className={`w-full px-4 py-2 bg-gray-700 rounded-md pl-10 focus:outline-none focus:ring-2 ${
-                  confirmPasswordError ? "border-red-500 focus:ring-red-500" : "focus:ring-blue-500"
+                className={`w-full px-4 py-2 pl-10 bg-gray-700 rounded-md focus:outline-none focus:ring-2 transition-all duration-300 ${
+                  confirmPasswordError ? "border-red-500 focus:ring-red-500" : "focus:ring-emerald-500"
                 }`}
                 placeholder="Confirm your password"
                 required
                 minLength="8"
-                aria-invalid={confirmPasswordError ? "true" : "false"}
-                aria-describedby="confirmPassword-error"
               />
-              <FaLock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-              <button
+              <motion.button
+                whileHover={{ scale: 1.1 }}
+                whileTap={{ scale: 0.95 }}
                 type="button"
                 onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                 className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 focus:outline-none"
-                aria-label={showConfirmPassword ? "Hide password" : "Show password"}
               >
                 {showConfirmPassword ? <FaEyeSlash /> : <FaEye />}
-              </button>
+              </motion.button>
             </div>
             {confirmPasswordError && (
-              <p id="confirmPassword-error" className="mt-2 text-sm text-red-500">
+              <motion.p 
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="mt-2 text-sm text-red-500"
+              >
                 {confirmPasswordError}
-              </p>
+              </motion.p>
             )}
-          </div>
-          <button
+          </motion.div>
+
+          {/* Submit Button */}
+          <motion.button
+            variants={itemVariants}
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
             type="submit"
-            className={`w-full flex justify-center items-center px-4 py-2 text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none ${
+            className={`w-full flex justify-center items-center px-4 py-2 text-white bg-emerald-600 rounded-md hover:bg-emerald-700 transition-all duration-300 ${
               isLoading ? "opacity-50 cursor-not-allowed" : ""
             }`}
             disabled={isLoading}
@@ -264,17 +358,23 @@ const SignupPage = () => {
             ) : (
               "Sign Up"
             )}
-          </button>
+          </motion.button>
         </form>
-        <div className="mt-6 text-center">
+
+        <motion.div 
+          variants={itemVariants}
+          className="mt-6 text-center"
+        >
           <p className="text-sm">
             Already have an account?{" "}
-            <a href="login" className="text-blue-400 hover:underline">
-              Log in
-            </a>
+            <motion.span whileHover={{ scale: 1.05 }}>
+              <Link to="/login" className="text-emerald-400 hover:underline">
+                Log in
+              </Link>
+            </motion.span>
           </p>
-        </div>
-      </div>
+        </motion.div>
+      </motion.div>
     </div>
   );
 };

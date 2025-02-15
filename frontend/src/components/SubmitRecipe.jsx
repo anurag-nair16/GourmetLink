@@ -5,6 +5,7 @@ const RecipePostCreator = () => {
   const [recipe, setRecipe] = useState({
     name: "",
     ingredients: [""],
+    description: "",
     instructions: "",
     image: null,
     cuisine: "",
@@ -95,6 +96,7 @@ const RecipePostCreator = () => {
     formData.append("prep_time", recipe.cookingTime);
     formData.append("servings", recipe.servings);
     formData.append("tags", recipe.tags);
+    formData.append("description", recipe.description);
 
     // Add the image file (not just the URL)
     if (recipe.image && recipe.image instanceof File) {
@@ -105,7 +107,7 @@ const RecipePostCreator = () => {
   
     setIsLoading(true);
   
-    fetch("http://localhost:8000/submit-recipe/", {
+    fetch("http://127.0.0.1:8000/submit-recipe/", {
       method: "POST",
       headers: {
         "Authorization": `Bearer ${authToken}`,
@@ -127,6 +129,7 @@ const RecipePostCreator = () => {
           tags: [],
           cookingTime: "",
           servings: "",
+          description: "",
         });
       })
       .catch((error) => {
@@ -257,12 +260,24 @@ const RecipePostCreator = () => {
                     )}
                   </button>
                 ))}
+                
               </div>
+
 
               {/* Section Content */}
               <div className="min-h-[300px]">
                 {activeSection === "basic" && (
                   <div className="space-y-6">
+                    <div>
+                      <label className="block text-gray-300 mb-2">Recipe Description</label>
+                      <textarea
+                        name="description"
+                        value={recipe.description}
+                        onChange={handleChange}
+                        placeholder="Describe your recipe..."
+                        className="w-full bg-gray-700 rounded-lg px-4 py-2 text-gray-100 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-emerald-500 min-h-[100px] resize-none"
+                      />
+                    </div>
                     <div>
                       <label className="block text-gray-300 mb-2">Cuisine Type</label>
                       <select

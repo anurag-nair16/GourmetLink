@@ -1,461 +1,314 @@
-import { useEffect, useState } from "react";
-import axios from "axios";
-import { formatDistanceToNow } from "date-fns";
-import Avatar from "react-avatar";
-import { FaStar, FaRegStar, FaStarHalfAlt, FaCheck,  FaHeart, FaRegHeart, FaComment, FaTimes, FaChevronLeft, FaChevronRight } from "react-icons/fa";
+import React, { useEffect, useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Link } from 'react-router-dom';
+import { FaUtensils, FaSearch, FaHeart, FaUserFriends, FaStar, FaArrowRight } from 'react-icons/fa';
+import { IoFastFood } from 'react-icons/io5';
+import { GiCookingPot } from 'react-icons/gi';
 
-
-const HomePage = () => {
-  const [posts, setPosts] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [profileData, setProfileData] = useState({});
-  const [selectedRecipe, setSelectedRecipe] = useState(null);
-  const [currentIndex, setCurrentIndex] = useState(null);
-  const [commentText, setCommentText] = useState("");
-  const [rating, setRating] = useState(0);
-
-  useEffect(() => {
-    const fetchPosts = async () => {
-      try {
-        const token = localStorage.getItem("token");
-        const response = await axios.get("http://127.0.0.1:8000/posts/", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        const profileResponse = await axios.get("http://127.0.0.1:8000/profile/", {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-  
-        setProfileData(profileResponse.data);
-        setPosts(response.data);
-  
-        // Check localStorage for liked posts and update the state
-        const likedPosts = JSON.parse(localStorage.getItem("likedPosts")) || [];
-        const updatedPosts = response.data.map((post) => {
-          if (likedPosts.includes(post.id)) {
-            return {
-              ...post,
-              likes: [...post.likes, profileData.id], // Assuming the user has liked this post
-            };
-          }
-          return post;
-        });
-  
-        setPosts(updatedPosts);
-        setLoading(false);
-      } catch (err) {
-        console.error("Error fetching posts:", err);
-        setError("Failed to load posts.");
-        setLoading(false);
-      }
-    };
-  
-    fetchPosts();
-  }, []);
-  
-
-  const handleLike = async (postId) => {
-    try {
-      const token = localStorage.getItem("token");
-      const response = await axios.post(
-        `http://127.0.0.1:8000/posts/${postId}/like/`,
-        {},
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-  
-      // Update the likes state
-      const updatedPosts = posts.map((post) => {
-        if (post.id === postId) {
-          return {
-            ...post,
-            likes_count: response.data.total_likes,
-            likes: response.data.liked
-              ? [...post.likes, profileData.id]
-              : post.likes.filter((id) => id !== profileData.id),
-          };
-        }
-        return post;
-      });
-  
-      setPosts(updatedPosts);
-  
-      // Save the liked post in localStorage
-      const likedPosts = JSON.parse(localStorage.getItem("likedPosts")) || [];
-      if (response.data.liked) {
-        likedPosts.push(postId);
-      } else {
-        const index = likedPosts.indexOf(postId);
-        if (index !== -1) likedPosts.splice(index, 1);
-      }
-  
-      localStorage.setItem("likedPosts", JSON.stringify(likedPosts));
-    } catch (err) {
-      console.error("Error liking post:", err);
+const Home = () => {
+  const featuredRecipes = [
+    {
+      id: 1,
+      recipe: {
+        name: "Classic Margherita Pizza",
+        image: "https://images.unsplash.com/photo-1604068549290-dea0e4a305ca?ixlib=rb-4.0.3",
+        average_rating: 4.9,
+        prep_time: 30,
+        servings: 4,
+        tags: "Italian, Pizza, Vegetarian",
+        description: "A timeless Italian favorite with fresh basil, mozzarella, and tomatoes"
+      },
+      chef: "Chef Mario",
+      likes_count: 1240
+    },
+    {
+      id: 2,
+      recipe: {
+        name: "Japanese Sushi Roll",
+        image: "https://images.unsplash.com/photo-1579871494447-9811cf80d66c?ixlib=rb-4.0.3",
+        average_rating: 4.8,
+        prep_time: 45,
+        servings: 3,
+        tags: "Japanese, Seafood, Sushi",
+        description: "Fresh salmon and avocado rolled in seasoned rice and nori"
+      },
+      chef: "Chef Yuki",
+      likes_count: 956
+    },
+    {
+      id: 3,
+      recipe: {
+        name: "Creamy Butter Chicken",
+        image: "https://images.unsplash.com/photo-1603894584373-5ac82b2ae398?ixlib=rb-4.0.3",
+        average_rating: 4.9,
+        prep_time: 50,
+        servings: 6,
+        tags: "Indian, Curry, Chicken",
+        description: "Rich and creamy Indian curry with tender chicken pieces"
+      },
+      chef: "Chef Priya",
+      likes_count: 1567
+    },
+    {
+      id: 4,
+      recipe: {
+        name: "Chocolate Lava Cake",
+        image: "https://images.unsplash.com/photo-1624353365286-3f8d62daad51?ixlib=rb-4.0.3",
+        average_rating: 4.7,
+        prep_time: 25,
+        servings: 2,
+        tags: "Dessert, Chocolate, Baking",
+        description: "Decadent chocolate cake with a molten center"
+      },
+      chef: "Chef Sophie",
+      likes_count: 892
     }
-  };
-  
+  ];
 
-  const handleRate = async (postId, value) => {
-    try {
-      const token = localStorage.getItem("token");
-      const response = await axios.post(
-        `http://127.0.0.1:8000/posts/${postId}/rate/`,
-        { value },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-  
-      // Update both posts and selectedRecipe with the new rating
-      const updatedPosts = posts.map((post) => {
-        if (post.recipe.id === selectedRecipe.id) {
-          return {
-            ...post,
-            recipe: {
-              ...post.recipe,
-              average_rating: response.data.average_rating
-            }
-          };
-        }
-        return post;
-      });
-  
-      // Update the posts state
-      setPosts(updatedPosts);
-  
-      // Update the selectedRecipe state to reflect the new rating
-      setSelectedRecipe({
-        ...selectedRecipe,
-        average_rating: response.data.average_rating
-      });
-  
-      // Reset the rating input
-      setRating(0);
-  
-    } catch (err) {
-      console.error("Error rating post:", err);
-      if (err.response) {
-        console.error("Error response:", err.response);
-        console.error("Error details:", err.response.data);
-      } else {
-        console.error("Error without response:", err.message);
-      }
+  const features = [
+    {
+      icon: <FaUtensils className="text-4xl text-emerald-500" />,
+      title: "Share Recipes",
+      description: "Upload and share your favorite recipes with the community"
+    },
+    {
+      icon: <FaSearch className="text-4xl text-emerald-500" />,
+      title: "Discover",
+      description: "Find new and exciting recipes from around the world"
+    },
+    {
+      icon: <FaHeart className="text-4xl text-emerald-500" />,
+      title: "Save Favorites",
+      description: "Save recipes you love and build your personal cookbook"
+    },
+    {
+      icon: <FaUserFriends className="text-4xl text-emerald-500" />,
+      title: "Community",
+      description: "Connect with other food lovers and share your experiences"
     }
-  };
-  
-
-  const handleComment = async (postId) => {
-    try {
-      const token = localStorage.getItem("token");
-      const response = await axios.post(
-        `http://127.0.0.1:8000/posts/${postId}/comment/`,
-        { text: commentText },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-
-      const updatedPosts = posts.map((post) => {
-        if (post.id === postId) {
-          return {
-            ...post,
-            comments: [...post.comments, response.data],
-          };
-        }
-        return post;
-      });
-
-      setPosts(updatedPosts);
-      setCommentText("");
-    } catch (err) {
-      console.error("Error adding comment:", err);
-    }
-  };
-
-  const openModal = (recipe, index) => {
-    setSelectedRecipe(recipe);
-    setCurrentIndex(index);
-  };
-
-  const closeModal = () => {
-    setSelectedRecipe(null);
-    setCurrentIndex(null);
-  };
-
-  const handleArrowClick = (direction) => {
-    const newIndex =
-      direction === "left"
-        ? (currentIndex - 1 + posts.length) % posts.length
-        : (currentIndex + 1) % posts.length;
-    setSelectedRecipe(posts[newIndex].recipe);
-    setCurrentIndex(newIndex);
-  };
-
-  const renderRatingStars = (averageRating) => {
-    const fullStars = Math.floor(averageRating); // Count full stars
-    const halfStar = averageRating % 1 >= 0.5 ? 1 : 0; // Check if there should be a half star
-    const emptyStars = 5 - fullStars - halfStar; // Remaining empty stars
-  
-    const stars = [];
-  
-    // Full stars
-    for (let i = 0; i < fullStars; i++) {
-      stars.push(<FaStar key={`full-${i}`} size={20} className="text-yellow-500" />);
-    }
-  
-    // Half star (if applicable)
-    if (halfStar) {
-      stars.push(<FaStarHalfAlt key="half" size={20} className="text-yellow-500" />);
-    }
-  
-    // Empty stars
-    for (let i = 0; i < emptyStars; i++) {
-      stars.push(<FaRegStar key={`empty-${i}`} size={20} className="text-gray-400" />);
-    }
-  
-    return stars;
-  };
+  ];
 
   return (
     <div className="min-h-screen bg-gray-900">
-      {/* Header */}
-      
-      <header className="relative flex items-center justify-center overflow-hidden py-12">
-        <div className="absolute inset-0 bg-gradient-to-br from-emerald-600 to-teal-700 z-0"></div>
-        <div className="z-10 text-center">
-            <h1 className="text-6xl font-bold bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent animate-gradient">
-                Welcome to Recipe Paradise 🍴
-            </h1>
-            <p className="mt-4 text-xl text-white">
-                Find, share, and enjoy delicious recipes from around the world.
-            </p><br />
-            <a href="#" className="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-3 px-6 rounded-full transition-colors inline-block">
-              Explore All
-             </a>
+      {/* Hero Section */}
+      <motion.section 
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 1 }}
+        className="relative h-screen flex items-center justify-center overflow-hidden"
+      >
+        {/* Video Background */}
+        <div className="absolute inset-0">
+          <div className="absolute inset-0 bg-black/60 z-10"></div>
+          <video
+            autoPlay
+            loop
+            muted
+            playsInline
+            className="absolute top-0 left-0 w-full h-full object-cover"
+            style={{ position: 'absolute' }} // This ensures the video stays within the section
+          >
+            <source 
+              src="/videos/mixkit-preparing-a-bowl-with-yogurt-and-fruit-43925-full-hd.mp4"
+              type="video/mp4"
+            />
+            Your browser does not support the video tag.
+          </video>
         </div>
-    </header>
 
-      {/* Main Content */}
-      <main className="container mx-auto px-4 py-8">
-        {loading ? (
-          <div className="flex justify-center items-center h-64">
-            <div className="text-emerald-500">Loading...</div>
-          </div>
-        ) : error ? (
-          <div className="text-red-500 text-center p-4 bg-red-900/20 rounded-lg">
-            {error}
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {posts.map((post, index) => (
-              <div
-                key={post.id}
-                onClick={() => openModal(post.recipe, index)}
-                className="bg-gray-800 rounded-xl shadow-lg hover:shadow-emerald-500/10 transition-all duration-300 overflow-hidden cursor-pointer"
+        {/* Content Overlay */}
+        <div className="relative z-20 text-center px-4 max-w-7xl mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 50 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5, duration: 0.8 }}
+            className="mb-8"
+          >
+            <h1 className="text-5xl md:text-7xl font-bold text-white mb-6 leading-tight">
+              <span className="block">Cook</span>
+              <span className="block text-emerald-400">Share</span>
+              <span className="block">Enjoy</span>
+            </h1>
+            <div className="w-24 h-1 bg-emerald-500 mx-auto my-8"></div>
+          </motion.div>
+
+          <motion.p 
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.7, duration: 0.8 }}
+            className="text-xl md:text-2xl text-gray-300 mb-12 max-w-3xl mx-auto"
+          >
+            Join our culinary community where passion meets plate. 
+            Share your recipes, discover new flavors, and connect with food lovers worldwide.
+          </motion.p>
+
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.9, duration: 0.8 }}
+            className="flex flex-col md:flex-row gap-6 justify-center"
+          >
+            <Link 
+              to="/submit-recipe"
+              className="group relative px-8 py-4 bg-emerald-600 text-white rounded-full overflow-hidden"
+            >
+              <span className="absolute inset-0 w-0 bg-emerald-700 transition-all duration-500 ease-out group-hover:w-full"></span>
+              <span className="relative flex items-center justify-center">
+                Share Your Recipe
+                <FaArrowRight className="ml-2 group-hover:translate-x-1 transition-transform duration-300" />
+              </span>
+            </Link>
+            <Link 
+              to="/posts"
+              className="group relative px-8 py-4 bg-white/10 backdrop-blur-sm text-white rounded-full overflow-hidden hover:bg-white/20 transition-colors duration-300"
+            >
+              <span className="relative flex items-center justify-center">
+                Explore Recipes
+                <FaArrowRight className="ml-2 group-hover:translate-x-1 transition-transform duration-300" />
+              </span>
+            </Link>
+          </motion.div>
+        </div>
+      </motion.section>
+
+      {/* Features Section */}
+      <section className="py-20 bg-gray-800">
+        <div className="container mx-auto px-4">
+          <motion.h2 
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+            className="text-4xl font-bold text-center text-white mb-16"
+          >
+            Why Choose Our Platform?
+          </motion.h2>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            {features.map((feature, index) => (
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: index * 0.1 }}
+                className="bg-gray-900 p-6 rounded-xl hover:transform hover:scale-105 transition-all duration-300"
               >
-                {/* Card Header */}
-                <div className="p-4 border-b border-gray-700">
-                  <div className="flex items-center space-x-3">
-                    <Avatar name={post.user} size="40" round={true} />
-                    <p className="text-gray-300 font-medium">{post.user}</p>
-                  </div>
+                <div className="flex flex-col items-center text-center">
+                  {feature.icon}
+                  <h3 className="text-xl font-semibold text-white mt-4 mb-2">{feature.title}</h3>
+                  <p className="text-gray-400">{feature.description}</p>
                 </div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
 
-                {/* Card Image */}
-                <div className="relative aspect-video">
-                  <img
-                    src={post.recipe.image}
-                    alt={post.recipe.name}
-                    className="w-full h-full object-cover"
-                  />
-                </div>
+      {/* Featured Recipes Section */}
+    <section className="py-20 bg-gray-900">
+      <div className="container mx-auto px-4">
+        <motion.h2 
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8 }}
+          className="text-4xl font-bold text-center text-white mb-16"
+        >
+          Featured Recipes
+        </motion.h2>
 
-                {/* Card Content */}
-                <div className="p-4">
-                <div className="flex justify-between items-start mb-2">
-                  <h3 className="text-xl font-semibold text-gray-100">
-                    {post.recipe.name}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+          {featuredRecipes.map((recipe, index) => (
+            <motion.div
+              key={recipe.id}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: index * 0.1 }}
+              className="bg-gray-800 rounded-xl overflow-hidden group hover:transform hover:scale-105 transition-all duration-300"
+            >
+              <div className="relative aspect-[4/3]">
+                <img 
+                  src={recipe.recipe.image} 
+                  alt={recipe.recipe.name}
+                  className="w-full h-full object-cover transition-transform duration-300"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
+                <div className="absolute bottom-0 left-0 p-4 w-full">
+                  <h3 className="text-xl font-semibold text-white mb-2">
+                    {recipe.recipe.name}
                   </h3>
-                  <span className="text-xs text-gray-400">
-                    {formatDistanceToNow(new Date(post.recipe.created_at), { addSuffix: true })}
-                  </span>
-                </div>
-                  
-                  {/* Tags */}
-                  <div className="flex flex-wrap gap-2 mb-3">
-                    {post.recipe.tags?.split(",").map((tag, idx) => (
-                      <span key={idx} className="px-2 py-1 bg-gray-700 rounded-full text-xs text-emerald-400">
-                        #{tag.trim()}
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-1">
+                      <FaStar className="text-yellow-500" size={16} />
+                      <span className="text-white">{recipe.recipe.average_rating}</span>
+                    </div>
+                    <span className="text-emerald-400 text-sm">by {recipe.chef}</span>
+                  </div>
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    {recipe.recipe.tags.split(", ").map((tag, i) => (
+                      <span 
+                        key={i}
+                        className="px-2 py-1 bg-emerald-600/20 text-emerald-400 rounded-full text-xs"
+                      >
+                        {tag}
                       </span>
                     ))}
                   </div>
-
-                  {/* Metrics */}
-                  <div className="flex items-center justify-between text-gray-400">
-                    <div className="flex items-center space-x-4">
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleLike(post.id);
-                        }}
-                        className="flex items-center space-x-1 hover:text-emerald-500 transition-colors"
-                      >
-                        {post.likes.includes(profileData.id) ? (
-                          <FaHeart className="text-red-500" />
-                        ) : (
-                          <FaRegHeart />
-                        )}
-                        <span>{post.likes_count}</span>
-                      </button>
-                      
-                      <div className="flex items-center space-x-1">
-                        <FaComment />
-                        <span>{post.comments.length}</span>
-                      </div>
-                    </div>
-
-                    <div className="flex items-center">
-                      {renderRatingStars(post.average_rating)}
-                    </div>
-                  </div>
                 </div>
               </div>
-            ))}
-          </div>
-        )}
-      </main>
-
-      {/* Modal */}
-      {selectedRecipe && (
-        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
-          <div className="bg-gray-800 rounded-2xl w-full max-w-5xl max-h-[90vh] overflow-hidden relative">
-            {/* Modal Header */}
-            <div className="p-4 border-b border-gray-700 flex justify-between items-center">
-              <h2 className="text-2xl font-bold text-gray-100">{selectedRecipe.name}</h2>
-              <button
-                onClick={closeModal}
-                className="text-gray-400 hover:text-white transition-colors"
-              >
-                <FaTimes size={24} />
-              </button>
-            </div>
-
-            {/* Modal Content */}
-            <div className="flex flex-col lg:flex-row h-[calc(90vh-80px)]">
-              {/* Left Column - Image */}
-              <div className="lg:w-1/2 p-4">
-                <div className="relative aspect-video rounded-lg overflow-hidden">
-                  <img
-                    src={selectedRecipe.image}
-                    alt={selectedRecipe.name}
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-
-                {/* Rating Section */}
-                <div className="mt-4 p-4 bg-gray-700/50 rounded-lg">
-                  <h3 className="text-lg font-semibold text-gray-200 mb-2">Rate this Recipe</h3>
-                  <div className="flex items-center space-x-2">
-                    {[1, 2, 3, 4, 5].map((star) => (
-                      <button
-                        key={star}
-                        onClick={() => setRating(star)}
-                        className="hover:scale-110 transition-transform"
-                      >
-                        {star <= rating ? (
-                          <FaStar size={24} className="text-yellow-500" />
-                        ) : (
-                          <FaRegStar size={24} className="text-gray-400" />
-                        )}
-                      </button>
-                    ))}
-                    <button
-                      onClick={() => handleRate(selectedRecipe.id, rating)}
-                      className="ml-4 bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg transition-colors"
-                    >
-                      Submit
-                    </button>
-                  </div>
+              <div className="p-4 border-t border-gray-700">
+                <p className="text-gray-400 text-sm line-clamp-2">
+                  {recipe.recipe.description}
+                </p>
+                <div className="mt-3 flex items-center justify-between text-sm">
+                  <span className="text-gray-400">
+                    🕒 {recipe.recipe.prep_time} mins
+                  </span>
+                  <span className="text-gray-400">
+                    👥 {recipe.recipe.servings} servings
+                  </span>
                 </div>
               </div>
-
-              {/* Right Column - Details */}
-              <div className="lg:w-1/2 p-4 overflow-y-auto">
-                {/* Recipe Info */}
-                <div className="space-y-6">
-                  <div>
-                    <h3 className="text-lg font-semibold text-emerald-400 mb-2">Ingredients</h3>
-                    <ul className="list-disc list-inside text-gray-300 space-y-1">
-                      {selectedRecipe.ingredients?.split(",").map((ingredient, idx) => (
-                        <li key={idx}>{ingredient.trim()}</li>
-                      ))}
-                    </ul>
-                  </div>
-
-                  <div>
-                    <h3 className="text-lg font-semibold text-emerald-400 mb-2">Instructions</h3>
-                    <p className="text-gray-300 whitespace-pre-line">{selectedRecipe.instructions}</p>
-                  </div>
-
-                  <div className="flex flex-wrap gap-3">
-                    <span className="px-3 py-1 bg-emerald-600/20 text-emerald-400 rounded-full text-sm">
-                      ⏳ {selectedRecipe.prep_time} min
-                    </span>
-                    <span className="px-3 py-1 bg-emerald-600/20 text-emerald-400 rounded-full text-sm">
-                      🍽️ {selectedRecipe.servings} servings
-                    </span>
-                  </div>
-
-                  {/* Comments Section */}
-                  <div className="mt-6">
-                    <h3 className="text-lg font-semibold text-emerald-400 mb-4">Comments</h3>
-                    <div className="space-y-4 max-h-[300px] overflow-y-auto pr-2">
-                      {posts[currentIndex]?.comments.map((comment, idx) => (
-                        <div key={idx} className="bg-gray-700/50 p-3 rounded-lg">
-                          <div className="flex items-center space-x-3 mb-2">
-                            <Avatar name={comment.user} size="32" round={true} />
-                            <p className="font-medium text-gray-200">{comment.user}</p>
-                          </div>
-                          <p className="text-gray-300">{comment.text}</p>
-                        </div>
-                      ))}
-                    </div>
-
-                    {/* Comment Input */}
-                    <div className="mt-4 flex items-center space-x-3">
-                      <input
-                        type="text"
-                        value={commentText}
-                        onChange={(e) => setCommentText(e.target.value)}
-                        placeholder="Add a comment..."
-                        className="flex-1 bg-gray-700 text-gray-100 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                      />
-                      <button
-                        onClick={() => handleComment(posts[currentIndex].id)}
-                        className="bg-emerald-600 hover:bg-emerald-700 text-white p-2 rounded-lg transition-colors"
-                      >
-                        <FaCheck size={20} />
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Navigation Arrows */}
-          <button
-            onClick={() => handleArrowClick("left")}
-            className="fixed left-4 top-1/2 -translate-y-1/2 hidden lg:block bg-gray-800 hover:bg-gray-700 text-white p-3 rounded-full transition-colors"
-          >
-            <FaChevronLeft size={24} />
-          </button>
-          <button
-            onClick={() => handleArrowClick("right")}
-            className="fixed right-4 top-1/2 -translate-y-1/2 hidden lg:block bg-gray-800 hover:bg-gray-700 text-white p-3 rounded-full transition-colors"
-          >
-            <FaChevronRight size={24} />
-          </button>
+            </motion.div>
+          ))}
         </div>
-      )}
+
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8 }}
+          className="text-center mt-12"
+        >
+          <Link 
+            to="/posts"
+            className="inline-flex items-center px-8 py-4 bg-emerald-600 text-white rounded-full hover:bg-emerald-700 transition-all duration-300 transform hover:scale-105"
+          >
+            Explore All Recipes
+            <FaArrowRight className="ml-2" />
+          </Link>
+        </motion.div>
+      </div>
+    </section>
+
+      {/* Call to Action Section */}
+      <motion.section 
+        initial={{ opacity: 0 }}
+        whileInView={{ opacity: 1 }}
+        transition={{ duration: 1 }}
+        className="py-20 bg-emerald-600"
+      >
+        <div className="container mx-auto px-4 text-center">
+          <h2 className="text-4xl font-bold text-white mb-8">Ready to Start Your Culinary Journey?</h2>
+          <p className="text-xl text-white/90 mb-12">Join our community of food lovers and share your recipes with the world</p>
+          <Link 
+            to="/signup"
+            className="inline-flex items-center px-8 py-4 bg-white text-emerald-600 rounded-full hover:bg-gray-100 transition-all duration-300 transform hover:scale-105"
+          >
+            Get Started
+            <FaArrowRight className="ml-2" />
+          </Link>
+        </div>
+      </motion.section>
     </div>
   );
 };
 
-export default HomePage;
+export default Home;

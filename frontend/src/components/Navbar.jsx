@@ -30,7 +30,7 @@ const Navbar = () => {
     // Remove the token from localStorage
     localStorage.removeItem("token");
     // Redirect to the login page
-    window.location.href = "/login";
+    window.location.href = "/";
   };
 
   return (
@@ -46,7 +46,7 @@ const Navbar = () => {
         <div className="hidden md:flex items-center space-x-9">
           {isAuthenticated ? (
             <>
-              <NavItem icon={<FaHome />} text="Home" to="/home" />
+              <NavItem icon={<FaHome />} text="Home" to="/" />
               <NavItem icon={<FaUtensils />} text="Submit Recipe" to="/submit-recipe" />
               <NavItem icon={<FaUser />} text="Profile" to="/profile" />
               <button onClick={handleLogoutClick} className="flex items-center text-white hover:text-gray-300 transition-all duration-300 ease-in-out">
@@ -56,6 +56,7 @@ const Navbar = () => {
             </>
           ) : (
             <>
+              <NavItem icon={<FaHome />} text="Home" to="/" />
               <NavItem icon={<FaSignInAlt />} text="Login" to="/login" />
               <NavItem icon={<FaUserPlus />} text="Signup" to="/signup" />
             </>
@@ -77,7 +78,7 @@ const Navbar = () => {
         <div className="md:hidden bg-gray-900 p-4 transition-all duration-300 ease-in-out transform">
           {isAuthenticated ? (
             <>
-              <NavItem icon={<FaHome />} text="Home" to="/home" onClick={toggleMenu} />
+              <NavItem icon={<FaHome />} text="Home" to="/" onClick={toggleMenu} />
               <NavItem icon={<FaUtensils />} text="Submit Recipe" to="/submit-recipe" onClick={toggleMenu} />
               <NavItem icon={<FaUser />} text="Profile" to="/profile" onClick={toggleMenu} />
               <NavItem
@@ -91,6 +92,7 @@ const Navbar = () => {
             </>
           ) : (
             <>
+              <NavItem icon={<FaHome />} text="Home" to="/" onClick={toggleMenu} />
               <NavItem icon={<FaSignInAlt />} text="Login" to="/login" onClick={toggleMenu} />
               <NavItem icon={<FaUserPlus />} text="Signup" to="/signup" onClick={toggleMenu} />
             </>

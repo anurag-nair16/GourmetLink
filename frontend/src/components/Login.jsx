@@ -2,6 +2,42 @@ import React, { useState, useEffect, useCallback  } from "react";
 import { FaEnvelope, FaLock, FaEye, FaEyeSlash } from "react-icons/fa";
 import { AiOutlineLoading3Quarters } from "react-icons/ai";
 import { GoogleOAuthProvider, GoogleLogin } from '@react-oauth/google'; // Add Google login
+import { motion } from 'framer-motion';
+import { Link } from 'react-router-dom';
+
+const containerVariants = {
+  hidden: { 
+    opacity: 0,
+    scale: 0.9
+  },
+  visible: { 
+    opacity: 1,
+    scale: 1,
+    transition: {
+      duration: 0.6,
+      ease: "easeOut",
+      when: "beforeChildren",
+      staggerChildren: 0.1
+    }
+  }
+};
+
+const itemVariants = {
+  hidden: { 
+    opacity: 0,
+    y: 20
+  },
+  visible: { 
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: 0.5,
+      ease: "easeOut"
+    }
+  }
+};
+
+const message = 'Please login first to use the desired features';
 
 const LoginPage = () => {
   const [email, setEmail] = useState("");
@@ -65,7 +101,7 @@ const LoginPage = () => {
           alert("Login successful");
           
           // Redirect to home or dashboard page
-          window.location.href = '/home'; // or use react-router: navigate('/home')
+          window.location.href = '/'; // or use react-router: navigate('/home')
         } else {
           const errorData = await response.json();
           alert(errorData.detail || "An error occurred");
@@ -77,11 +113,10 @@ const LoginPage = () => {
       }
     }
   };
-  
 
   const handleGoogleSuccess = (response) => {
     console.log("Google login successful", response);
-    window.location.href = '/home'; // Redirect to home after successful Google login
+    window.location.href = '/'; // Redirect to home after successful Google login
   };
 
   const handleGoogleFailure = (error) => {
@@ -103,16 +138,46 @@ const LoginPage = () => {
   };
 
   return (
-    <GoogleOAuthProvider clientId="YOUR_GOOGLE_CLIENT_ID"> {/* Google OAuth Provider */}
+    <GoogleOAuthProvider clientId="YOUR_GOOGLE_CLIENT_ID">
       <div className="relative min-h-screen flex items-center justify-center text-white p-4">
-        <div style={backgroundImageStyle} className="absolute inset-0" />
-        <div className="absolute inset-0 bg-black opacity-50" /> {/* Dark overlay */}
-        <div className="w-full max-w-md bg-gray-800 rounded-lg shadow-lg p-8 backdrop-blur-sm bg-opacity-75 relative z-10">
-          <h2 className="text-3xl font-bold text-center mb-8">Login</h2>
+        {/* Video Background */}
+        <div className="absolute inset-0 w-full h-full">
+          <div className="absolute inset-0 bg-black/60 z-10"></div>
+          <motion.video
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 1 }}
+            autoPlay
+            loop
+            muted
+            playsInline
+            className="w-full h-full object-cover"
+          >
+            <source 
+              src="/videos/mixkit-preparing-a-bowl-with-yogurt-and-fruit-43925-full-hd.mp4" 
+              type="video/mp4"
+            />
+            Your browser does not support the video tag.
+          </motion.video>
+        </div>
+  
+        {/* Login Form */}
+        <motion.div
+          variants={containerVariants}
+          initial="hidden"
+          animate="visible"
+          className="w-full max-w-md bg-gray-800/80 backdrop-blur-md rounded-lg shadow-lg p-8 relative z-20"
+        >
+          <motion.h2 
+            variants={itemVariants}
+            className="text-3xl font-bold text-center mb-8"
+          >
+            Login
+          </motion.h2>
           
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Email input */}
-            <div>
+            <motion.div variants={itemVariants}>
               <label className="block text-sm font-medium mb-1">Email</label>
               <div className="relative">
                 <FaEnvelope className="absolute left-3 top-2.5 text-gray-500" />
@@ -120,16 +185,16 @@ const LoginPage = () => {
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full pl-10 py-2 text-black rounded-md"
+                  className="w-full pl-10 py-2 text-black rounded-md focus:ring-2 focus:ring-emerald-500 transition-all duration-300"
                   placeholder="Enter your email"
                   required
                 />
               </div>
               {emailError && <p className="text-red-500 text-xs mt-1">{emailError}</p>}
-            </div>
-
+            </motion.div>
+  
             {/* Password input */}
-            <div>
+            <motion.div variants={itemVariants}>
               <label className="block text-sm font-medium mb-1">Password</label>
               <div className="relative">
                 <FaLock className="absolute left-3 top-2.5 text-gray-500" />
@@ -137,71 +202,97 @@ const LoginPage = () => {
                   type={showPassword ? "text" : "password"}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full pl-10 py-2 text-black rounded-md"
+                  className="w-full pl-10 py-2 text-black rounded-md focus:ring-2 focus:ring-emerald-500 transition-all duration-300"
                   placeholder="Enter your password"
                   required
                 />
-                <div
+                <motion.div
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.95 }}
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute right-3 top-2.5 cursor-pointer"
                 >
                   {showPassword ? <FaEyeSlash /> : <FaEye />}
-                </div>
+                </motion.div>
               </div>
               {passwordError && <p className="text-red-500 text-xs mt-1">{passwordError}</p>}
-            </div>
-
+            </motion.div>
+  
             {/* Remember me checkbox */}
-            <div className="flex items-center justify-between">
+            <motion.div 
+              variants={itemVariants}
+              className="flex items-center justify-between"
+            >
               <label className="flex items-center">
                 <input
                   type="checkbox"
                   checked={rememberMe}
                   onChange={(e) => setRememberMe(e.target.checked)}
-                  className="text-red-600"
+                  className="text-emerald-600 rounded transition-all duration-300"
                 />
                 <span className="ml-2">Remember me</span>
               </label>
-              <a href="www.google.com" className="text-sm text-blue-400 hover:underline">Forgot password?</a>
-            </div>
-
+              <motion.a 
+                whileHover={{ scale: 1.05 }}
+                href="www.google.com" 
+                className="text-sm text-emerald-400 hover:underline"
+              >
+                Forgot password?
+              </motion.a>
+            </motion.div>
+  
             {/* Submit button */}
-            <button
+            <motion.button
+              variants={itemVariants}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
               type="submit"
-              className="w-full bg-blue-600 text-white py-2 px-4 rounded-md font-semibold transition-colors hover:bg-blue-700"
+              className="w-full bg-emerald-600 text-white py-2 px-4 rounded-md font-semibold transition-all duration-300 hover:bg-emerald-700"
             >
               {isLoading ? (
                 <AiOutlineLoading3Quarters className="animate-spin h-5 w-5 mx-auto" />
               ) : (
                 "Login"
               )}
-            </button>
+            </motion.button>
           </form>
           
-          <div className="flex items-center justify-center my-6">
+          <motion.div 
+            variants={itemVariants}
+            className="flex items-center justify-center my-6"
+          >
             <hr className="w-full border-gray-400" />
             <span className="px-4 text-gray-400">OR</span>
             <hr className="w-full border-gray-400" />
-          </div>
+          </motion.div>
+  
           {/* Google Login */}
-          <div className="mt-6">
+          <motion.div 
+            variants={itemVariants}
+            className="mt-6"
+          >
             <GoogleLogin
               onSuccess={handleGoogleSuccess}
               onError={handleGoogleFailure}
               buttonText="Continue with Google"
-              className="w-full flex justify-center bg-red-600 text-white py-2 px-4 rounded-md font-semibold transition-colors hover:bg-red-700"
+              className="w-full flex justify-center bg-red-600 text-white py-2 px-4 rounded-md font-semibold transition-all duration-300 hover:bg-red-700 hover:scale-[1.02]"
             />
-          </div>
-
-          <div className="mt-6 text-center">
+          </motion.div>
+  
+          <motion.div 
+            variants={itemVariants}
+            className="mt-6 text-center"
+          >
             <p className="text-sm">
               Don't have an account?{" "}
-              <a href="signup" className="text-blue-400 hover:underline">
-                Sign up here
-              </a>
+              <motion.span whileHover={{ scale: 1.05 }}>
+                <Link to="/signup" className="text-emerald-400 hover:underline">
+                  Sign up here
+                </Link>
+              </motion.span>
             </p>
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
       </div>
     </GoogleOAuthProvider>
   );
