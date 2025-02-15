@@ -1,7 +1,8 @@
 // RecipeModal.jsx
 import { FaTimes, FaCheck, FaChevronLeft, FaChevronRight, FaStar, FaRegStar } from "react-icons/fa";
 import Avatar from "react-avatar";
-import {  useState, useRef } from 'react';
+import {  useState, useRef, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 
 const RecipeModal = ({
   selectedRecipe,
@@ -21,7 +22,14 @@ const RecipeModal = ({
   const modalRef = useRef(null);
   const touchStartX = useRef(null);
   const touchEndX = useRef(null);
-  const minSwipeDistance = 50;
+  const minSwipeDistance = 50;  
+  const scrollableRef = useRef(null);
+
+  useEffect(() => {
+    if (scrollableRef.current) {
+      scrollableRef.current.scrollTop = 0;
+    }
+  }, [selectedRecipe]);
 
   const handleClose = () => {
     setIsLeaving(true);
@@ -63,6 +71,7 @@ const RecipeModal = ({
     touchStartX.current = null;
     touchEndX.current = null;
   };
+
   return (
     <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
       <div 
@@ -118,7 +127,7 @@ const RecipeModal = ({
             </div>
           </div>
 
-          <div className="lg:w-1/2 p-4 overflow-y-auto">
+          <div className="lg:w-1/2 p-4 overflow-y-auto" ref={scrollableRef}>
             <div className="space-y-6">
               <div>
                 <h3 className="text-lg font-semibold text-emerald-400 mb-2">Ingredients</h3>

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Route, Routes } from 'react-router-dom';
+import { Route, Routes, useLocation } from 'react-router-dom';
 import "./index.css";
 import Navbar from './components/Navbar'; // Adjust the path based on your file structure
 import SubmitRecipe from './components/SubmitRecipe'; // Example of your submit recipe component
@@ -47,6 +47,11 @@ const App = () => {
     removeExpiredToken();
   }, []);
   
+  const location = useLocation();
+
+  useEffect(() => {
+    window.scrollTo(0, 0); // Scroll to top whenever the route changes
+  }, [location]);
   return (
     <>
       <Navbar />

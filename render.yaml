@@ -1,0 +1,29 @@
+databases:
+  - name: gourmetlink-db
+    databaseName: gourmetlink
+    user: postgres
+    password: chaosdevil
+
+services:
+  - type: web
+    name: django-backend
+    env: python
+    buildCommand: pip install -r backend/requirements.txt
+    startCommand: gunicorn backend.gourmet.wsgi:application
+    envVars:
+      - key: DJANGO_SECRET_KEY
+        value: +^+hgh(z=)vrs6^&39^@+!y&sljw!9&3mwv@!j1qpw%zl7vtph
+      - key: DATABASE_URL
+        value: postgres://postgres:chaosdevil@dpg-cuodl1aj1k6c73987230-a:5432/gourmetlink
+        fromDatabase:
+          name: gourmetlink-db
+          property: connectionString
+
+  - type: web
+    name: react-frontend
+    env: node
+    buildCommand: cd frontend && npm install && npm run build
+    startCommand: cd frontend && serve -s build
+    envVars:
+      - key: REACT_APP_API_URL
+        value: your_backend_api_url
