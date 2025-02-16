@@ -9,7 +9,7 @@ services:
     name: django-backend
     env: python
     buildCommand: pip install -r backend/requirements.txt
-    startCommand: gunicorn gourmet.wsgi:application
+    startCommand: gunicorn gourmet.wsgi
     envVars:
       - key: DJANGO_SECRET_KEY
         value: +^+hgh(z=)vrs6^&39^@+!y&sljw!9&3mwv@!j1qpw%zl7vtph
@@ -23,7 +23,7 @@ services:
     name: react-frontend
     env: node
     buildCommand: npm install && npm run build
-    startCommand: serve -s build
+    startCommand: npm run start
     envVars:
       - key: REACT_APP_API_URL
         value: https://gourmetlink.onrender.com
