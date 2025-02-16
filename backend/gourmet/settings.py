@@ -33,7 +33,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-)8b0a-@sq0#q#%ombex$jgpg&pw+4uhk)mu0*=f!m-v)i56x8@'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.getenv('DEBUG', 'False') == 'True'
 
 ALLOWED_HOSTS = ['*']
 
@@ -113,18 +113,20 @@ WSGI_APPLICATION = 'gourmet.wsgi.application'
 #     }
 # }
 
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.postgresql_psycopg2',
+#         'NAME': 'gourmetlink',
+#         'USER': 'postgres',
+#         'PASSWORD': 'chaosdevil',
+#         'HOST': 'localhost',  
+#         'PORT': '5432',       
+#     }
+# }
+
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': 'gourmetlink',
-        'USER': 'postgres',
-        'PASSWORD': 'chaosdevil',
-        'HOST': 'localhost',  
-        'PORT': '5432',       
-    }
+    'default': dj_database_url.config(default=os.getenv('DATABASE_URL'))
 }
-
-
 
 # Password validation
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
@@ -182,3 +184,5 @@ STATIC_URL = 'static/'
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.RawMediaCloudinaryStorage'
+
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
