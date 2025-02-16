@@ -9,7 +9,7 @@ services:
     name: django-backend
     env: python
     buildCommand: pip install -r backend/requirements.txt
-    startCommand: gunicorn backend.gourmet.wsgi:application
+    startCommand: gunicorn gourmet.wsgi:application
     envVars:
       - key: DJANGO_SECRET_KEY
         value: +^+hgh(z=)vrs6^&39^@+!y&sljw!9&3mwv@!j1qpw%zl7vtph
