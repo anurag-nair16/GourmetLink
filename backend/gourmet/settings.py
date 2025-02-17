@@ -140,7 +140,7 @@ DEFAULT_FILE_STORAGE = 'cloudinary_storage.storage.RawMediaCloudinaryStorage'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 CLOUDINARY_STORAGE = {
-    'CLOUD_NAME': os.getenv('CLOUDINARY_CLOUD_NAME', 'dhmmausdb'),
-    'API_KEY': os.getenv('CLOUDINARY_API_KEY', '211566653991499'),
-    'API_SECRET': os.getenv('CLOUDINARY_API_SECRET', 'cXLmsNnv-XLli5fC9bmpa9wbRuk')
+    'CLOUD_NAME': os.getenv('CLOUDINARY_CLOUD_NAME'),
+    'API_KEY': os.getenv('CLOUDINARY_API_KEY'),
+    'API_SECRET': os.getenv('CLOUDINARY_API_SECRET')
 }
