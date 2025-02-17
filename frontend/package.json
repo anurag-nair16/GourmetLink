@@ -31,7 +31,7 @@
     "web-vitals": "^2.1.4"
   },
   "scripts": {
-    "start": "react-scripts start",
+    "start": "node --trace-deprecation node_modules/react-scripts/scripts/start.js",
     "build": "react-scripts build",
     "serve": "serve -s build",
     "test": "react-scripts test",
