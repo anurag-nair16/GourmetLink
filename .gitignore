@@ -61,6 +61,12 @@ local_settings.py
 db.sqlite3
 db.sqlite3-journal
 
+# react stuff:
+/frontend/node_modules
+/frontend/build
+/frontend/dist
+
+
 # Flask stuff:
 instance/
 .webassets-cache
@@ -166,8 +172,8 @@ cython_debug/
 *.pot
 *.pyc
 __pycache__/
-db.sqlite3
-media/
+backend/db.sqlite3
+backend/media/
 
 # React/Node
 node_modules/
@@ -175,4 +181,4 @@ build/
 dist/
 
 # Virtual environment
-venv/
+backend/venv/
