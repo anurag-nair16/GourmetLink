@@ -14,13 +14,13 @@ const Profile = () => {
     const fetchProfile = async () => {
       try {
         const token = localStorage.getItem("token");
-        const profileResponse = await axios.get("http://127.0.0.1:8000/profile/", {
+        const profileResponse = await axios.get(`${process.env.REACT_APP_API_URL}/profile/`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
         });
 
-        const recipesResponse = await axios.get("http://127.0.0.1:8000/recipes/", {
+        const recipesResponse = await axios.get(`${process.env.REACT_APP_API_URL}/recipes/`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },

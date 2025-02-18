@@ -19,12 +19,12 @@ const PostDetailPage = () => {
         const token = localStorage.getItem("token");
 
         // Fetch post details
-        const postResponse = await axios.get(`http://127.0.0.1:8000/posts/${postId}/`, {
+        const postResponse = await axios.get(`${process.env.REACT_APP_API_URL}/posts/${postId}/`, {
           headers: { Authorization: `Bearer ${token}` },
         });
 
         // Fetch profile details
-        const profileResponse = await axios.get("http://127.0.0.1:8000/profile/", {
+        const profileResponse = await axios.get(`${process.env.REACT_APP_API_URL}/profile/`, {
           headers: { Authorization: `Bearer ${token}` },
         });
 
@@ -47,7 +47,7 @@ const PostDetailPage = () => {
     try {
       const token = localStorage.getItem("token");
       const response = await axios.post(
-        `http://127.0.0.1:8000/posts/${postId}/like/`,
+        `${process.env.REACT_APP_API_URL}/posts/${postId}/like/`,
         {},
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -68,7 +68,7 @@ const PostDetailPage = () => {
     try {
       const token = localStorage.getItem("token");
       const response = await axios.post(
-        `http://127.0.0.1:8000/posts/${postId}/comment/`,
+        `${process.env.REACT_APP_API_URL}/posts/${postId}/comment/`,
         { text: commentText },
         { headers: { Authorization: `Bearer ${token}` } }
       );

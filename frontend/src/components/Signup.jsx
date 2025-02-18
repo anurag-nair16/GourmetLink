@@ -4,7 +4,6 @@ import { FaLock, FaEye, FaEyeSlash, FaUser, FaEnvelope } from "react-icons/fa";
 import { AiOutlineLoading3Quarters } from "react-icons/ai";
 import { Link } from 'react-router-dom';
 
-// Add animation variants
 const containerVariants = {
   hidden: { 
     opacity: 0,
@@ -56,7 +55,7 @@ const SignupPage = () => {
     } else {
       setUsernameError("");
     }
-  }, [username]); // Only recreate when 'username' changes
+  }, [username]);
 
   const validateEmail = useCallback(() => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -65,7 +64,7 @@ const SignupPage = () => {
     } else {
       setEmailError("");
     }
-  }, [email]); // Only recreate when 'email' changes
+  }, [email]);
 
   const validatePassword = useCallback(() => {
     if (password.length < 8) {
@@ -73,7 +72,7 @@ const SignupPage = () => {
     } else {
       setPasswordError("");
     }
-  }, [password]); // Only recreate when 'password' changes
+  }, [password]);
 
   const validateConfirmPassword = useCallback(() => {
     if (confirmPassword !== password) {
@@ -102,7 +101,6 @@ const SignupPage = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    // Ensure no errors in the form inputs and that required fields are filled
     if (
       !usernameError &&
       !emailError &&
@@ -115,7 +113,6 @@ const SignupPage = () => {
     ) {
       setIsLoading(true);
 
-      // Prepare the user data to send to the backend
       const userData = {
         username,
         email,
@@ -124,6 +121,7 @@ const SignupPage = () => {
 
       try {
         const response = await fetch(`${process.env.REACT_APP_API_URL}/signup/`, {
+          // const response = await fetch('${process.env.REACT_APP_API_URL}/signup/', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -134,10 +132,8 @@ const SignupPage = () => {
         const data = await response.json();
         if (response.ok) {
           alert(data.message);
-          // Optionally redirect to login or another page
         } else {
-          // Handle error response
-          alert(data.detail || "An error occurred");
+          alert(data.error || "An error occurred");
         }
       } catch (error) {
         alert("An error occurred: " + error.message);
@@ -151,7 +147,7 @@ const SignupPage = () => {
     backgroundImage: `url('https://media.istockphoto.com/id/1152493500/photo/authentic-indian-dishes-and-snacks.webp?a=1&b=1&s=612x612&w=0&k=20&c=vy1KDx5reosJ4LEYRq_QLBSYyMdGdSYHoqFGW0-CLFM=')`,
     backgroundSize: 'cover',
     backgroundPosition: 'center',
-    filter: 'blur(2px)',  // Adjust the blur as needed
+    filter: 'blur(2px)',
     position: 'absolute',
     top: 0,
     left: 0,
@@ -162,7 +158,6 @@ const SignupPage = () => {
 
   return (
     <div className="relative min-h-screen flex items-center justify-center text-white p-4">
-      {/* Video Background */}
       <div className="absolute inset-0 w-full h-full">
         <div className="absolute inset-0 bg-black/60 z-10"></div>
         <motion.video
@@ -183,7 +178,6 @@ const SignupPage = () => {
         </motion.video>
       </div>
 
-      {/* Signup Form */}
       <motion.div
         variants={containerVariants}
         initial="hidden"
@@ -198,7 +192,6 @@ const SignupPage = () => {
         </motion.h2>
 
         <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Username Input */}
           <motion.div variants={itemVariants}>
             <label htmlFor="username" className="block text-sm font-medium mb-2">
               Username
@@ -229,7 +222,6 @@ const SignupPage = () => {
             )}
           </motion.div>
 
-          {/* Email Input */}
           <motion.div variants={itemVariants}>
             <label htmlFor="email" className="block text-sm font-medium mb-2">
               Email Address
@@ -260,7 +252,6 @@ const SignupPage = () => {
             )}
           </motion.div>
 
-          {/* Password Input */}
           <motion.div variants={itemVariants}>
             <label htmlFor="password" className="block text-sm font-medium mb-2">
               Password
@@ -301,7 +292,6 @@ const SignupPage = () => {
             )}
           </motion.div>
 
-          {/* Confirm Password Input */}
           <motion.div variants={itemVariants}>
             <label htmlFor="confirmPassword" className="block text-sm font-medium mb-2">
               Confirm Password
@@ -342,7 +332,6 @@ const SignupPage = () => {
             )}
           </motion.div>
 
-          {/* Submit Button */}
           <motion.button
             variants={itemVariants}
             whileHover={{ scale: 1.02 }}

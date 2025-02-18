@@ -107,7 +107,7 @@ const RecipePostCreator = () => {
   
     setIsLoading(true);
   
-    fetch("http://127.0.0.1:8000/submit-recipe/", {
+    fetch(`${process.env.REACT_APP_API_URL}/submit-recipe/`, {
       method: "POST",
       headers: {
         "Authorization": `Bearer ${authToken}`,

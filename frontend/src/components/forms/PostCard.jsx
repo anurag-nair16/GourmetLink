@@ -13,7 +13,7 @@ const PostCard = ({ post, index, onOpenModal, onLike, profileData, renderRatingS
       if (post.user) {
         const token = localStorage.getItem("token");
         try {
-          const profileResponse = await axios.get(`http://127.0.0.1:8000/profile/${post.user}/`, {
+          const profileResponse = await axios.get(`${process.env.REACT_APP_API_URL}/profile/${post.user}/`, {
             headers: {
               Authorization: `Bearer ${token}`,
             },

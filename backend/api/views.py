@@ -28,8 +28,11 @@ class SignupView(generics.CreateAPIView):
     def post(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         if serializer.is_valid():
-            user = serializer.save()
-            return Response({"message": "User created successfully!", "user": serializer.data}, status=status.HTTP_201_CREATED)
+            try:
+                user = serializer.save()
+                return Response({"message": "User created successfully!", "user": serializer.data}, status=status.HTTP_201_CREATED)
+            except Exception as e:
+                return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class LoginView(APIView):

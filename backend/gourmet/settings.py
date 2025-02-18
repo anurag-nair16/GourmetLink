@@ -71,7 +71,7 @@ MIDDLEWARE = [
 
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",
-    "https://gourmetlink.netlify.app/",
+    "https://gourmetlink.netlify.app",
 ]
 
 ROOT_URLCONF = 'gourmet.urls'
