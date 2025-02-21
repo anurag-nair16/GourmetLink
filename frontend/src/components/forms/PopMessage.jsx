@@ -1,26 +1,37 @@
-import React, { useState, useEffect } from 'react';
-import { FaTimes } from 'react-icons/fa';
+import React, { useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { FaCheckCircle, FaTimesCircle } from 'react-icons/fa';
 
-const PopupMessage = ({ message }) => {
-  const [show, setShow] = useState(true);
+const popupVariants = {
+  hidden: { opacity: 0, y: -20 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.5 } },
+  exit: { opacity: 0, y: -20, transition: { duration: 0.5 } },
+};
 
+const PopupMessage = ({ message, onClose }) => {
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setShow(false);
-    }, 3000); // Display message for 3 seconds
-
+    const timer = setTimeout(onClose, 3000); // Auto close after 3 seconds
     return () => clearTimeout(timer);
-  }, []);
-
-  if (!show) return null;
+  }, [onClose]);
 
   return (
-    <div className="fixed bottom-4 left-1/2 transform -translate-x-1/2 bg-emerald-600 text-white px-4 py-2 rounded shadow-lg flex items-center">
-      <span>{message}</span>
-      <button onClick={() => setShow(false)} className="ml-4">
-        <FaTimes />
-      </button>
-    </div>
+    <AnimatePresence>
+      {message && (
+        <motion.div
+          className="w-full text-center bg-emerald-600 text-white px-4 py-2 rounded shadow-lg flex items-center gap-2 mb-4"
+          variants={popupVariants}
+          initial="hidden"
+          animate="visible"
+          exit="exit"
+        >
+          <FaCheckCircle />
+          <span className="flex-1">{message}</span>
+          <button onClick={onClose} className="text-white">
+            <FaTimesCircle />
+          </button>
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 };
 

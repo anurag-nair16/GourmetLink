@@ -1,9 +1,10 @@
-import React, { useState, useEffect, useCallback  } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { FaEnvelope, FaLock, FaEye, FaEyeSlash } from "react-icons/fa";
 import { AiOutlineLoading3Quarters } from "react-icons/ai";
-import { GoogleOAuthProvider, GoogleLogin } from '@react-oauth/google'; // Add Google login
+import { GoogleOAuthProvider, GoogleLogin } from '@react-oauth/google'; 
 import { motion } from 'framer-motion';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
+import PopupMessage from './forms/PopMessage'; // Import the PopupMessage component
 
 const containerVariants = {
   hidden: { 
@@ -37,8 +38,6 @@ const itemVariants = {
   }
 };
 
-const message = 'Please login first to use the desired features';
-
 const LoginPage = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -47,6 +46,16 @@ const LoginPage = () => {
   const [passwordError, setPasswordError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
+  const [popupMessage, setPopupMessage] = useState("");
+
+  const location = useLocation();
+
+  // Show popup message if redirected from a protected route
+  useEffect(() => {
+    if (location.state?.fromProtected) {
+      setPopupMessage("Please login first to use the desired features");
+    }
+  }, [location]);
 
   const validateEmail = useCallback(() => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -67,7 +76,7 @@ const LoginPage = () => {
     } else {
       setPasswordError("");
     }
-  }, [password])
+  }, [password]);
 
   useEffect(() => {
     validateEmail();
@@ -85,29 +94,26 @@ const LoginPage = () => {
   
       const loginData = { email, password };
       try {
-        // const response = await fetch(`${process.env.REACT_APP_API_URL}/login/`, {
-          const response = await fetch(`${process.env.REACT_APP_API_URL}/login/`, {
+        const response = await fetch(`${process.env.REACT_APP_API_URL}/login/`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify(loginData),
         });
-        console.log(response.data);
         if (response.ok) {
           const data = await response.json();
-          // Store the token in localStorage or cookies
           localStorage.setItem("token", data.access);
-          alert("Login successful");
-          
-          // Redirect to home or dashboard page
-          window.location.href = '/'; // or use react-router: navigate('/home')
+          setPopupMessage("Login successful!");
+          setTimeout(() => {
+            window.location.href = '/';
+          }, 2000); // Redirect after 2 seconds
         } else {
           const errorData = await response.json();
-          alert(errorData.detail || "An error occurred");
+          setPopupMessage(errorData.detail || "An error occurred");
         }
       } catch (error) {
-        alert("An error occurred: " + error.message);
+        setPopupMessage("An error occurred: " + error.message);
       } finally {
         setIsLoading(false);
       }
@@ -115,26 +121,14 @@ const LoginPage = () => {
   };
 
   const handleGoogleSuccess = (response) => {
-    console.log("Google login successful", response);
-    window.location.href = '/'; // Redirect to home after successful Google login
+    setPopupMessage("Google login successful!");
+    setTimeout(() => {
+      window.location.href = '/';
+    }, 2000); // Redirect after 2 seconds
   };
 
   const handleGoogleFailure = (error) => {
-    console.error("Google login failed", error);
-    alert("Google login failed. Please try again.");
-  };
-
-  const backgroundImageStyle = {
-    backgroundImage: `url('https://media.istockphoto.com/id/1152493500/photo/authentic-indian-dishes-and-snacks.webp?a=1&b=1&s=612x612&w=0&k=20&c=vy1KDx5reosJ4LEYRq_QLBSYyMdGdSYHoqFGW0-CLFM=')`,
-    backgroundSize: 'cover',
-    backgroundPosition: 'center',
-    filter: 'blur(2px)',  
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    width: '100%',
-    height: '100%',
-    zIndex: -1,
+    setPopupMessage("Google login failed. Please try again.");
   };
 
   return (
@@ -174,6 +168,8 @@ const LoginPage = () => {
           >
             Login
           </motion.h2>
+
+          {popupMessage && <PopupMessage message={popupMessage} onClose={() => setPopupMessage("")} />}
           
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Email input */}
@@ -248,6 +244,7 @@ const LoginPage = () => {
               whileTap={{ scale: 0.98 }}
               type="submit"
               className="w-full bg-emerald-600 text-white py-2 px-4 rounded-md font-semibold transition-all duration-300 hover:bg-emerald-700"
+              disabled={isLoading}
             >
               {isLoading ? (
                 <AiOutlineLoading3Quarters className="animate-spin h-5 w-5 mx-auto" />

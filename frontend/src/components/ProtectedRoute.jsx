@@ -23,8 +23,8 @@ const ProtectedRoute = ({ element }) => {
   const token = localStorage.getItem("token");
 
   if (!token) {
-    // If there is no token, redirect to login
-    return <Navigate to="/login" />;
+    // If there is no token, redirect to login with state
+    return <Navigate to="/login" state={{ fromProtected: true }} />;
   }
 
   return element; // If token exists, render the passed element
