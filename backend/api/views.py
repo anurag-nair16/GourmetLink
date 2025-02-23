@@ -222,7 +222,7 @@ def get_nutritional_info(request):
         if response.status_code == 200:
             nutrition_data = response.json()
             nutrients = nutrition_data['foods'][0]
-            print("Full Nutritionix Response:", nutrients)
+            # print("Full Nutritionix Response:", nutrients)
             vitamin_attr_ids = [318, 323, 328, 401, 404, 405, 406, 415, 418, 430]
             total_vitamins = sum(
                 nutrient['value']

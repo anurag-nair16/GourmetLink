@@ -35,18 +35,31 @@ const RecipeModal = ({
   const fetchNutrition = async () => {
     setShowNutritionModal(true); // Open modal immediately
     setLoading(true);
+    const token = localStorage.getItem('token');
     try {
-      const response = await axios.post(`${process.env.REACT_APP_API_URL}/nutrition/`, { 
+      const response = await axios.post(`${process.env.REACT_APP_API_URL}/nutrition/`, 
+      { 
         ingredients: selectedRecipe.ingredients,
         recipeName: selectedRecipe.name
-       });
+       },
+      {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
       const nutritionData = response.data;
       setNutrition(nutritionData);
       
-      const recommendationResponse = await axios.post(`${process.env.REACT_APP_API_URL}/recommendation/`, { 
+      const recommendationResponse = await axios.post(`${process.env.REACT_APP_API_URL}/recommendation/`, 
+       { 
         nutrition: nutritionData,
         recipeName: selectedRecipe.name
-       });
+       },
+       {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
       setRecommendation(recommendationResponse.data.recommendation);
       setLoading(false);
     } catch (error) {
