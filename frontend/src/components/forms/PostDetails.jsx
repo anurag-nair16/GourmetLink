@@ -1,7 +1,9 @@
-import { FaTimes, FaCheck, FaChevronLeft, FaChevronRight, FaStar, FaRegStar } from "react-icons/fa";
+import { FaTimes, FaCheck, FaChevronLeft, FaChevronRight, FaStar, FaRegStar, FaAppleAlt } from "react-icons/fa";
 import Avatar from "react-avatar";
 import { useState, useRef, useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
+import axios from 'axios';
+import { Oval } from 'react-loader-spinner';
+import ReactMarkdown from 'react-markdown';
 
 const RecipeModal = ({
   selectedRecipe,
@@ -24,6 +26,38 @@ const RecipeModal = ({
   const touchEndX = useRef(null);
   const minSwipeDistance = 50;  
   const scrollableRef = useRef(null);
+
+  const [nutrition, setNutrition] = useState(null);
+  const [showNutritionModal, setShowNutritionModal] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [recommendation, setRecommendation] = useState('');
+
+  const fetchNutrition = async () => {
+    setShowNutritionModal(true); // Open modal immediately
+    setLoading(true);
+    try {
+      const response = await axios.post(`${process.env.REACT_APP_API_URL}/nutrition/`, { 
+        ingredients: selectedRecipe.ingredients,
+        recipeName: selectedRecipe.name
+       });
+      const nutritionData = response.data;
+      setNutrition(nutritionData);
+      
+      const recommendationResponse = await axios.post(`${process.env.REACT_APP_API_URL}/recommendation/`, { 
+        nutrition: nutritionData,
+        recipeName: selectedRecipe.name
+       });
+      setRecommendation(recommendationResponse.data.recommendation);
+      setLoading(false);
+    } catch (error) {
+      console.error('Error fetching nutritional information:', error);
+      setLoading(false);
+    }
+  };
+
+  const handleCloseNutritionModal = () => {
+    setShowNutritionModal(false);
+  };
 
   useEffect(() => {
     // Lock the scroll of the background page
@@ -100,12 +134,21 @@ const RecipeModal = ({
         <div className="bg-gray-800 rounded-2xl w-full h-full max-w-5xl overflow-hidden relative">
           <div className="p-4 border-b border-gray-700 flex justify-between items-center">
             <h2 className="text-2xl font-bold text-gray-100">{selectedRecipe.name}</h2>
-            <button
-              onClick={handleClose}
-              className="text-gray-400 hover:text-white transition-colors"
-            >
-              <FaTimes size={24} />
-            </button>
+            <div className="flex items-center space-x-4">
+              <button
+                onClick={fetchNutrition}
+                className="text-gray-400 hover:text-white transition-colors flex items-center space-x-2"
+              >
+                <FaAppleAlt size={24} />
+                <span>Nutritional Analysis</span>
+              </button>
+              <button
+                onClick={handleClose}
+                className="text-gray-400 hover:text-white transition-colors"
+              >
+                <FaTimes size={24} />
+              </button>
+            </div>
           </div>
 
           <div className="overflow-y-auto h-[calc(100vh-80px)] p-4" ref={scrollableRef}>
@@ -236,8 +279,113 @@ const RecipeModal = ({
           />
         </div>
       )}
+
+{showNutritionModal && (
+      <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
+        <div className="relative bg-gray-900 rounded-lg w-full max-w-md mx-4">
+          <div className="p-4 border-b border-gray-700 flex justify-between items-center">
+            <h2 className="text-2xl font-bold text-gray-100">Nutritional Information</h2>
+            <button
+              onClick={handleCloseNutritionModal}
+              className="text-gray-400 hover:text-white transition-colors"
+            >
+              <FaTimes size={24} />
+            </button>
+          </div>
+          <div className="p-4">
+            {loading ? (
+              <div className="flex flex-col items-center justify-center py-8">
+                <div className="relative">
+                  <Oval
+                    height={80}
+                    width={80}
+                    color="#4CAF50"
+                    visible={true}
+                    ariaLabel="oval-loading"
+                    secondaryColor="#4CAF50"
+                    strokeWidth={2}
+                    strokeWidthSecondary={2}
+                  />
+                  <FaAppleAlt 
+                  size={32} 
+                  className="text-emerald-500 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2" 
+                  />
+                  </div>
+                  <p className="text-gray-300 mt-4 text-center">
+                    Analyzing nutritional content...
+                    <br />
+                    <span className="text-sm text-gray-400">This may take a few seconds</span>
+                  </p>
+              </div>
+            ) : (
+              nutrition && (
+                <div className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    {parseFloat(nutrition.calories) > 0 && (
+                      <div className="bg-gray-800 p-3 rounded-lg">
+                        <p className="text-gray-400 text-sm">Calories</p>
+                        <p className="text-gray-200 text-lg font-semibold">{nutrition.calories}</p>
+                      </div>
+                    )}
+                    {parseFloat(nutrition.carbohydrates) > 0 && (
+                      <div className="bg-gray-800 p-3 rounded-lg">
+                        <p className="text-gray-400 text-sm">Carbohydrates</p>
+                        <p className="text-gray-200 text-lg font-semibold">{nutrition.carbohydrates}g</p>
+                      </div>
+                    )}
+                    {parseFloat(nutrition.protein) > 0 && (
+                      <div className="bg-gray-800 p-3 rounded-lg">
+                        <p className="text-gray-400 text-sm">Protein</p>
+                        <p className="text-gray-200 text-lg font-semibold">{nutrition.protein}g</p>
+                      </div>
+                    )}
+                    {parseFloat(nutrition.fat) > 0 && (
+                      <div className="bg-gray-800 p-3 rounded-lg">
+                        <p className="text-gray-400 text-sm">Fat</p>
+                        <p className="text-gray-200 text-lg font-semibold">{nutrition.fat}g</p>
+                      </div>
+                    )}
+                    {parseFloat(nutrition.fiber) > 0 && (
+                      <div className="bg-gray-800 p-3 rounded-lg">
+                        <p className="text-gray-400 text-sm">Fiber</p>
+                        <p className="text-gray-200 text-lg font-semibold">{nutrition.fiber}g</p>
+                      </div>
+                    )}
+                    {parseFloat(nutrition.vitamins) > 0 && (
+                      <div className="bg-gray-800 p-3 rounded-lg">
+                        <p className="text-gray-400 text-sm">Vitamins</p>
+                        <p className="text-gray-200 text-lg font-semibold">{nutrition.vitamins}g</p>
+                      </div>
+                    )}
+                  </div>
+                  
+                  {recommendation && (
+                    <div className="mt-6">
+                      {/* <h3 className="text-lg font-semibold text-emerald-400 mb-3">Recommendations</h3> */}
+                      <div className="prose prose-invert max-w-none">
+                        <ReactMarkdown
+                          components={{
+                            p: ({node, ...props}) => <p className="text-gray-300 mb-2" {...props} />,
+                            ul: ({node, ...props}) => <ul className="list-disc list-inside space-y-1 text-gray-300" {...props} />,
+                            li: ({node, ...props}) => <li className="text-gray-300" {...props} />,
+                            strong: ({node, ...props}) => <strong className="text-emerald-400 font-semibold" {...props} />
+                          }}
+                        >
+                          {recommendation}
+                        </ReactMarkdown>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )
+            )}
+          </div>
+        </div>
+      </div>
+    )}
     </div>
   );
 };
+
 
 export default RecipeModal;

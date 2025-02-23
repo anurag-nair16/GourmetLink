@@ -31,7 +31,7 @@ const PostCard = ({ post, index, onOpenModal, onLike, profileData, renderRatingS
   }, [post.user]);
 
   if (!userProfile) {
-    return <div>Loading...</div>;
+    return <div className="bg-gray-800 rounded-xl h-full"></div>;
   }
 
   return (

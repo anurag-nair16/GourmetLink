@@ -5,6 +5,36 @@ import PostCard from "./forms/PostCard";
 import PostDetails from "./forms/PostDetails";
 import { FaStar, FaRegStar, FaStarHalfAlt, FaChevronUp, FaChevronDown } from "react-icons/fa";
 
+const PostCardSkeleton = () => (
+  <div className="bg-gray-800 rounded-lg overflow-hidden animate-pulse">
+    {/* Image skeleton */}
+    <div className="aspect-video bg-gray-700"></div>
+    
+    {/* Content skeleton */}
+    <div className="p-4 space-y-4">
+      {/* Title skeleton */}
+      <div className="h-6 bg-gray-700 rounded w-3/4"></div>
+      
+      {/* Rating skeleton */}
+      <div className="flex space-x-1">
+        {[...Array(5)].map((_, i) => (
+          <div key={i} className="w-5 h-5 bg-gray-700 rounded"></div>
+        ))}
+      </div>
+      
+      {/* Stats skeleton */}
+      <div className="flex justify-between items-center">
+        <div className="flex space-x-2">
+          {/* Like count skeleton */}
+          <div className="h-5 w-16 bg-gray-700 rounded"></div>
+        </div>
+        {/* Time skeleton */}
+        <div className="h-5 w-24 bg-gray-700 rounded"></div>
+      </div>
+    </div>
+  </div>
+);
+
 const AllPostsPage = () => {
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -22,6 +52,7 @@ const AllPostsPage = () => {
       try {
         const token = localStorage.getItem("token");
         const response = await axios.get(`${process.env.REACT_APP_API_URL}/posts/`, {
+          // const response = await axios.get("http://127.0.0.1:8000/posts/", {
           headers: { Authorization: `Bearer ${token}` },
         });
         const profileResponse = await axios.get(`${process.env.REACT_APP_API_URL}/profile/`, {
@@ -465,8 +496,10 @@ const AllPostsPage = () => {
       {/* Main Content */}
       <main className="container mx-auto px-4 py-8">
         {loading ? (
-          <div className="flex justify-center items-center h-64">
-            <div className="text-emerald-500 animate-pulse">Loading...</div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {[...Array(8)].map((_, index) => (
+              <PostCardSkeleton key={index} />
+            ))}
           </div>
         ) : error ? (
           <div className="text-red-500 text-center p-4 bg-red-900/20 rounded-lg">

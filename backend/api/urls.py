@@ -1,6 +1,6 @@
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from django.urls import path
-from .views import SignupView, LoginView, user_profile, get_user_recipes, UserProfileDetailView, RecipeSubmitView, like_post, add_comment, get_all_posts, UserByEmailView, rate_post
+from .views import SignupView, LoginView, user_profile, get_user_recipes, get_nutritional_info, generate_recommendation, UserProfileDetailView, RecipeSubmitView, like_post, add_comment, get_all_posts, UserByEmailView, rate_post
 from rest_framework_simplejwt.views import TokenRefreshView
 
 urlpatterns = [
@@ -16,4 +16,6 @@ urlpatterns = [
     path('posts/<int:post_id>/comment/', add_comment, name='add_comment'),
     path('posts/<int:post_id>/rate/', rate_post, name='rate_post'),
     path('user-by-email/', UserByEmailView.as_view(), name='user-by-email'),
+    path('nutrition/', get_nutritional_info, name='get_nutritional_info'),
+    path('recommendation/', generate_recommendation, name='get-recommended-nutrition'),
 ]

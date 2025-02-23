@@ -8,10 +8,12 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import authenticate, login
 from django.http import JsonResponse
 from django.contrib.auth.models import User
-
+import requests, json
+from django.views.decorators.csrf import csrf_exempt
 from .models import Post, Rating, Comment, CustomUser, Recipe
 from .serializers import PostSerializer, RatingSerializer, CommentSerializer, UserSerializer, RecipeSerializer, CustomUserSerializer
 from rest_framework import status
+import google.generativeai as genai
 
 class UserProfileDetailView(generics.RetrieveAPIView):
     queryset = CustomUser.objects.all()
@@ -194,3 +196,79 @@ def rate_post(request, post_id):
 
     post.update_average_rating()
     return Response({'average_rating': post.average_rating})
+
+@csrf_exempt
+def get_nutritional_info(request):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        ingredients = data.get('ingredients', '')
+
+        app_id = '395e8a96'
+        app_key = '555e34ff6808fe37588cc3e53cc55436'
+        api_url = 'https://trackapi.nutritionix.com/v2/natural/nutrients'
+
+        headers = {
+            'Content-Type': 'application/json',
+            'x-app-id': app_id,
+            'x-app-key': app_key
+        }
+        payload = {
+            'query': ingredients
+        }
+
+        response = requests.post(api_url, headers=headers, json=payload)
+
+        if response.status_code == 200:
+            nutrition_data = response.json()
+            nutrients = nutrition_data['foods'][0]
+            print("Full Nutritionix Response:", nutrients)
+            vitamin_attr_ids = [318, 323, 328, 401, 404, 405, 406, 415, 418, 430]
+            total_vitamins = sum(
+                nutrient['value']
+                for nutrient in nutrients['full_nutrients']
+                if nutrient['attr_id'] in vitamin_attr_ids
+            )
+            return JsonResponse({
+                'calories': format(float(nutrients.get('nf_calories', 0)), '.2f'),
+                'carbohydrates': format(float(nutrients.get('nf_total_carbohydrate', 0)), '.2f'),
+                'protein': format(float(nutrients.get('nf_protein', 0)), '.2f'),
+                'fat': format(float(nutrients.get('nf_total_fat', 0)), '.2f'),
+                'vitamins': format(total_vitamins, '.2f'),
+                'fiber': format(float(nutrients.get('nf_dietary_fiber', 0)), '.2f'),
+            })
+        else:
+            return JsonResponse({'error': 'Failed to fetch nutritional information'}, status=500)
+
+    return JsonResponse({'error': 'Invalid request method'}, status=400)
+
+genai.configure(api_key="AIzaSyAOMzTFvGjw1-bliVzeb47w4EWXXPxeBCE")
+@csrf_exempt
+def generate_recommendation(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            nutrition = data.get('nutrition', '')
+            recipe_name = data.get('recipeName', 'this recipe')
+            prompt = (
+                f"As a friendly nutritionist, analyze the nutritional values of {recipe_name}:\n"
+                f"Calories: {nutrition['calories']}\n"
+                f"Carbohydrates: {nutrition['carbohydrates']}g\n"
+                f"Protein: {nutrition['protein']}g\n"
+                f"Fat: {nutrition['fat']}g\n"
+                f"Vitamins: {nutrition['vitamins']}\n\n"
+                f"Please provide a short, encouraging recommendation in 2-3 sentences. "
+                f"First comment on the nutritional balance, then suggest 1-2 complementary foods or sides "
+                f"that would pair well with {recipe_name} to create a balanced meal. "
+                f"Keep the tone positive and friendly."
+            )
+
+            model = genai.GenerativeModel('gemini-pro')
+            response = model.generate_content(prompt)
+            
+            recommendation = response.text.strip()
+            return JsonResponse({'recommendation': recommendation})
+        
+        except Exception as e:
+            return JsonResponse({'error': str(e)}, status=500)
+
+    return JsonResponse({'error': 'Invalid request method'}, status=400)
