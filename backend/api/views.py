@@ -8,7 +8,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import authenticate, login
 from django.http import JsonResponse
 from django.contrib.auth.models import User
-import requests, json
+import requests, json, os
 from django.views.decorators.csrf import csrf_exempt
 from .models import Post, Rating, Comment, CustomUser, Recipe
 from .serializers import PostSerializer, RatingSerializer, CommentSerializer, UserSerializer, RecipeSerializer, CustomUserSerializer
@@ -197,14 +197,15 @@ def rate_post(request, post_id):
     post.update_average_rating()
     return Response({'average_rating': post.average_rating})
 
-@csrf_exempt
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
 def get_nutritional_info(request):
     if request.method == 'POST':
         data = json.loads(request.body)
         ingredients = data.get('ingredients', '')
 
-        app_id = '395e8a96'
-        app_key = '555e34ff6808fe37588cc3e53cc55436'
+        app_id = os.getenv('NUTRITIONIX_APP_ID')
+        app_key = os.getenv('NUTRITIONIX_APP_KEY')
         api_url = 'https://trackapi.nutritionix.com/v2/natural/nutrients'
 
         headers = {
@@ -241,8 +242,10 @@ def get_nutritional_info(request):
 
     return JsonResponse({'error': 'Invalid request method'}, status=400)
 
-genai.configure(api_key="AIzaSyAOMzTFvGjw1-bliVzeb47w4EWXXPxeBCE")
-@csrf_exempt
+genai.configure(api_key=os.getenv('GOOGLE_GENAI_API_KEY'))
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
 def generate_recommendation(request):
     if request.method == 'POST':
         try:
