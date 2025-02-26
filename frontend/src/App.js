@@ -1,8 +1,8 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Route, Routes, useLocation } from 'react-router-dom';
 import "./index.css";
-import Navbar from './components/Navbar'; // Adjust the path based on your file structure
-import SubmitRecipe from './components/SubmitRecipe'; // Example of your submit recipe component
+import Navbar from './components/Navbar';
+import SubmitRecipe from './components/SubmitRecipe';
 import Footer from './components/Footer';
 import Home from './components/Home';
 import Login from './components/Login';
@@ -12,8 +12,9 @@ import Profile from './components/Profile';
 import HomePage from './components/HomePage';
 import PostDetailPage from './components/PostDetailPage';
 import AllPosts from './components/AllPosts';
-import { useEffect } from 'react';
-
+// Import TranslationProvider
+import { TranslationProvider } from './context/TranslationContext';
+import LanguageSwitcher from './components/LanguageSwitcher';
 
 const App = () => {
   useEffect(() => {
@@ -52,12 +53,14 @@ const App = () => {
   useEffect(() => {
     window.scrollTo(0, 0); // Scroll to top whenever the route changes
   }, [location]);
+
   return (
-    <>
+    // Wrap the entire app with TranslationProvider
+    <TranslationProvider>
       <Navbar />
       <main>
         <Routes>
-        <Route 
+          <Route 
             path="/" 
             element={<HomePage />} 
           />
@@ -77,10 +80,6 @@ const App = () => {
             path="/profile" 
             element={<ProtectedRoute element={<Profile />} />} 
           />
-          {/* <Route 
-            path="/home" 
-            element={<HomePage />} 
-          /> */}
           <Route 
             path="/post/:postId" 
             element={<ProtectedRoute element={<PostDetailPage />} />} 
@@ -89,11 +88,11 @@ const App = () => {
             path="/posts" 
             element={<ProtectedRoute element={<AllPosts />} />} 
           />
-          {/* Add other routes here */}
         </Routes>
       </main>
       <Footer />
-    </>
+      <LanguageSwitcher />
+    </TranslationProvider>
   );
 };
 

@@ -8,7 +8,7 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import authenticate, login
 from django.http import JsonResponse
 from django.contrib.auth.models import User
-import requests, json, os
+import requests, json, os, logging
 from django.views.decorators.csrf import csrf_exempt
 from .models import Post, Rating, Comment, CustomUser, Recipe
 from .serializers import PostSerializer, RatingSerializer, CommentSerializer, UserSerializer, RecipeSerializer, CustomUserSerializer
@@ -244,14 +244,37 @@ def get_nutritional_info(request):
 
 genai.configure(api_key=os.getenv('GOOGLE_GENAI_API_KEY'))
 
+logging.basicConfig(filename='generate_recommendation.log', level=logging.ERROR, 
+                    format='%(asctime)s - %(levelname)s - %(message)s')
+
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def generate_recommendation(request):
     if request.method == 'POST':
         try:
+            # models = genai.list_models()
+            # for model in models:
+            #     print(model.name)
+            # print("Received request body:", request.body)
+
+            # Load request data
             data = json.loads(request.body)
-            nutrition = data.get('nutrition', '')
+            nutrition = data.get('nutrition', {})
             recipe_name = data.get('recipeName', 'this recipe')
+
+            # Validate nutrition data
+            required_keys = ['calories', 'carbohydrates', 'protein', 'fat', 'vitamins']
+            for key in required_keys:
+                if key not in nutrition:
+                    error_msg = f"Missing key in nutrition data: {key}"
+                    print(error_msg)
+                    logging.error(error_msg)
+                    return JsonResponse({'error': error_msg}, status=400)
+
+            # Debugging: Print nutrition details
+            # print("Parsed nutrition data:", nutrition)
+
+            # Generate prompt
             prompt = (
                 f"As a friendly nutritionist, analyze the nutritional values of {recipe_name}:\n"
                 f"Calories: {nutrition['calories']}\n"
@@ -265,13 +288,37 @@ def generate_recommendation(request):
                 f"Keep the tone positive and friendly."
             )
 
-            model = genai.GenerativeModel('gemini-pro')
+            # Debugging: Print generated prompt
+            # print("Generated prompt:", prompt)
+
+            # Generate response using Gemini API
+            model = genai.GenerativeModel('gemini-2.0-flash')
             response = model.generate_content(prompt)
-            
+
+            # Check if response is valid
+            if not hasattr(response, 'text') or not response.text.strip():
+                error_msg = "Empty or invalid response from Gemini API"
+                print(error_msg)
+                logging.error(error_msg)
+                return JsonResponse({'error': error_msg}, status=500)
+
             recommendation = response.text.strip()
+
+            # Debugging: Print AI response
+            print("Generated recommendation:", recommendation)
+
             return JsonResponse({'recommendation': recommendation})
-        
+
+        except json.JSONDecodeError as e:
+            error_msg = f"JSON decoding error: {str(e)}"
+            print(error_msg)
+            logging.error(error_msg)
+            return JsonResponse({'error': error_msg}, status=400)
+
         except Exception as e:
-            return JsonResponse({'error': str(e)}, status=500)
+            error_msg = f"Unexpected error: {str(e)}"
+            print(error_msg)
+            logging.error(error_msg, exc_info=True)
+            return JsonResponse({'error': error_msg}, status=500)
 
     return JsonResponse({'error': 'Invalid request method'}, status=400)

@@ -3,6 +3,7 @@ from django.db import models
 from django.contrib.auth.models import BaseUserManager
 from django.contrib.auth.models import User
 from django.conf import settings
+from django.core.cache import cache
 
 class CustomUserManager(BaseUserManager):
     def create_user(self, email, username, password=None, **extra_fields):
@@ -52,6 +53,45 @@ class Recipe(models.Model):
     prep_time = models.PositiveIntegerField(null=True, blank=True, help_text="Preparation time in minutes")
     servings = models.PositiveIntegerField(null=True, blank=True, help_text="Number of servings")
     tags = models.TextField(default=list, blank=True)
+
+    translations = models.JSONField(default=dict, blank=True)
+
+    def get_translation(self, language_code):
+        print(f"Getting translation for {self.name} in {language_code}")
+        if language_code == 'en':
+            return {
+                'name': self.name,
+                'ingredients': self.ingredients,
+                'description': self.description,
+                'instructions': self.instructions,
+            }
+        
+        # Try to get from cache first
+        cache_key = f'recipe_translation_{self.id}_{language_code}'
+        cached_translation = cache.get(cache_key)
+        if cached_translation:
+            return cached_translation
+
+        # If not in cache, get from database
+        translation = self.translations.get(language_code, {})
+        if translation:
+            cache.set(cache_key, translation, timeout=86400)  # Cache for 24 hours
+            return translation
+
+        print(f"No translation found for {self.name} in {language_code}")
+        return None  # Fallback to English
+
+    def set_translation(self, language_code, translated_data):
+        print(f"Setting translation for {self.name} in {language_code}")
+        if language_code != 'en':  # Don't store English translations
+            if not self.translations:
+                self.translations = {}
+            self.translations[language_code] = translated_data
+            self.save()
+
+            # Update cache
+            cache_key = f'recipe_translation_{self.id}_{language_code}'
+            cache.set(cache_key, translated_data, timeout=86400)
 
     def __str__(self):
         return self.name

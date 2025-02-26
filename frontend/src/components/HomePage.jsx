@@ -2,8 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { FaUtensils, FaSearch, FaHeart, FaUserFriends, FaStar, FaArrowRight } from 'react-icons/fa';
-import { IoFastFood } from 'react-icons/io5';
-import { GiCookingPot } from 'react-icons/gi';
+import TranslatedText from '../context/TranslatedText';
 
 const Home = () => {
   const featuredRecipes = [
@@ -125,9 +124,15 @@ const Home = () => {
             className="mb-8"
           >
             <h1 className="text-5xl md:text-7xl font-bold text-white mb-6 leading-tight">
-              <span className="block">Cook</span>
-              <span className="block text-emerald-400">Share</span>
-              <span className="block">Enjoy</span>
+              <span className="block">
+                <TranslatedText id="hero_cook">Cook</TranslatedText>
+              </span>
+              <span className="block text-emerald-400">
+                <TranslatedText id="hero_share">Share</TranslatedText>
+              </span>
+              <span className="block">
+                <TranslatedText id="hero_enjoy">Enjoy</TranslatedText>
+              </span>
             </h1>
             <div className="w-24 h-1 bg-emerald-500 mx-auto my-8"></div>
           </motion.div>
@@ -138,8 +143,10 @@ const Home = () => {
             transition={{ delay: 0.7, duration: 0.8 }}
             className="text-xl md:text-2xl text-gray-300 mb-12 max-w-3xl mx-auto"
           >
-            Join our culinary community where passion meets plate. 
-            Share your recipes, discover new flavors, and connect with food lovers worldwide.
+            <TranslatedText id="hero_description">
+              Join our culinary community where passion meets plate. 
+              Share your recipes, discover new flavors, and connect with food lovers worldwide.
+            </TranslatedText>
           </motion.p>
 
           <motion.div
@@ -154,7 +161,7 @@ const Home = () => {
             >
               <span className="absolute inset-0 w-0 bg-emerald-700 transition-all duration-500 ease-out group-hover:w-full"></span>
               <span className="relative flex items-center justify-center">
-                Share Your Recipe
+              <TranslatedText id="btn_share_recipe">Share Your Recipe</TranslatedText>
                 <FaArrowRight className="ml-2 group-hover:translate-x-1 transition-transform duration-300" />
               </span>
             </Link>
@@ -163,7 +170,7 @@ const Home = () => {
               className="group relative px-8 py-4 bg-white/10 backdrop-blur-sm text-white rounded-full overflow-hidden hover:bg-white/20 transition-colors duration-300"
             >
               <span className="relative flex items-center justify-center">
-                Explore Recipes
+              <TranslatedText id="btn_explore_recipes">Explore Recipes</TranslatedText>
                 <FaArrowRight className="ml-2 group-hover:translate-x-1 transition-transform duration-300" />
               </span>
             </Link>
@@ -174,13 +181,13 @@ const Home = () => {
       {/* Features Section */}
       <section className="py-20 bg-gray-800">
         <div className="container mx-auto px-4">
-          <motion.h2 
+        <motion.h2 
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
             className="text-4xl font-bold text-center text-white mb-16"
           >
-            Why Choose Our Platform?
+            <TranslatedText id="features_title">Why Choose Our Platform?</TranslatedText>
           </motion.h2>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
@@ -194,8 +201,12 @@ const Home = () => {
               >
                 <div className="flex flex-col items-center text-center">
                   {feature.icon}
-                  <h3 className="text-xl font-semibold text-white mt-4 mb-2">{feature.title}</h3>
-                  <p className="text-gray-400">{feature.description}</p>
+                  <h3 className="text-xl font-semibold text-white mt-4 mb-2">
+                    <TranslatedText id={feature.titleId}>{feature.title}</TranslatedText>
+                  </h3>
+                  <p className="text-gray-400">
+                    <TranslatedText id={feature.descriptionId}>{feature.description}</TranslatedText>
+                  </p>
                 </div>
               </motion.div>
             ))}
@@ -212,7 +223,7 @@ const Home = () => {
           transition={{ duration: 0.8 }}
           className="text-4xl font-bold text-center text-white mb-16"
         >
-          Featured Recipes
+          <TranslatedText id="featured_recipes_title">Featured Recipes</TranslatedText>
         </motion.h2>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
@@ -240,7 +251,9 @@ const Home = () => {
                       <FaStar className="text-yellow-500" size={16} />
                       <span className="text-white">{recipe.recipe.average_rating}</span>
                     </div>
-                    <span className="text-emerald-400 text-sm">by {recipe.chef}</span>
+                    <span className="text-emerald-400 text-sm">
+                    <TranslatedText id="recipe_by">by</TranslatedText> {recipe.chef}
+                    </span>
                   </div>
                   <div className="mt-2 flex flex-wrap gap-2">
                     {recipe.recipe.tags.split(", ").map((tag, i) => (
@@ -281,7 +294,7 @@ const Home = () => {
             to="/posts"
             className="inline-flex items-center px-8 py-4 bg-emerald-600 text-white rounded-full hover:bg-emerald-700 transition-all duration-300 transform hover:scale-105"
           >
-            Explore All Recipes
+            <TranslatedText id="btn_explore_all">Explore All Recipes</TranslatedText>
             <FaArrowRight className="ml-2" />
           </Link>
         </motion.div>
@@ -296,13 +309,19 @@ const Home = () => {
         className="py-20 bg-emerald-600"
       >
         <div className="container mx-auto px-4 text-center">
-          <h2 className="text-4xl font-bold text-white mb-8">Ready to Start Your Culinary Journey?</h2>
-          <p className="text-xl text-white/90 mb-12">Join our community of food lovers and share your recipes with the world</p>
+          <h2 className="text-4xl font-bold text-white mb-8">
+            <TranslatedText id="cta_title">Ready to Start Your Culinary Journey?</TranslatedText>
+          </h2>
+          <p className="text-xl text-white/90 mb-12">
+            <TranslatedText id="cta_description">
+              Join our community of food lovers and share your recipes with the world
+            </TranslatedText>
+          </p>
           <Link 
             to="/signup"
             className="inline-flex items-center px-8 py-4 bg-white text-emerald-600 rounded-full hover:bg-gray-100 transition-all duration-300 transform hover:scale-105"
           >
-            Get Started
+            <TranslatedText id="btn_get_started">Get Started</TranslatedText>
             <FaArrowRight className="ml-2" />
           </Link>
         </div>

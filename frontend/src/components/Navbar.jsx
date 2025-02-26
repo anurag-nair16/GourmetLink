@@ -2,13 +2,15 @@ import React, { useState, useEffect } from "react";
 import { FaBars, FaTimes, FaHome, FaUtensils, FaSignInAlt, FaUserPlus, FaUser, FaSignOutAlt } from "react-icons/fa";
 import { Link } from "react-router-dom";
 import LogoutPopup from "./forms/LogoutPopup";
+import { useTranslation } from '../context/TranslationContext';
+import LanguageSwitcher from './LanguageSwitcher';
+import TranslatedText from '../context/TranslatedText';
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isPopupOpen, setIsPopupOpen] = useState(false);
 
-  // Check if user is authenticated
   useEffect(() => {
     const token = localStorage.getItem("token");
     setIsAuthenticated(!!token);
@@ -27,9 +29,7 @@ const Navbar = () => {
   };
 
   const handleConfirmLogout = () => {
-    // Remove the token from localStorage
     localStorage.removeItem("token");
-    // Redirect to the login page
     window.location.href = "/";
   };
 
@@ -39,28 +39,67 @@ const Navbar = () => {
         {/* Logo and Name */}
         <div className="flex items-center space-x-4">
           <FaUtensils className="h-8 w-8 text-yellow-500" aria-hidden="true" />
-          <span className="text-white text-2xl font-extrabold tracking-wider">Gourmet Link</span>
+          <span className="text-white text-2xl font-extrabold tracking-wider">
+            <div id="brand_name">
+              Gourmet Link
+            </div>
+          </span>
         </div>
 
         {/* Desktop Menu */}
         <div className="hidden md:flex items-center space-x-9">
           {isAuthenticated ? (
             <>
-              <NavItem icon={<FaHome />} text="Home" to="/" />
-              <NavItem icon={<FaUtensils />} text="Submit Recipe" to="/submit-recipe" />
-              <NavItem icon={<FaUser />} text="Profile" to="/profile" />
+              <NavItem 
+                icon={<FaHome />} 
+                textId="nav_home"
+                defaultText="Home" 
+                to="/" 
+              />
+              <NavItem 
+                icon={<FaUtensils />} 
+                textId="nav_submit_recipe"
+                defaultText="Submit Recipe" 
+                to="/submit-recipe" 
+              />
+              <NavItem 
+                icon={<FaUser />} 
+                textId="nav_profile"
+                defaultText="Profile" 
+                to="/profile" 
+              />
               <button onClick={handleLogoutClick} className="flex items-center text-white hover:text-gray-300 transition-all duration-300 ease-in-out">
                 <FaSignOutAlt />
-                <span className="ml-2">Logout</span>
+                <span className="ml-2">
+                  <TranslatedText id="nav_logout">
+                    Logout
+                  </TranslatedText>
+                </span>
               </button>
             </>
           ) : (
             <>
-              <NavItem icon={<FaHome />} text="Home" to="/" />
-              <NavItem icon={<FaSignInAlt />} text="Login" to="/login" />
-              <NavItem icon={<FaUserPlus />} text="Signup" to="/signup" />
+              <NavItem 
+                icon={<FaHome />} 
+                textId="nav_home"
+                defaultText="Home" 
+                to="/" 
+              />
+              <NavItem 
+                icon={<FaSignInAlt />} 
+                textId="nav_login"
+                defaultText="Login" 
+                to="/login" 
+              />
+              <NavItem 
+                icon={<FaUserPlus />} 
+                textId="nav_signup"
+                defaultText="Signup" 
+                to="/signup" 
+              />
             </>
           )}
+          <LanguageSwitcher />
         </div>
 
         {/* Mobile Menu Button */}
@@ -78,12 +117,31 @@ const Navbar = () => {
         <div className="md:hidden bg-gray-900 p-4 transition-all duration-300 ease-in-out transform">
           {isAuthenticated ? (
             <>
-              <NavItem icon={<FaHome />} text="Home" to="/" onClick={toggleMenu} />
-              <NavItem icon={<FaUtensils />} text="Submit Recipe" to="/submit-recipe" onClick={toggleMenu} />
-              <NavItem icon={<FaUser />} text="Profile" to="/profile" onClick={toggleMenu} />
+              <NavItem 
+                icon={<FaHome />} 
+                textId="nav_home"
+                defaultText="Home" 
+                to="/" 
+                onClick={toggleMenu} 
+              />
+              <NavItem 
+                icon={<FaUtensils />} 
+                textId="nav_submit_recipe"
+                defaultText="Submit Recipe" 
+                to="/submit-recipe" 
+                onClick={toggleMenu} 
+              />
+              <NavItem 
+                icon={<FaUser />} 
+                textId="nav_profile"
+                defaultText="Profile" 
+                to="/profile" 
+                onClick={toggleMenu} 
+              />
               <NavItem
                 icon={<FaSignOutAlt />}
-                text="Logout"
+                textId="nav_logout"
+                defaultText="Logout"
                 onClick={() => {
                   handleLogoutClick();
                   toggleMenu();
@@ -92,9 +150,27 @@ const Navbar = () => {
             </>
           ) : (
             <>
-              <NavItem icon={<FaHome />} text="Home" to="/" onClick={toggleMenu} />
-              <NavItem icon={<FaSignInAlt />} text="Login" to="/login" onClick={toggleMenu} />
-              <NavItem icon={<FaUserPlus />} text="Signup" to="/signup" onClick={toggleMenu} />
+              <NavItem 
+                icon={<FaHome />} 
+                textId="nav_home"
+                defaultText="Home" 
+                to="/" 
+                onClick={toggleMenu} 
+              />
+              <NavItem 
+                icon={<FaSignInAlt />} 
+                textId="nav_login"
+                defaultText="Login" 
+                to="/login" 
+                onClick={toggleMenu} 
+              />
+              <NavItem 
+                icon={<FaUserPlus />} 
+                textId="nav_signup"
+                defaultText="Signup" 
+                to="/signup" 
+                onClick={toggleMenu} 
+              />
             </>
           )}
         </div>
@@ -110,15 +186,19 @@ const Navbar = () => {
   );
 };
 
-const NavItem = ({ icon, text, to, onClick }) => {
+const NavItem = ({ icon, textId, defaultText, to, onClick }) => {
   return (
     <Link
       to={to}
-      onClick={onClick} // Handle logout if necessary
+      onClick={onClick}
       className="flex items-center space-x-2 text-white hover:text-emerald-400 transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none p-2"
     >
       {icon}
-      <span>{text}</span>
+      <span>
+        <TranslatedText id={textId}>
+          {defaultText}
+        </TranslatedText>
+      </span>
     </Link>
   );
 };

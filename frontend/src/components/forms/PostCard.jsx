@@ -4,9 +4,13 @@ import Avatar from 'react-avatar';
 import { motion } from 'framer-motion';
 import { FaStar, FaHeart, FaRegHeart, FaComment } from 'react-icons/fa';
 import { formatDistanceToNow } from 'date-fns';
+import { useTranslation } from '../../context/TranslationContext'; // Import the useTranslation hook
+import TranslatedText from '../../context/TranslatedText'; // Import the TranslatedText component
 
 const PostCard = ({ post, index, onOpenModal, onLike, profileData, renderRatingStars }) => {
   const [userProfile, setUserProfile] = useState(null);
+  const { currentLanguage, translateRecipe } = useTranslation(); // Add translation context
+  const [translatedRecipe, setTranslatedRecipe] = useState(null);
 
   useEffect(() => {
     const fetchUserProfile = async () => {
@@ -30,8 +34,38 @@ const PostCard = ({ post, index, onOpenModal, onLike, profileData, renderRatingS
     fetchUserProfile();
   }, [post.user]);
 
+  // Add effect for translation
+  useEffect(() => {
+    const fetchTranslation = async () => {
+      if (post.recipe && currentLanguage !== 'en') {
+        const translated = await translateRecipe(post.recipe.id, currentLanguage);
+        if (translated) {
+          setTranslatedRecipe(translated);
+        }
+      } else {
+        setTranslatedRecipe(null);
+      }
+    };
+
+    fetchTranslation();
+  }, [post.recipe, currentLanguage]);
+
   if (!userProfile) {
     return <div className="bg-gray-800 rounded-xl h-full"></div>;
+  }
+
+  // Use translated content or fallback to original
+  const recipeContent = translatedRecipe || post.recipe;
+
+  // Handle date parsing and formatting
+  let formattedDate;
+  console.log(recipeContent.created_at);
+  console.log(formattedDate);
+  try {
+    formattedDate = formatDistanceToNow(new Date(recipeContent.created_at), { addSuffix: true });
+  } catch (error) {
+    console.error("Invalid date value:", error);
+    formattedDate = 'Invalid date';
   }
 
   return (
@@ -44,49 +78,42 @@ const PostCard = ({ post, index, onOpenModal, onLike, profileData, renderRatingS
     >
       <div className="relative aspect-[4/3]">
         <img
-          src={post.recipe.image}
-          alt={post.recipe.name}
+          src={recipeContent.image}
+          alt={recipeContent.name}
           className="w-full h-full object-cover transition-transform duration-300"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
         <div className="absolute bottom-0 left-0 p-4 w-full">
-          {/* <div className="flex items-center space-x-3 mb-2">
-            <Avatar
-              name={userProfile.username}
-              src={userProfile.profile_image}
-              size="40"
-              round={true}
-              className="border-4 border-emerald-500"
-            />
-            <p className="text-gray-300 font-medium">{userProfile.username}</p>
-          </div> */}
           <div className="flex items-center justify-between">
             <h3 className="text-xl font-semibold text-white mb-2">
-              {post.recipe.name}
+              {recipeContent.name}
             </h3>
-            
           </div>
           <div className="flex items-center">
             <div className="flex items-center space-x-1">
               <FaStar className="text-yellow-500" size={16} />
               <span className="text-white">{post.average_rating}</span>
-              <span className="text-gray-400 text-xs">({post.ratings.length} ratings)</span>
+              <span className="text-gray-400 text-xs">
+                (<TranslatedText id="ratings_count">{post.ratings.length} ratings</TranslatedText>)
+              </span>
             </div>
             <div className="ml-auto">
-              <span className="text-emerald-400 text-sm">by {userProfile.username}</span>
+              <span className="text-emerald-400 text-sm">
+                <TranslatedText id="recipe_by">by</TranslatedText> {userProfile.username}
+              </span>
             </div>
           </div>
 
           <div className="mt-2 flex items-center justify-between gap-2">
             <div>
-            {post.recipe.tags?.split(",").map((tag, i) => (
-              <span
-                key={i}
-                className="px-2 py-1 bg-emerald-600/20 text-emerald-400 rounded-full text-xs"
-              >
-                #{tag.trim()}
-              </span>
-            ))}
+              {recipeContent.tags?.split(",").map((tag, i) => (
+                <span
+                  key={i}
+                  className="px-2 py-1 bg-emerald-600/20 text-emerald-400 rounded-full text-xs"
+                >
+                  #{tag.trim()}
+                </span>
+              ))}
             </div>
           </div>
         </div>
@@ -94,7 +121,7 @@ const PostCard = ({ post, index, onOpenModal, onLike, profileData, renderRatingS
       <div className="p-4 border-t border-gray-700">
         <div className="flex justify-between items-start mb-2">
           <span className="text-xs text-gray-400">
-            {formatDistanceToNow(new Date(post.recipe.created_at), { addSuffix: true })}
+            {formattedDate}
           </span>
           <div className="flex items-center space-x-4 text-white">
             <button
@@ -119,18 +146,15 @@ const PostCard = ({ post, index, onOpenModal, onLike, profileData, renderRatingS
           </div>
         </div>
         <p className="text-gray-400 text-sm line-clamp-2">
-          {post.recipe.description}
+          {recipeContent.description}
         </p>
         <div className="mt-3 flex items-center justify-between text-sm text-gray-400">
           <span>
-            🕒 {post.recipe.prep_time} mins
+            🕒 {recipeContent.prep_time} <TranslatedText id="recipe_mins">mins</TranslatedText>
           </span>
           <span>
-            👥 {post.recipe.servings} servings
+            👥 {recipeContent.servings} <TranslatedText id="recipe_servings">servings</TranslatedText>
           </span>
-        </div>
-        <div className="flex items-center justify-between mt-3 text-gray-400">
-          
         </div>
       </div>
     </motion.div>

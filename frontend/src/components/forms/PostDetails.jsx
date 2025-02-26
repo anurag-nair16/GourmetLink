@@ -4,6 +4,8 @@ import { useState, useRef, useEffect } from 'react';
 import axios from 'axios';
 import { Oval } from 'react-loader-spinner';
 import ReactMarkdown from 'react-markdown';
+import { useTranslation } from '../../context/TranslationContext'; // Add this import
+import TranslatedText from '../../context/TranslatedText';
 
 const RecipeModal = ({
   selectedRecipe,
@@ -31,7 +33,28 @@ const RecipeModal = ({
   const [showNutritionModal, setShowNutritionModal] = useState(false);
   const [loading, setLoading] = useState(false);
   const [recommendation, setRecommendation] = useState('');
+  
+  const { currentLanguage, translateRecipe } = useTranslation(); // Add translation hook
+  const [translatedRecipe, setTranslatedRecipe] = useState(null);
 
+  // Add effect to handle recipe translation
+  useEffect(() => {
+    const fetchTranslation = async () => {
+      if (selectedRecipe && currentLanguage !== 'en') {
+        const translated = await translateRecipe(selectedRecipe.id, currentLanguage);
+        if (translated) {
+          setTranslatedRecipe(translated);
+        }
+      } else {
+        setTranslatedRecipe(null);
+      }
+    };
+
+    fetchTranslation();
+  }, [selectedRecipe, currentLanguage]);
+
+  // Use translated content or fallback to original
+  const recipeContent = translatedRecipe || selectedRecipe;
   const fetchNutrition = async () => {
     setShowNutritionModal(true); // Open modal immediately
     setLoading(true);
@@ -153,7 +176,7 @@ const RecipeModal = ({
                 className="text-gray-400 hover:text-white transition-colors flex items-center space-x-2"
               >
                 <FaAppleAlt size={24} />
-                <span>Nutritional Analysis</span>
+                <span><TranslatedText id="nutritional_analysis">Nutritional Analysis</TranslatedText></span>
               </button>
               <button
                 onClick={handleClose}
@@ -177,7 +200,9 @@ const RecipeModal = ({
                 </div>
 
                 <div className="mt-4 p-4 bg-gray-700/50 rounded-lg">
-                  <h3 className="text-lg font-semibold text-gray-200 mb-2">Rate this Recipe</h3>
+                  <h3 className="text-lg font-semibold text-gray-200 mb-2">
+                  <TranslatedText id="rate_recipe">Rate this Recipe</TranslatedText>
+                  </h3>
                   <div className="flex items-center space-x-2">
                     {[1, 2, 3, 4, 5].map((star) => (
                       <button
@@ -196,7 +221,7 @@ const RecipeModal = ({
                       onClick={() => onRate(selectedRecipe.id, rating)}
                       className="ml-4 bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg transition-colors"
                     >
-                      Submit
+                      <TranslatedText id="submit">Submit</TranslatedText>
                     </button>
                   </div>
                 </div>
@@ -205,30 +230,36 @@ const RecipeModal = ({
               <div className="lg:w-1/2 mt-4 lg:mt-0 lg:pl-4">
                 <div className="space-y-6">
                   <div>
-                    <h3 className="text-lg font-semibold text-emerald-400 mb-2">Ingredients</h3>
+                    <h3 className="text-lg font-semibold text-emerald-400 mb-2">
+                    <TranslatedText id="ingredients">Ingredients</TranslatedText>
+                    </h3>
                     <ul className="list-disc list-inside text-gray-300 space-y-1">
-                      {selectedRecipe.ingredients?.split(",").map((ingredient, idx) => (
+                      {recipeContent.ingredients?.split(",").map((ingredient, idx) => (
                         <li key={idx}>{ingredient.trim()}</li>
                       ))}
                     </ul>
                   </div>
 
                   <div>
-                    <h3 className="text-lg font-semibold text-emerald-400 mb-2">Instructions</h3>
-                    <p className="text-gray-300 whitespace-pre-line">{selectedRecipe.instructions}</p>
+                    <h3 className="text-lg font-semibold text-emerald-400 mb-2">
+                      <TranslatedText id="instructions">Instructions</TranslatedText>
+                    </h3>
+                    <p className="text-gray-300 whitespace-pre-line">{recipeContent.instructions}</p>
                   </div>
 
                   <div className="flex flex-wrap gap-3">
                     <span className="px-3 py-1 bg-emerald-600/20 text-emerald-400 rounded-full text-sm">
-                      ⏳ {selectedRecipe.prep_time} min
+                      ⏳ {recipeContent.prep_time} <TranslatedText id="recipe_mins">min</TranslatedText>
                     </span>
                     <span className="px-3 py-1 bg-emerald-600/20 text-emerald-400 rounded-full text-sm">
-                      🍽️ {selectedRecipe.servings} servings
+                      🍽️ {recipeContent.servings} <TranslatedText id="recipe_servings">servings</TranslatedText>
                     </span>
                   </div>
 
                   <div className="mt-6">
-                    <h3 className="text-lg font-semibold text-emerald-400 mb-4">Comments</h3>
+                    <h3 className="text-lg font-semibold text-emerald-400 mb-4">
+                      <TranslatedText id="comments">Comments</TranslatedText>
+                    </h3>
                     <div className="space-y-4 max-h-[300px] overflow-y-auto pr-2">
                       {posts[currentIndex]?.comments.map((comment, idx) => (
                         <div key={idx} className="bg-gray-700/50 p-3 rounded-lg">
@@ -246,7 +277,7 @@ const RecipeModal = ({
                         type="text"
                         value={commentText}
                         onChange={(e) => setCommentText(e.target.value)}
-                        placeholder="Add a comment..."
+                        placeholder={<TranslatedText id="add_comment_placeholder">Add a comment...</TranslatedText>}
                         className="flex-1 bg-gray-700 text-gray-100 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-500"
                       />
                       <button
@@ -297,7 +328,7 @@ const RecipeModal = ({
       <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
         <div className="relative bg-gray-900 rounded-lg w-full max-w-md mx-4">
           <div className="p-4 border-b border-gray-700 flex justify-between items-center">
-            <h2 className="text-2xl font-bold text-gray-100">Nutritional Information</h2>
+            <h2 className="text-2xl font-bold text-gray-100"><TranslatedText id="nutritional_information">Nutritional Information</TranslatedText></h2>
             <button
               onClick={handleCloseNutritionModal}
               className="text-gray-400 hover:text-white transition-colors"
