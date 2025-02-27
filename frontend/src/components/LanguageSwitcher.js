@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from '../context/TranslationContext';
-import { FaGlobe, FaSpinner, FaTimes } from 'react-icons/fa';
+import { FaGlobe, FaSpinner } from 'react-icons/fa';
 
 const LanguageSwitcher = () => {
   const { currentLanguage, setCurrentLanguage, loading } = useTranslation();
@@ -13,7 +13,9 @@ const LanguageSwitcher = () => {
     { code: 'en', name: 'English', flag: '🇺🇸' },
     { code: 'es', name: 'Español', flag: '🇪🇸' },
     { code: 'hi', name: 'हिंदी', flag: '🇮🇳' },
-    { code: 'fr', name: 'Français', flag: '🇫🇷' }
+    { code: 'fr', name: 'Français', flag: '🇫🇷' },
+    { code: 'de', name: 'Deutsch', flag: '🇩🇪' },
+    { code: 'ml', name: 'മലയാളം', flag: '🇮🇳' }
   ];
 
   // Check and set the language on page load
