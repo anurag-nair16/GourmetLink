@@ -94,16 +94,16 @@ const PostCard = ({ post, index, onOpenModal, onLike, profileData, renderRatingS
               <FaStar className="text-yellow-500" size={16} />
               <span className="text-white">{post.average_rating}</span>
               <span className="text-gray-400 text-xs">
-                (<TranslatedText id="ratings_count">{post.ratings.length} ratings</TranslatedText>)
+                ({post.ratings.length} ratings)
               </span>
             </div>
             <div className="ml-auto">
               <span className="text-emerald-400 text-sm">
-                <TranslatedText id="recipe_by">by</TranslatedText> {userProfile.username}
+                by {userProfile.username}
               </span>
             </div>
           </div>
-
+  
           <div className="mt-2 flex items-center justify-between gap-2">
             <div>
               {recipeContent.tags?.split(",").map((tag, i) => (
@@ -138,7 +138,7 @@ const PostCard = ({ post, index, onOpenModal, onLike, profileData, renderRatingS
               )}
               <span>{post.likes_count}</span>
             </button>
-
+  
             <div className="flex items-center space-x-1">
               <FaComment />
               <span>{post.comments.length}</span>
@@ -150,15 +150,15 @@ const PostCard = ({ post, index, onOpenModal, onLike, profileData, renderRatingS
         </p>
         <div className="mt-3 flex items-center justify-between text-sm text-gray-400">
           <span>
-            🕒 {recipeContent.prep_time} <TranslatedText id="recipe_mins">mins</TranslatedText>
+            🕒 {recipeContent.prep_time} mins
           </span>
           <span>
-            👥 {recipeContent.servings} <TranslatedText id="recipe_servings">servings</TranslatedText>
+            👥 {recipeContent.servings} servings
           </span>
         </div>
       </div>
     </motion.div>
-  );
+  );  
 };
 
 export default PostCard;

@@ -176,7 +176,7 @@ const RecipeModal = ({
                 className="text-gray-400 hover:text-white transition-colors flex items-center space-x-2"
               >
                 <FaAppleAlt size={24} />
-                <span><TranslatedText id="nutritional_analysis">Nutritional Analysis</TranslatedText></span>
+                <span>Nutritional Analysis</span>
               </button>
               <button
                 onClick={handleClose}
@@ -186,11 +186,11 @@ const RecipeModal = ({
               </button>
             </div>
           </div>
-
+  
           <div className="overflow-y-auto h-[calc(100vh-80px)] p-4" ref={scrollableRef}>
             <div className="flex flex-col lg:flex-row">
               <div className="lg:w-1/2">
-                <div className="relative w-full max-h-[300px] lg:max-h-[400px] overflow-hidden">
+                <div className="relative w-full max-h-[600px] lg:max-h-[600px] overflow-hidden">
                   <img
                     src={selectedRecipe.image}
                     alt={selectedRecipe.name}
@@ -198,10 +198,10 @@ const RecipeModal = ({
                     onClick={handleImageClick}
                   />
                 </div>
-
+  
                 <div className="mt-4 p-4 bg-gray-700/50 rounded-lg">
                   <h3 className="text-lg font-semibold text-gray-200 mb-2">
-                  <TranslatedText id="rate_recipe">Rate this Recipe</TranslatedText>
+                    Rate this Recipe
                   </h3>
                   <div className="flex items-center space-x-2">
                     {[1, 2, 3, 4, 5].map((star) => (
@@ -221,17 +221,17 @@ const RecipeModal = ({
                       onClick={() => onRate(selectedRecipe.id, rating)}
                       className="ml-4 bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg transition-colors"
                     >
-                      <TranslatedText id="submit">Submit</TranslatedText>
+                      Submit
                     </button>
                   </div>
                 </div>
               </div>
-
+  
               <div className="lg:w-1/2 mt-4 lg:mt-0 lg:pl-4">
                 <div className="space-y-6">
                   <div>
                     <h3 className="text-lg font-semibold text-emerald-400 mb-2">
-                    <TranslatedText id="ingredients">Ingredients</TranslatedText>
+                      Ingredients
                     </h3>
                     <ul className="list-disc list-inside text-gray-300 space-y-1">
                       {recipeContent.ingredients?.split(",").map((ingredient, idx) => (
@@ -239,26 +239,26 @@ const RecipeModal = ({
                       ))}
                     </ul>
                   </div>
-
+  
                   <div>
                     <h3 className="text-lg font-semibold text-emerald-400 mb-2">
-                      <TranslatedText id="instructions">Instructions</TranslatedText>
+                      Instructions
                     </h3>
                     <p className="text-gray-300 whitespace-pre-line">{recipeContent.instructions}</p>
                   </div>
-
+  
                   <div className="flex flex-wrap gap-3">
                     <span className="px-3 py-1 bg-emerald-600/20 text-emerald-400 rounded-full text-sm">
-                      ⏳ {recipeContent.prep_time} <TranslatedText id="recipe_mins">min</TranslatedText>
+                      ⏳ {recipeContent.prep_time} min
                     </span>
                     <span className="px-3 py-1 bg-emerald-600/20 text-emerald-400 rounded-full text-sm">
-                      🍽️ {recipeContent.servings} <TranslatedText id="recipe_servings">servings</TranslatedText>
+                      🍽️ {recipeContent.servings} servings
                     </span>
                   </div>
-
+  
                   <div className="mt-6">
                     <h3 className="text-lg font-semibold text-emerald-400 mb-4">
-                      <TranslatedText id="comments">Comments</TranslatedText>
+                      Comments
                     </h3>
                     <div className="space-y-4 max-h-[300px] overflow-y-auto pr-2">
                       {posts[currentIndex]?.comments.map((comment, idx) => (
@@ -271,13 +271,13 @@ const RecipeModal = ({
                         </div>
                       ))}
                     </div>
-
+  
                     <div className="mt-4 flex items-center space-x-3">
                       <input
                         type="text"
                         value={commentText}
                         onChange={(e) => setCommentText(e.target.value)}
-                        placeholder={<TranslatedText id="add_comment_placeholder">Add a comment...</TranslatedText>}
+                        placeholder="Add a comment..."
                         className="flex-1 bg-gray-700 text-gray-100 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-500"
                       />
                       <button
@@ -293,7 +293,7 @@ const RecipeModal = ({
             </div>
           </div>
         </div>
-
+  
         <button
           onClick={() => onNavigate("left")}
           className="absolute left-4 top-1/2 -translate-y-1/2 hidden lg:block bg-gray-800 hover:bg-gray-700 text-white p-3 rounded-full transition-colors"
@@ -307,7 +307,7 @@ const RecipeModal = ({
           <FaChevronRight size={24} />
         </button>
       </div>
-
+  
       {isImageFullScreen && (
         <div className="fixed inset-0 bg-black/90 flex items-center justify-center z-50">
           <button
@@ -323,112 +323,111 @@ const RecipeModal = ({
           />
         </div>
       )}
-
-{showNutritionModal && (
-      <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
-        <div className="relative bg-gray-900 rounded-lg w-full max-w-md mx-4">
-          <div className="p-4 border-b border-gray-700 flex justify-between items-center">
-            <h2 className="text-2xl font-bold text-gray-100"><TranslatedText id="nutritional_information">Nutritional Information</TranslatedText></h2>
-            <button
-              onClick={handleCloseNutritionModal}
-              className="text-gray-400 hover:text-white transition-colors"
-            >
-              <FaTimes size={24} />
-            </button>
-          </div>
-          <div className="p-4">
-            {loading ? (
-              <div className="flex flex-col items-center justify-center py-8">
-                <div className="relative">
-                  <Oval
-                    height={80}
-                    width={80}
-                    color="#4CAF50"
-                    visible={true}
-                    ariaLabel="oval-loading"
-                    secondaryColor="#4CAF50"
-                    strokeWidth={2}
-                    strokeWidthSecondary={2}
-                  />
-                  <FaAppleAlt 
-                  size={32} 
-                  className="text-emerald-500 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2" 
-                  />
+  
+      {showNutritionModal && (
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
+          <div className="relative bg-gray-900 rounded-lg w-full max-w-md mx-4">
+            <div className="p-4 border-b border-gray-700 flex justify-between items-center">
+              <h2 className="text-2xl font-bold text-gray-100">Nutritional Information</h2>
+              <button
+                onClick={handleCloseNutritionModal}
+                className="text-gray-400 hover:text-white transition-colors"
+              >
+                <FaTimes size={24} />
+              </button>
+            </div>
+            <div className="p-4">
+              {loading ? (
+                <div className="flex flex-col items-center justify-center py-8">
+                  <div className="relative">
+                    <Oval
+                      height={80}
+                      width={80}
+                      color="#4CAF50"
+                      visible={true}
+                      ariaLabel="oval-loading"
+                      secondaryColor="#4CAF50"
+                      strokeWidth={2}
+                      strokeWidthSecondary={2}
+                    />
+                    <FaAppleAlt 
+                      size={32} 
+                      className="text-emerald-500 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2" 
+                    />
                   </div>
                   <p className="text-gray-300 mt-4 text-center">
                     Analyzing nutritional content...
                     <br />
                     <span className="text-sm text-gray-400">This may take a few seconds</span>
                   </p>
-              </div>
-            ) : (
-              nutrition && (
-                <div className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    {parseFloat(nutrition.calories) > 0 && (
-                      <div className="bg-gray-800 p-3 rounded-lg">
-                        <p className="text-gray-400 text-sm">Calories</p>
-                        <p className="text-gray-200 text-lg font-semibold">{nutrition.calories}</p>
-                      </div>
-                    )}
-                    {parseFloat(nutrition.carbohydrates) > 0 && (
-                      <div className="bg-gray-800 p-3 rounded-lg">
-                        <p className="text-gray-400 text-sm">Carbohydrates</p>
-                        <p className="text-gray-200 text-lg font-semibold">{nutrition.carbohydrates}g</p>
-                      </div>
-                    )}
-                    {parseFloat(nutrition.protein) > 0 && (
-                      <div className="bg-gray-800 p-3 rounded-lg">
-                        <p className="text-gray-400 text-sm">Protein</p>
-                        <p className="text-gray-200 text-lg font-semibold">{nutrition.protein}g</p>
-                      </div>
-                    )}
-                    {parseFloat(nutrition.fat) > 0 && (
-                      <div className="bg-gray-800 p-3 rounded-lg">
-                        <p className="text-gray-400 text-sm">Fat</p>
-                        <p className="text-gray-200 text-lg font-semibold">{nutrition.fat}g</p>
-                      </div>
-                    )}
-                    {parseFloat(nutrition.fiber) > 0 && (
-                      <div className="bg-gray-800 p-3 rounded-lg">
-                        <p className="text-gray-400 text-sm">Fiber</p>
-                        <p className="text-gray-200 text-lg font-semibold">{nutrition.fiber}g</p>
-                      </div>
-                    )}
-                    {parseFloat(nutrition.vitamins) > 0 && (
-                      <div className="bg-gray-800 p-3 rounded-lg">
-                        <p className="text-gray-400 text-sm">Vitamins</p>
-                        <p className="text-gray-200 text-lg font-semibold">{nutrition.vitamins}g</p>
+                </div>
+              ) : (
+                nutrition && (
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      {parseFloat(nutrition.calories) > 0 && (
+                        <div className="bg-gray-800 p-3 rounded-lg">
+                          <p className="text-gray-400 text-sm">Calories</p>
+                          <p className="text-gray-200 text-lg font-semibold">{nutrition.calories}</p>
+                        </div>
+                      )}
+                      {parseFloat(nutrition.carbohydrates) > 0 && (
+                        <div className="bg-gray-800 p-3 rounded-lg">
+                          <p className="text-gray-400 text-sm">Carbohydrates</p>
+                          <p className="text-gray-200 text-lg font-semibold">{nutrition.carbohydrates}g</p>
+                        </div>
+                      )}
+                      {parseFloat(nutrition.protein) > 0 && (
+                        <div className="bg-gray-800 p-3 rounded-lg">
+                          <p className="text-gray-400 text-sm">Protein</p>
+                          <p className="text-gray-200 text-lg font-semibold">{nutrition.protein}g</p>
+                        </div>
+                      )}
+                      {parseFloat(nutrition.fat) > 0 && (
+                        <div className="bg-gray-800 p-3 rounded-lg">
+                          <p className="text-gray-400 text-sm">Fat</p>
+                          <p className="text-gray-200 text-lg font-semibold">{nutrition.fat}g</p>
+                        </div>
+                      )}
+                      {parseFloat(nutrition.fiber) > 0 && (
+                        <div className="bg-gray-800 p-3 rounded-lg">
+                          <p className="text-gray-400 text-sm">Fiber</p>
+                          <p className="text-gray-200 text-lg font-semibold">{nutrition.fiber}g</p>
+                        </div>
+                      )}
+                      {parseFloat(nutrition.vitamins) > 0 && (
+                        <div className="bg-gray-800 p-3 rounded-lg">
+                          <p className="text-gray-400 text-sm">Vitamins</p>
+                          <p className="text-gray-200 text-lg font-semibold">{nutrition.vitamins}g</p>
+                        </div>
+                      )}
+                    </div>
+                    
+                    {recommendation && (
+                      <div className="mt-6">
+                        <div className="prose prose-invert max-w-none">
+                          <ReactMarkdown
+                            components={{
+                              p: ({node, ...props}) => <p className="text-gray-300 mb-2" {...props} />,
+                              ul: ({node, ...props}) => <ul className="list-disc list-inside space-y-1 text-gray-300" {...props} />,
+                              li: ({node, ...props}) => <li className="text-gray-300" {...props} />,
+                              strong: ({node, ...props}) => <strong className="text-emerald-400 font-semibold" {...props} />
+                            }}
+                          >
+                            {recommendation}
+                          </ReactMarkdown>
+                        </div>
                       </div>
                     )}
                   </div>
-                  
-                  {recommendation && (
-                    <div className="mt-6">
-                      {/* <h3 className="text-lg font-semibold text-emerald-400 mb-3">Recommendations</h3> */}
-                      <div className="prose prose-invert max-w-none">
-                        <ReactMarkdown
-                          components={{
-                            p: ({node, ...props}) => <p className="text-gray-300 mb-2" {...props} />,
-                            ul: ({node, ...props}) => <ul className="list-disc list-inside space-y-1 text-gray-300" {...props} />,
-                            li: ({node, ...props}) => <li className="text-gray-300" {...props} />,
-                            strong: ({node, ...props}) => <strong className="text-emerald-400 font-semibold" {...props} />
-                          }}
-                        >
-                          {recommendation}
-                        </ReactMarkdown>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )
-            )}
+                )
+              )}
+            </div>
           </div>
         </div>
-      </div>
-    )}
+      )}
     </div>
-  );
+  );  
 };
 
 

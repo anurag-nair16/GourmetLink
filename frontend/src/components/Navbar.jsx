@@ -45,35 +45,30 @@ const Navbar = () => {
             </div>
           </span>
         </div>
-
+  
         {/* Desktop Menu */}
         <div className="hidden md:flex items-center space-x-9">
           {isAuthenticated ? (
             <>
               <NavItem 
                 icon={<FaHome />} 
-                textId="nav_home"
                 defaultText="Home" 
                 to="/" 
               />
               <NavItem 
                 icon={<FaUtensils />} 
-                textId="nav_submit_recipe"
                 defaultText="Submit Recipe" 
                 to="/submit-recipe" 
               />
               <NavItem 
                 icon={<FaUser />} 
-                textId="nav_profile"
                 defaultText="Profile" 
                 to="/profile" 
               />
               <button onClick={handleLogoutClick} className="flex items-center text-white hover:text-gray-300 transition-all duration-300 ease-in-out">
                 <FaSignOutAlt />
                 <span className="ml-2">
-                  <TranslatedText id="nav_logout">
-                    Logout
-                  </TranslatedText>
+                  Logout
                 </span>
               </button>
             </>
@@ -81,19 +76,16 @@ const Navbar = () => {
             <>
               <NavItem 
                 icon={<FaHome />} 
-                textId="nav_home"
                 defaultText="Home" 
                 to="/" 
               />
               <NavItem 
                 icon={<FaSignInAlt />} 
-                textId="nav_login"
                 defaultText="Login" 
                 to="/login" 
               />
               <NavItem 
                 icon={<FaUserPlus />} 
-                textId="nav_signup"
                 defaultText="Signup" 
                 to="/signup" 
               />
@@ -101,7 +93,7 @@ const Navbar = () => {
           )}
           <LanguageSwitcher />
         </div>
-
+  
         {/* Mobile Menu Button */}
         <button
           className="md:hidden text-white focus:outline-none"
@@ -111,7 +103,7 @@ const Navbar = () => {
           {isOpen ? <FaTimes size={24} /> : <FaBars size={24} />}
         </button>
       </div>
-
+  
       {/* Mobile Menu */}
       {isOpen && (
         <div className="md:hidden bg-gray-900 p-4 transition-all duration-300 ease-in-out transform">
@@ -119,28 +111,24 @@ const Navbar = () => {
             <>
               <NavItem 
                 icon={<FaHome />} 
-                textId="nav_home"
                 defaultText="Home" 
                 to="/" 
                 onClick={toggleMenu} 
               />
               <NavItem 
                 icon={<FaUtensils />} 
-                textId="nav_submit_recipe"
                 defaultText="Submit Recipe" 
                 to="/submit-recipe" 
                 onClick={toggleMenu} 
               />
               <NavItem 
                 icon={<FaUser />} 
-                textId="nav_profile"
                 defaultText="Profile" 
                 to="/profile" 
                 onClick={toggleMenu} 
               />
               <NavItem
                 icon={<FaSignOutAlt />}
-                textId="nav_logout"
                 defaultText="Logout"
                 onClick={() => {
                   handleLogoutClick();
@@ -152,21 +140,18 @@ const Navbar = () => {
             <>
               <NavItem 
                 icon={<FaHome />} 
-                textId="nav_home"
                 defaultText="Home" 
                 to="/" 
                 onClick={toggleMenu} 
               />
               <NavItem 
                 icon={<FaSignInAlt />} 
-                textId="nav_login"
                 defaultText="Login" 
                 to="/login" 
                 onClick={toggleMenu} 
               />
               <NavItem 
                 icon={<FaUserPlus />} 
-                textId="nav_signup"
                 defaultText="Signup" 
                 to="/signup" 
                 onClick={toggleMenu} 
@@ -175,7 +160,7 @@ const Navbar = () => {
           )}
         </div>
       )}
-
+  
       {/* Logout Popup */}
       <LogoutPopup
         isOpen={isPopupOpen}
@@ -184,23 +169,22 @@ const Navbar = () => {
       />
     </nav>
   );
-};
-
-const NavItem = ({ icon, textId, defaultText, to, onClick }) => {
-  return (
-    <Link
-      to={to}
-      onClick={onClick}
-      className="flex items-center space-x-2 text-white hover:text-emerald-400 transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none p-2"
-    >
-      {icon}
-      <span>
-        <TranslatedText id={textId}>
+}
+  
+  const NavItem = ({ icon, defaultText, to, onClick }) => {
+    return (
+      <Link
+        to={to}
+        onClick={onClick}
+        className="flex items-center space-x-2 text-white hover:text-emerald-400 transition duration-300 ease-in-out transform hover:scale-105 focus:outline-none p-2"
+      >
+        {icon}
+        <span>
           {defaultText}
-        </TranslatedText>
-      </span>
-    </Link>
-  );
-};
+        </span>
+      </Link>
+    );
+  };
+  
 
 export default Navbar;

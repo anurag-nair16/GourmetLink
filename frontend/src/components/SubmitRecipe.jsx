@@ -161,8 +161,6 @@ const RecipePostCreator = () => {
       {/* Header */}
       <header className="bg-gray-800 py-6 px-4 shadow-lg">
         <h1 className="text-3xl font-bold text-center text-gray-100">
-          Create Recipe
-          <span className="text-emerald-500 ml-2">✨</span>
         </h1>
       </header>
 
