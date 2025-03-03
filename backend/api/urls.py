@@ -2,6 +2,12 @@ from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from django.urls import path
 from .views import SignupView, LoginView, user_profile, get_user_recipes, get_nutritional_info, generate_recommendation, UserProfileDetailView, RecipeSubmitView, like_post, add_comment, get_all_posts, UserByEmailView, rate_post
 from rest_framework_simplejwt.views import TokenRefreshView
+from rest_framework.routers import DefaultRouter
+from features.views import MealPlanViewSet
+
+router = DefaultRouter()
+# Register the MealPlanViewSet with the router
+router.register(r'meal-plans', MealPlanViewSet, basename='meal-plan')
 
 urlpatterns = [
     path('signup/', SignupView.as_view(), name='signup'),

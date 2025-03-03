@@ -355,7 +355,7 @@ const AllPostsPage = () => {
   return (
     <div className="min-h-screen bg-gray-900 page-transition">
       {/* Search and Filter Controls */}
-      <div className="sticky top-0 z-50 bg-gray-900 shadow-lg">
+      <div className="sticky top-0 z-20 bg-gray-900 shadow-lg">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center gap-4">
             {/* Search Bar */}

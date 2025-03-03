@@ -1,21 +1,20 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.parsers import JSONParser
-from rest_framework import status
-from django.shortcuts import get_object_or_404
-import requests
+from rest_framework import status, viewsets
 from rest_framework.permissions import IsAuthenticated
-import json, logging
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from api.models import Recipe
-from api.serializers import RecipeSerializer
-from .utils import translate_recipe
+from rest_framework.decorators import action
+from django.shortcuts import get_object_or_404
 from django.core.cache import cache
 import requests
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework.parsers import JSONParser
+import json
+import logging
+from .models import MealPlan
+from api.models import Recipe
+from .serializers import MealPlanSerializer, ShoppingListSerializer
+from api.serializers import RecipeSerializer
+from .utils import translate_recipe
+
 
 class TranslateContent(APIView):
     parser_classes = [JSONParser]
@@ -225,3 +224,28 @@ class RecipeListView(APIView):
             translated_recipes.append(recipe_data)
         
         return Response(translated_recipes)
+
+
+class MealPlanViewSet(viewsets.ModelViewSet):
+    serializer_class = MealPlanSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        return MealPlan.objects.filter(user=self.request.user)
+
+    @action(detail=True, methods=["get"])
+    def shopping_list(self, request, pk=None):
+        meal_plan = self.get_object()
+        ingredients = {}
+        for entry in meal_plan.entries.all():
+            for ingredient in entry.recipe.ingredients:  # Assuming ingredients is a list of dicts
+                name = ingredient["item"]
+                qty = float(ingredient["quantity"]) * entry.servings
+                unit = ingredient.get("unit", "")
+                if name in ingredients:
+                    ingredients[name]["quantity"] += qty
+                else:
+                    ingredients[name] = {"name": name, "quantity": qty, "unit": unit}
+        shopping_list = list(ingredients.values())
+        serializer = ShoppingListSerializer({"items": shopping_list})
+        return Response(serializer.data)

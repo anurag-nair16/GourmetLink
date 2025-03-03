@@ -15,6 +15,7 @@ import AllPosts from './components/AllPosts';
 // Import TranslationProvider
 import { TranslationProvider } from './context/TranslationContext';
 import LanguageSwitcher from './components/LanguageSwitcher';
+import MealPlannerPage from './components/MealPlannerPage';
 
 const App = () => {
   useEffect(() => {
@@ -88,10 +89,14 @@ const App = () => {
             path="/posts" 
             element={<ProtectedRoute element={<AllPosts />} />} 
           />
+          <Route 
+            path="/meal-planner"
+            element={<ProtectedRoute element={<MealPlannerPage />} />}
+          />
         </Routes>
       </main>
       <Footer />
-      <LanguageSwitcher />
+      <LanguageSwitcher/>
     </TranslationProvider>
   );
 };

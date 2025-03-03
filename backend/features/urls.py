@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import TranslateContent, RecipeDetailView, RecipeListView, RecipeTranslationView
+from .views import TranslateContent, RecipeDetailView, RecipeListView, RecipeTranslationView, MealPlanViewSet
 
 urlpatterns = [
     path('translate/', TranslateContent.as_view(), name='translate'),
