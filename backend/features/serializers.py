@@ -11,10 +11,11 @@ class MealPlanEntrySerializer(serializers.ModelSerializer):
 
 class MealPlanSerializer(serializers.ModelSerializer):
     entries = MealPlanEntrySerializer(many=True)
-
+    
+    # Removed 'duration' and added 'end_date'
     class Meta:
         model = MealPlan
-        fields = ["id", "name", "start_date", "duration", "entries", "created_at", "updated_at"]
+        fields = ["id", "name", "start_date", "end_date", "entries", "created_at", "updated_at"]  # Updated fields
 
     def create(self, validated_data):
         entries_data = validated_data.pop("entries")
@@ -27,7 +28,7 @@ class MealPlanSerializer(serializers.ModelSerializer):
         entries_data = validated_data.pop("entries", None)
         instance.name = validated_data.get("name", instance.name)
         instance.start_date = validated_data.get("start_date", instance.start_date)
-        instance.duration = validated_data.get("duration", instance.duration)
+        instance.end_date = validated_data.get("end_date", instance.end_date)  # Update the end_date
         instance.save()
 
         if entries_data is not None:
@@ -35,6 +36,12 @@ class MealPlanSerializer(serializers.ModelSerializer):
             for entry_data in entries_data:
                 MealPlanEntry.objects.create(meal_plan=instance, **entry_data)
         return instance
+
+    def validate(self, data):
+        if data['end_date'] <= data['start_date']:
+            raise serializers.ValidationError("End date must be later than the start date.")
+        return data
+
     
 class ShoppingListSerializer(serializers.Serializer):
     items = serializers.ListField(

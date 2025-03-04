@@ -91,18 +91,19 @@ class RecipeListView(APIView):
         
         translated_recipes = []
         for recipe in recipes:
-            # Get cached or stored translation
+            recipe_data = RecipeSerializer(recipe).data  # Full serialized data
             translated_data = recipe.get_translation(target_language)
             
             if not translated_data and target_language != 'en':
-                # Translate and store if not exists
                 translated_data = translate_recipe(recipe, target_language)
                 recipe.set_translation(target_language, translated_data)
             
-            # Create recipe data with translations
-            recipe_data = RecipeSerializer(recipe).data
+            # Update only translatable fields if translation exists
             if translated_data:
-                recipe_data.update(translated_data)
+                recipe_data['name'] = translated_data['name']
+                recipe_data['ingredients'] = translated_data['ingredients']
+                recipe_data['description'] = translated_data['description']
+                recipe_data['instructions'] = translated_data['instructions']
             
             translated_recipes.append(recipe_data)
         
@@ -111,83 +112,53 @@ class RecipeListView(APIView):
 logger = logging.getLogger(__name__)
 
 class RecipeTranslationView(APIView):
-    # permission_classes = [IsAuthenticated]
-
     def get(self, request, pk):
         try:
             language = request.query_params.get('language', 'en')
-            user = request.user.username
-            message = f"Translation requested for recipe {pk} to language {language} by user {user}"
-            logger.info(message)
-            # print(message)
-            
             recipe = get_object_or_404(Recipe, pk=pk)
             
-            if language == 'en':
-                message = "Returning original English content"
-                logger.debug(message)
-                print(message)
-                return Response(RecipeSerializer(recipe).data)
+            recipe_data = RecipeSerializer(recipe).data  # Full serialized data
             
-            # Try to get cached translation
+            if language == 'en':
+                return Response(recipe_data)
+            
+            # Try cache or stored translation
             cache_key = f'recipe_translation_{pk}_{language}'
             cached_translation = cache.get(cache_key)
             
             if cached_translation:
-                message = f"Found cached translation for recipe {pk}"
-                logger.debug(message)
-                print(message)
-                # print(f"Cached translation: {cached_translation}")
-                return Response(cached_translation)
-            
-            # Get translation from database if exists
-            translation = recipe.get_translation(language)
-            
-            if translation:
-                message = f"Found stored translation for recipe {pk}"
-                logger.debug(message)
-                print(message)
-                # print(f"Stored translation: {translation}")
-                cache.set(cache_key, translation, timeout=86400)
-                recipe_data = RecipeSerializer(recipe).data
-                recipe_data.update(translation)
+                recipe_data['name'] = cached_translation['name']
+                recipe_data['ingredients'] = cached_translation['ingredients']
+                recipe_data['description'] = cached_translation['description']
+                recipe_data['instructions'] = cached_translation['instructions']
                 return Response(recipe_data)
             
-            # If no translation exists, create one
-            # message = f"Creating new translation for recipe {pk}"
-            # logger.info(message)
-            # print(message)
+            translation = recipe.get_translation(language)
+            if translation:
+                recipe_data['name'] = translation['name']
+                recipe_data['ingredients'] = translation['ingredients']
+                recipe_data['description'] = translation['description']
+                recipe_data['instructions'] = translation['instructions']
+                cache.set(cache_key, translation, timeout=86400)
+                return Response(recipe_data)
+            
+            # Create new translation
             translated_data = translate_recipe(recipe, language)
-                
             if translated_data:
                 recipe.set_translation(language, translated_data)
                 cache.set(cache_key, translated_data, timeout=86400)
-                
-                recipe_data = RecipeSerializer(recipe).data
-                recipe_data.update(translated_data)
-                message = f"Successfully translated recipe {pk}"
-                logger.info(message)
-                print(message)
-                # print(f"Translated data: {translated_data}")
+                recipe_data['name'] = translated_data['name']
+                recipe_data['ingredients'] = translated_data['ingredients']
+                recipe_data['description'] = translated_data['description']
+                recipe_data['instructions'] = translated_data['instructions']
                 return Response(recipe_data)
             else:
-                message = f"Translation failed for recipe {pk}, returning original content"
-                logger.warning(message)
-                print(message)
-                return Response(RecipeSerializer(recipe).data)
+                return Response(recipe_data)
                     
         except Exception as e:
             message = f"Translation error for recipe {pk}: {str(e)}"
             logger.error(message)
-            print(message)
-            return Response(
-                {
-                    'error': message,
-                    'timestamp': '2025-02-26 08:50:28',
-                    'requested_by': 'anurag-nair16'
-                },
-                status=500
-            )
+            return Response({'error': message}, status=500)
 
 class RecipeDetailView(APIView):
     def get(self, request, pk):
@@ -199,32 +170,6 @@ class RecipeDetailView(APIView):
                 {'error': 'Recipe not found'}, 
                 status=status.HTTP_404_NOT_FOUND
             )
-        
-
-class RecipeListView(APIView):
-    def get(self, request):
-        target_language = request.query_params.get('language', 'en')
-        recipes = Recipe.objects.all()
-        
-        translated_recipes = []
-        for recipe in recipes:
-            # Get cached or stored translation
-            translated_data = recipe.get_translation(target_language)
-            
-            if not translated_data and target_language != 'en':
-                # Translate and store if not exists
-                translated_data = translate_recipe(recipe, target_language)
-                recipe.set_translation(target_language, translated_data)
-            
-            # Create recipe data with translations
-            recipe_data = RecipeSerializer(recipe).data
-            if translated_data:
-                recipe_data.update(translated_data)
-            
-            translated_recipes.append(recipe_data)
-        
-        return Response(translated_recipes)
-
 
 class MealPlanViewSet(viewsets.ModelViewSet):
     serializer_class = MealPlanSerializer

@@ -68,6 +68,9 @@ const PostCard = ({ post, index, onOpenModal, onLike, profileData, renderRatingS
     formattedDate = 'Invalid date';
   }
 
+  console.log(recipeContent);
+  console.log(recipeContent.image);
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}

@@ -58,28 +58,34 @@ class Recipe(models.Model):
 
     def get_translation(self, language_code):
         print(f"Getting translation for {self.name} in {language_code}")
+        base_data = {
+            'image': self.image.url if self.image else None,
+            'created_at': self.created_at.isoformat(),
+        }
+        
         if language_code == 'en':
-            return {
+            base_data.update({
                 'name': self.name,
                 'ingredients': self.ingredients,
                 'description': self.description,
                 'instructions': self.instructions,
-            }
+            })
+            return base_data
         
-        # Try to get from cache first
         cache_key = f'recipe_translation_{self.id}_{language_code}'
         cached_translation = cache.get(cache_key)
         if cached_translation:
-            return cached_translation
+            base_data.update(cached_translation)
+            return base_data
 
-        # If not in cache, get from database
         translation = self.translations.get(language_code, {})
         if translation:
-            cache.set(cache_key, translation, timeout=86400)  # Cache for 24 hours
-            return translation
+            cache.set(cache_key, translation, timeout=86400)
+            base_data.update(translation)
+            return base_data
 
         print(f"No translation found for {self.name} in {language_code}")
-        return None  # Fallback to English
+        return None
 
     def set_translation(self, language_code, translated_data):
         print(f"Setting translation for {self.name} in {language_code}")

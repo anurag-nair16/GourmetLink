@@ -177,6 +177,18 @@ def add_comment(request, post_id):
         return Response(serializer.data, status=status.HTTP_201_CREATED)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+class FavouriteRecipesView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        # Get posts liked by the authenticated user
+        liked_posts = Post.objects.filter(likes=request.user)
+        # Extract recipes from these posts
+        recipes = [post.recipe for post in liked_posts]
+        # Serialize the recipe data
+        serializer = RecipeSerializer(recipes, many=True)
+        return Response(serializer.data)
+
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def rate_post(request, post_id):
