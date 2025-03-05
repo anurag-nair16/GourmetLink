@@ -399,7 +399,7 @@ const RecipeModal = ({
                     <div key={idx} className="flex items-start gap-3">
                       <Avatar name={comment.user} size="36" round={true} className="flex-shrink-0" />
                       <div className="flex-1">
-                        <p className="text-sm font-medium text-white">{comment.username}</p>
+                        <p className="text-sm font-medium text-white">{comment.user}</p>
                         <p className="text-sm text-gray-300 break-words">{comment.text}</p>
                       </div>
                     </div>
