@@ -239,7 +239,7 @@ const RecipeModal = ({
           <div className="lg:w-1/2 flex flex-col">
             <div
               className="relative overflow-hidden transition-all duration-300"
-              style={{ height: isExpanded ? "auto" : imageHeight ? `${imageHeight}px` : "200px" }}
+              style={{ height: isExpanded ? "auto" : "280px" }}
             >
               <img
                 ref={imageRef}

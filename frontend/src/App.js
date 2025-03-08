@@ -15,7 +15,8 @@ import AllPosts from './components/AllPosts';
 // Import TranslationProvider
 import { TranslationProvider } from './context/TranslationContext';
 import LanguageSwitcher from './components/LanguageSwitcher';
-import MealPlannerPage from './components/MealPlannerPage';
+import MealPlannerCreator from './components/MealPlanCreator';
+import MealPlannerViewer from './components/MealPlanViewer';
 
 const App = () => {
   useEffect(() => {
@@ -91,7 +92,11 @@ const App = () => {
           />
           <Route 
             path="/meal-planner"
-            element={<ProtectedRoute element={<MealPlannerPage />} />}
+            element={<ProtectedRoute element={<MealPlannerCreator />} />}
+          />
+          <Route 
+            path="/my-mealplans"
+            element={<ProtectedRoute element={<MealPlannerViewer />} />}
           />
         </Routes>
       </main>

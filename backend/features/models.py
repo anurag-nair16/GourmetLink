@@ -27,9 +27,8 @@ class MealPlanEntry(models.Model):
         ("breakfast", "Breakfast"),
         ("lunch", "Lunch"),
         ("dinner", "Dinner"),
-        ("snack", "Snack"),
     ]
-
+    
     meal_plan = models.ForeignKey(MealPlan, on_delete=models.CASCADE, related_name="entries")
     recipe = models.ForeignKey(Recipe, on_delete=models.CASCADE)  # Assuming Recipe model exists
     day = models.PositiveIntegerField()  # Day 1-N for the custom date range (start_date to end_date)

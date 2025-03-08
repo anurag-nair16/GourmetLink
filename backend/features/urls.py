@@ -1,9 +1,15 @@
-from django.urls import path
-from .views import TranslateContent, RecipeDetailView, RecipeListView, RecipeTranslationView, MealPlanViewSet
+from django.urls import path, include
+from rest_framework.routers import DefaultRouter
+from .views import TranslateContent, RecipeDetailView, RecipeTranslationView, MealPlanViewSet, RecipeViewSet
+
+router = DefaultRouter()
+router.register(r'recipes', RecipeViewSet, basename='recipe')
+router.register(r'mealplans', MealPlanViewSet, basename='mealplan')
 
 urlpatterns = [
     path('translate/', TranslateContent.as_view(), name='translate'),
-    path('recipes/', RecipeListView.as_view(), name='recipe-list'),
+    # path('recipess/', RecipeListView.as_view(), name='recipe-list'),
     path('recipes/<int:pk>/', RecipeDetailView.as_view(), name='recipe-detail'),
     path('recipes/<int:pk>/translate/', RecipeTranslationView.as_view(), name='recipe-translate'),
+    path('', include(router.urls)),  # Add this for MealPlanViewSet
 ]

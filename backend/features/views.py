@@ -10,10 +10,23 @@ import requests
 import json
 import logging
 from .models import MealPlan
-from api.models import Recipe
-from .serializers import MealPlanSerializer, ShoppingListSerializer
+from api.models import Recipe, Post
+from .serializers import MealPlanSerializer, IngredientsListSerializer, RecipeSerializer, PostSerializer
 from api.serializers import RecipeSerializer
 from .utils import translate_recipe
+from dotenv import load_dotenv
+import google.generativeai as genai
+from rest_framework import viewsets, status
+from rest_framework.decorators import action
+from rest_framework.response import Response
+from rest_framework.permissions import IsAuthenticated
+from .models import Recipe, MealPlan
+from .serializers import RecipeSerializer, MealPlanSerializer, IngredientsListSerializer
+from django.http import HttpResponse
+from reportlab.lib.pagesizes import letter
+from reportlab.pdfgen import canvas
+import io
+import os
 
 
 class TranslateContent(APIView):
@@ -84,30 +97,30 @@ class TranslateContent(APIView):
             }, status=500)
 
 
-class RecipeListView(APIView):
-    def get(self, request):
-        target_language = request.query_params.get('language', 'en')
-        recipes = Recipe.objects.all()
+# class RecipeListView(APIView):
+#     def get(self, request):
+#         target_language = request.query_params.get('language', 'en')
+#         recipes = Recipe.objects.all()
         
-        translated_recipes = []
-        for recipe in recipes:
-            recipe_data = RecipeSerializer(recipe).data  # Full serialized data
-            translated_data = recipe.get_translation(target_language)
+#         translated_recipes = []
+#         for recipe in recipes:
+#             recipe_data = RecipeSerializer(recipe).data  # Full serialized data
+#             translated_data = recipe.get_translation(target_language)
             
-            if not translated_data and target_language != 'en':
-                translated_data = translate_recipe(recipe, target_language)
-                recipe.set_translation(target_language, translated_data)
+#             if not translated_data and target_language != 'en':
+#                 translated_data = translate_recipe(recipe, target_language)
+#                 recipe.set_translation(target_language, translated_data)
             
-            # Update only translatable fields if translation exists
-            if translated_data:
-                recipe_data['name'] = translated_data['name']
-                recipe_data['ingredients'] = translated_data['ingredients']
-                recipe_data['description'] = translated_data['description']
-                recipe_data['instructions'] = translated_data['instructions']
+#             # Update only translatable fields if translation exists
+#             if translated_data:
+#                 recipe_data['name'] = translated_data['name']
+#                 recipe_data['ingredients'] = translated_data['ingredients']
+#                 recipe_data['description'] = translated_data['description']
+#                 recipe_data['instructions'] = translated_data['instructions']
             
-            translated_recipes.append(recipe_data)
+#             translated_recipes.append(recipe_data)
         
-        return Response(translated_recipes)
+#         return Response(translated_recipes)
 
 logger = logging.getLogger(__name__)
 
@@ -171,6 +184,16 @@ class RecipeDetailView(APIView):
                 status=status.HTTP_404_NOT_FOUND
             )
 
+
+load_dotenv()
+genai.configure(api_key=os.getenv("GOOGLE_GENAI_API_KEY"))
+model = genai.GenerativeModel("gemini-2.0-flash")
+
+class RecipeViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = Post.objects.all()
+    serializer_class = PostSerializer
+    permission_classes = [IsAuthenticated]
+
 class MealPlanViewSet(viewsets.ModelViewSet):
     serializer_class = MealPlanSerializer
     permission_classes = [IsAuthenticated]
@@ -178,19 +201,74 @@ class MealPlanViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         return MealPlan.objects.filter(user=self.request.user)
 
-    @action(detail=True, methods=["get"])
-    def shopping_list(self, request, pk=None):
-        meal_plan = self.get_object()
-        ingredients = {}
+    def _aggregate_and_format_ingredients(self, meal_plan):
+        # Step 1: Aggregate raw ingredients
+        raw_ingredients = {}
         for entry in meal_plan.entries.all():
-            for ingredient in entry.recipe.ingredients:  # Assuming ingredients is a list of dicts
-                name = ingredient["item"]
-                qty = float(ingredient["quantity"]) * entry.servings
-                unit = ingredient.get("unit", "")
-                if name in ingredients:
-                    ingredients[name]["quantity"] += qty
-                else:
-                    ingredients[name] = {"name": name, "quantity": qty, "unit": unit}
-        shopping_list = list(ingredients.values())
-        serializer = ShoppingListSerializer({"items": shopping_list})
+            for ingr in entry.recipe.ingredients.split(","):
+                name = ingr.strip().lower()  # Normalize to lowercase for consistency
+                if name:
+                    if name in raw_ingredients:
+                        raw_ingredients[name] += entry.servings
+                    else:
+                        raw_ingredients[name] = entry.servings
+
+        # Step 2: Prepare input for Gemini
+        ingredient_list = [f"{name}: {count} servings" for name, count in raw_ingredients.items()]
+        prompt = (
+            "You are tasked with creating a shopping list from the following ingredients, where each is listed with a number of servings. "
+            "Your goal is to aggregate duplicate ingredients (e.g., combine 'onions' from multiple entries) and estimate a single, practical quantity "
+            "in metric units (kilograms, grams, liters, milliliters) suitable for shopping. Avoid using 'servings,' 'cups,' 'small,' or 'large'—provide an "
+            "above-average total amount that makes sense for a grocery list (e.g., '7 onions' might become '2 kilograms'). "
+            "Return the result as a JSON array with 'name', 'quantity' (as a string), and 'unit' fields. Here's the list:\n" +
+            "\n".join(ingredient_list)
+        )
+
+        # Step 3: Call Gemini API
+        try:
+            response = model.generate_content(prompt)
+            formatted_ingredients = response.text.strip()
+            # Clean up Gemini response (remove markdown if present)
+            if formatted_ingredients.startswith("```json"):
+                formatted_ingredients = formatted_ingredients[7:-3].strip()
+            shopping_list = json.loads(formatted_ingredients)
+        except Exception as e:
+            print(f"Error with Gemini API: {e}")
+            # Fallback: simple list with servings converted to basic units
+            shopping_list = [
+                {"name": name, "quantity": str(count * 100), "unit": "grams"}
+                for name, count in raw_ingredients.items()
+            ]
+        return shopping_list
+
+    @action(detail=True, methods=['get'])
+    def ingredients(self, request, pk=None):
+        meal_plan = self.get_object()
+        shopping_list = self._aggregate_and_format_ingredients(meal_plan)
+        serializer = IngredientsListSerializer({"items": shopping_list})
         return Response(serializer.data)
+
+    @action(detail=True, methods=['get'])
+    def pdf(self, request, pk=None):
+        meal_plan = self.get_object()
+        shopping_list = self._aggregate_and_format_ingredients(meal_plan)
+
+        # Generate PDF
+        buffer = io.BytesIO()
+        p = canvas.Canvas(buffer, pagesize=letter)
+        p.setFont("Helvetica", 12)
+        p.drawString(100, 750, f"Shopping List for {meal_plan.name}")
+        y = 730
+        for item in shopping_list:
+            p.drawString(100, y, f"{item['quantity']} {item['unit']} {item['name']}")
+            y -= 20
+            if y < 50:  # New page if needed
+                p.showPage()
+                p.setFont("Helvetica", 12)
+                y = 750
+        p.showPage()
+        p.save()
+        buffer.seek(0)
+        response = HttpResponse(buffer, content_type='application/pdf')
+        response['Content-Disposition'] = f'attachment; filename="shopping_list_{meal_plan.id}.pdf"'
+        return response
