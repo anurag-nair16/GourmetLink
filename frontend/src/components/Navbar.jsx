@@ -123,6 +123,7 @@ const Navbar = () => {
                   <>
                     <NavItem icon={<FaHome />} text="Home" to="/" scrollY={scrollY} />
                     <NavItem icon={<FaUtensils />} text="Submit" to="/submit-recipe" scrollY={scrollY} />
+                    <NavItem icon={<FaUser />} text="Meal Plan" to="/meal-planner" scrollY={scrollY} />
                     <NavItem icon={<FaUser />} text="Profile" to="/profile" scrollY={scrollY} />
                     <NavItem 
                       icon={<FaSignOutAlt />} 
@@ -183,6 +184,7 @@ const Navbar = () => {
                 <>
                   <SidebarItem icon={<FaHome />} text="Home" to="/" onClick={toggleMenu} />
                   <SidebarItem icon={<FaUtensils />} text="Submit Recipe" to="/submit-recipe" onClick={toggleMenu} />
+                  <SidebarItem icon={<FaUser />} text="Meal Plan" to="/meal-planner" onClick={toggleMenu} />
                   <SidebarItem icon={<FaUser />} text="Profile" to="/profile" onClick={toggleMenu} />
                   <SidebarItem 
                     icon={<FaSignOutAlt />} 
