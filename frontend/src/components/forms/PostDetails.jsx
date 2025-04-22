@@ -27,8 +27,8 @@ const RecipeModal = ({
   const [showComments, setShowComments] = useState(false);
   const [imageHeight, setImageHeight] = useState(null);
   const [isExpanded, setIsExpanded] = useState(false);
-  const [isRatingSubmitted, setIsRatingSubmitted] = useState(false); // New state for rating animation
-  const [isCommentSubmitting, setIsCommentSubmitting] = useState(false); // New state for comment animation
+  const [isRatingSubmitted, setIsRatingSubmitted] = useState(false);
+  const [isCommentSubmitting, setIsCommentSubmitting] = useState(false);
   const modalRef = useRef(null);
   const imageRef = useRef(null);
   const touchStartX = useRef(null);
@@ -43,6 +43,7 @@ const RecipeModal = ({
 
   const { currentLanguage, translateRecipe } = useTranslation();
   const [translatedRecipe, setTranslatedRecipe] = useState(null);
+  const detailsRef = useRef(null); // New ref for details section
 
   useEffect(() => {
     const fetchTranslation = async () => {
@@ -84,10 +85,10 @@ const RecipeModal = ({
   }, []);
 
   useEffect(() => {
-    if (scrollableRef.current) {
-      scrollableRef.current.scrollTop = 0;
-    }
-  }, [selectedRecipe]);
+  if (detailsRef.current) {
+    detailsRef.current.scrollTop = 0;
+  }
+}, [selectedRecipe]);
 
   const fetchNutrition = async () => {
     setShowNutritionModal(true);
@@ -156,14 +157,14 @@ const RecipeModal = ({
   const handleRateSubmit = () => {
     setIsRatingSubmitted(true);
     onRate(selectedRecipe.id, rating);
-    setTimeout(() => setIsRatingSubmitted(false), 1000); // Reset after 1s
+    setTimeout(() => setIsRatingSubmitted(false), 1000);
   };
 
   const handleCommentSubmit = () => {
     setIsCommentSubmitting(true);
     onComment(posts[currentIndex].id);
     setCommentText("");
-    setTimeout(() => setIsCommentSubmitting(false), 800); // Reset after 0.8s
+    setTimeout(() => setIsCommentSubmitting(false), 800);
   };
 
   const modalVariants = {
@@ -197,14 +198,14 @@ const RecipeModal = ({
 
   return (
     <motion.div
-      className="fixed inset-0 bg-black/90 flex items-center justify-center z-50 p-4 sm:p-6"
+      className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4 sm:p-6"
       initial="hidden"
       animate="visible"
       exit="exit"
       variants={modalVariants}
     >
       <motion.div
-        className="relative bg-gray-850 rounded-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden shadow-2xl border border-emerald-500/20"
+        className="relative bg-neutral-900 rounded-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden shadow-xl border border-neutral-700"
         ref={modalRef}
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
@@ -216,26 +217,23 @@ const RecipeModal = ({
         exit="exit"
         transition={{ duration: 0.3, ease: "easeInOut" }}
       >
-        {/* Header */}
-        <div className="flex justify-between items-center p-4 sm:p-6 bg-gray-800/80 backdrop-blur-sm border-b border-gray-700">
-          <h2 className="text-xl sm:text-2xl font-bold text-emerald-400 truncate">{recipeContent.name}</h2>
+        <div className="flex justify-between items-center p-4 sm:p-6 bg-neutral-800/95 backdrop-blur-sm border-b border-neutral-700">
+          <h2 className="text-xl sm:text-2xl font-bold text-emerald-300 truncate">{recipeContent.name}</h2>
           <div className="flex items-center gap-4">
             <button
               onClick={fetchNutrition}
-              className="text-gray-300 hover:text-emerald-400 transition-colors flex items-center gap-2"
+              className="text-neutral-300 hover:text-emerald-400 transition-colors flex items-center gap-2"
             >
-              <FaAppleAlt size={20} />
-              <span className="hidden sm:inline">Nutrition</span>
+              <FaAppleAlt size={20} className="text-emerald-400" />
+              <span className="hidden sm:inline text-neutral-200">Nutrition</span>
             </button>
-            <button onClick={handleClose} className="text-gray-300 hover:text-white transition-colors">
+            <button onClick={handleClose} className="text-neutral-300 hover:text-emerald-400 transition-colors">
               <FaTimes size={24} />
             </button>
           </div>
         </div>
 
-        {/* Main Content */}
         <div className="flex flex-col lg:flex-row h-[calc(90vh-72px)] overflow-hidden">
-          {/* Left: Image and Rating */}
           <div className="lg:w-1/2 flex flex-col">
             <div
               className="relative overflow-hidden transition-all duration-300"
@@ -248,30 +246,30 @@ const RecipeModal = ({
                 className="w-full h-full object-contain cursor-pointer"
                 onClick={() => setIsExpanded(true)}
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-gray-900/60 to-transparent" />
-              <div className="absolute bottom-4 left-4 flex items-center gap-2 bg-emerald-600/80 px-3 py-1 rounded-full text-sm text-white">
-                <FaClock /> {recipeContent.prep_time || "N/A"} mins
+              <div className="absolute inset-0 bg-gradient-to-t from-neutral-900/70 to-transparent" />
+              <div className="absolute bottom-4 left-4 flex items-center gap-2 bg-emerald-700/90 px-3 py-1 rounded-full text-sm text-neutral-100">
+                <FaClock className="text-emerald-300" /> {recipeContent.prep_time || "N/A"} mins
               </div>
               {!isExpanded && imageHeight && (
                 <button
                   onClick={() => setIsExpanded(true)}
-                  className="absolute bottom-4 right-4 bg-gray-800/70 hover:bg-gray-700 text-white px-3 py-1 rounded-full text-sm flex items-center gap-2 transition-colors"
+                  className="absolute bottom-4 right-4 bg-neutral-800/80 hover:bg-neutral-700 text-neutral-100 px-3 py-1 rounded-full text-sm flex items-center gap-2 transition-colors"
                 >
-                  <FaChevronRight /> Full Image
+                  <FaChevronRight className="text-emerald-400" /> Full Image
                 </button>
               )}
               {isExpanded && (
                 <button
                   onClick={() => setIsExpanded(false)}
-                  className="absolute top-4 right-4 bg-gray-800/70 hover:bg-gray-700 text-white p-2 rounded-full transition-colors"
+                  className="absolute top-4 right-4 bg-neutral-800/80 hover:bg-neutral-700 text-neutral-100 p-2 rounded-full transition-colors"
                 >
-                  <FaTimes size={20} />
+                  <FaTimes size={20} className="text-emerald-400" />
                 </button>
               )}
             </div>
-            <div className="p-4 bg-gray-800/50 border-t border-gray-700">
+            <div className="p-4 bg-neutral-800 border-t border-neutral-700">
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 bg-neutral-900 p-2 rounded-lg">
                   {[1, 2, 3, 4, 5].map((star) => (
                     <button
                       key={star}
@@ -281,32 +279,37 @@ const RecipeModal = ({
                       {star <= rating ? (
                         <FaStar size={20} className="text-yellow-400" />
                       ) : (
-                        <FaRegStar size={20} className="text-gray-400" />
+                        <FaRegStar size={20} className="text-neutral-500" />
                       )}
                     </button>
                   ))}
                 </div>
                 <motion.button
                   onClick={handleRateSubmit}
-                  className="bg-emerald-600 text-white px-4 py-1 rounded-full text-sm transition-colors"
+                  className="bg-emerald-600 hover:bg-emerald-700 text-neutral-100 px-4 py-1 rounded-full text-sm transition-colors"
                   variants={buttonVariants}
                   initial="initial"
                   animate={isRatingSubmitted ? "animate" : "initial"}
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                 >
-                  {isRatingSubmitted ? "Rated!" : "Rate"}
+                  {isRatingSubmitted ? (
+                    <span className="flex items-center gap-2">
+                      <FaCheck className="text-neutral-100" /> Rated!
+                    </span>
+                  ) : (
+                    "Rate"
+                  )}
                 </motion.button>
               </div>
             </div>
           </div>
 
-          {/* Right: Recipe Details */}
-          <div className="lg:w-1/2 p-4 sm:p-6 overflow-y-auto custom-scrollbar">
+          <div className="lg:w-1/2 p-4 sm:p-6 overflow-y-auto custom-scrollbar bg-neutral-900 " ref={detailsRef}>
             <div className="space-y-6">
               <div>
                 <h3 className="text-lg font-semibold text-emerald-400 mb-2">Ingredients</h3>
-                <ul className="list-disc list-inside text-gray-300 space-y-1 text-sm sm:text-base">
+                <ul className="list-disc list-inside text-neutral-200 space-y-1 text-sm sm:text-base">
                   {recipeContent.ingredients?.split(",").map((ingredient, idx) => (
                     <li key={idx}>{ingredient.trim()}</li>
                   ))}
@@ -314,39 +317,37 @@ const RecipeModal = ({
               </div>
               <div>
                 <h3 className="text-lg font-semibold text-emerald-400 mb-2">Instructions</h3>
-                <p className="text-gray-300 whitespace-pre-line text-sm sm:text-base">{recipeContent.instructions}</p>
+                <p className="text-neutral-200 whitespace-pre-line text-sm sm:text-base">{recipeContent.instructions}</p>
               </div>
               <div className="flex flex-wrap gap-3">
-                <span className="px-3 py-1 bg-emerald-600/20 text-emerald-400 rounded-full text-sm">
+                <span className="px-3 py-1 bg-emerald-700/30 text-emerald-300 rounded-full text-sm">
                   🍽️ {recipeContent.servings || "N/A"} servings
                 </span>
               </div>
               <button
                 onClick={() => setShowComments(true)}
-                className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors"
+                className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-neutral-800 hover:bg-neutral-700 text-neutral-100 rounded-lg transition-colors"
               >
-                <FaComment size={20} /> View Comments ({posts[currentIndex]?.comments.length || 0})
+                <FaComment size={20} className="text-emerald-400" /> View Comments ({posts[currentIndex]?.comments.length || 0})
               </button>
             </div>
           </div>
         </div>
 
-        {/* Navigation Arrows */}
         <button
           onClick={() => handleNavigation("left")}
-          className="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 bg-gray-800/70 hover:bg-gray-700 text-white p-2 sm:p-3 rounded-full transition-colors"
+          className="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 bg-neutral-800/80 hover:bg-neutral-700 text-neutral-100 shadow-lg p-2 sm:p-3 rounded-full transition-colors"
         >
-          <FaChevronLeft size={20} />
+          <FaChevronLeft size={20} className="text-emerald-400" />
         </button>
         <button
           onClick={() => handleNavigation("right")}
-          className="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 bg-gray-800/70 hover:bg-gray-700 text-white p-2 sm:p-3 rounded-full transition-colors"
+          className="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 bg-neutral-800/80 hover:bg-neutral-700 text-neutral-100 p-2 sm:p-3 rounded-full transition-colors"
         >
-          <FaChevronRight size={20} />
+          <FaChevronRight size={20} className="text-emerald-400" />
         </button>
       </motion.div>
 
-      {/* Full-Screen Image */}
       <AnimatePresence>
         {isImageFullScreen && (
           <motion.div
@@ -358,9 +359,9 @@ const RecipeModal = ({
           >
             <button
               onClick={handleImageClose}
-              className="absolute top-4 right-4 text-white bg-gray-800/70 hover:bg-gray-700 p-2 rounded-full transition-colors"
+              className="absolute top-4 right-4 text-neutral-100 bg-neutral-800/80 hover:bg-neutral-700 p-2 rounded-full transition-colors"
             >
-              <FaTimes size={24} />
+              <FaTimes size={24} className="text-emerald-400" />
             </button>
             <img
               src={recipeContent.image}
@@ -371,7 +372,6 @@ const RecipeModal = ({
         )}
       </AnimatePresence>
 
-      {/* Comments Popup */}
       <AnimatePresence>
         {showComments && (
           <motion.div
@@ -381,44 +381,44 @@ const RecipeModal = ({
             exit={{ opacity: 0, y: 50 }}
             transition={{ duration: 0.3 }}
           >
-            <div className="bg-gray-850 rounded-2xl w-full max-w-md max-h-[80vh] overflow-hidden shadow-xl border border-emerald-500/20">
-              <div className="p-4 border-b border-gray-700 flex justify-between items-center">
+            <div className="bg-neutral-900 rounded-2xl w-full max-w-md max-h-[80vh] overflow-hidden shadow-xl border border-emerald-500/30">
+              <div className="p-4 border-b border-neutral-700 flex justify-between items-center">
                 <h3 className="text-lg font-semibold text-emerald-400">Comments</h3>
                 <button
                   onClick={() => setShowComments(false)}
-                  className="text-gray-300 hover:text-white transition-colors"
+                  className="text-neutral-300 hover:text-emerald-400 transition-colors"
                 >
                   <FaTimes size={20} />
                 </button>
               </div>
               <div className="p-4 max-h-[50vh] overflow-y-auto custom-scrollbar space-y-4">
                 {posts[currentIndex]?.comments.length === 0 ? (
-                  <p className="text-gray-400 text-center">No comments yet. Be the first!</p>
+                  <p className="text-neutral-400 text-center">No comments yet. Be the first!</p>
                 ) : (
                   posts[currentIndex]?.comments.map((comment, idx) => (
                     <div key={idx} className="flex items-start gap-3">
                       <Avatar name={comment.user} size="36" round={true} className="flex-shrink-0" />
                       <div className="flex-1">
-                        <p className="text-sm font-medium text-white">{comment.user}</p>
-                        <p className="text-sm text-gray-300 break-words">{comment.text}</p>
+                        <p className="text-sm font-medium text-neutral-100">{comment.user}</p>
+                        <p className="text-sm text-neutral-300 break-words">{comment.text}</p>
                       </div>
                     </div>
                   ))
                 )}
               </div>
-              <div className="p-4 border-t border-gray-700 flex items-center gap-3">
+              <div className="p-4 border-b border-neutral-700 flex items-center gap-3">
                 <input
                   type="text"
                   value={commentText}
                   onChange={(e) => setCommentText(e.target.value)}
                   placeholder="Add a comment..."
-                  className={`flex-1 bg-gray-700 text-gray-100 rounded-full px-4 py-2 text-sm focus:outline-none focus:ring-2 transition-all ${
+                  className={`flex-1 bg-neutral-800 text-neutral-100 border border-neutral-600 rounded-full px-4 py-2 text-sm focus:outline-none focus:ring-2 transition-all ${
                     isCommentSubmitting ? "ring-2 ring-emerald-500" : "focus:ring-emerald-500"
                   }`}
                 />
                 <motion.button
                   onClick={handleCommentSubmit}
-                  className="bg-emerald-600 text-white p-2 rounded-full transition-colors"
+                  className="bg-emerald-600 hover:bg-emerald-700 text-neutral-100 p-2 rounded-full transition-colors"
                   variants={checkVariants}
                   initial="initial"
                   animate={isCommentSubmitting ? "animate" : "initial"}
@@ -433,7 +433,6 @@ const RecipeModal = ({
         )}
       </AnimatePresence>
 
-      {/* Nutrition Modal */}
       <AnimatePresence>
         {showNutritionModal && (
           <motion.div
@@ -443,12 +442,12 @@ const RecipeModal = ({
             exit={{ opacity: 0, scale: 0.95 }}
             transition={{ duration: 0.3 }}
           >
-            <div className="bg-gray-900 rounded-2xl w-full max-w-md max-h-[80vh] overflow-y-auto custom-scrollbar">
-              <div className="p-4 sm:p-6 border-b border-gray-700 flex justify-between items-center">
+            <div className="bg-neutral-900 rounded-2xl w-full max-w-md max-h-[80vh] overflow-y-auto custom-scrollbar">
+              <div className="p-4 sm:p-6 border-b border-neutral-700 flex justify-between items-center">
                 <h2 className="text-xl sm:text-2xl font-bold text-emerald-400">Nutrition Info</h2>
                 <button
                   onClick={() => setShowNutritionModal(false)}
-                  className="text-gray-300 hover:text-white transition-colors"
+                  className="text-neutral-300 hover:text-emerald-400 transition-colors"
                 >
                   <FaTimes size={20} />
                 </button>
@@ -459,14 +458,14 @@ const RecipeModal = ({
                     <Oval
                       height={60}
                       width={60}
-                      color="#4CAF50"
+                      color="#10B981"
                       visible={true}
                       ariaLabel="oval-loading"
-                      secondaryColor="#4CAF50"
+                      secondaryColor="#10B981"
                       strokeWidth={3}
                       strokeWidthSecondary={3}
                     />
-                    <p className="text-gray-300 mt-4 text-sm text-center">
+                    <p className="text-neutral-300 mt-4 text-sm text-center">
                       Analyzing nutrition...
                     </p>
                   </div>
@@ -483,9 +482,9 @@ const RecipeModal = ({
                           Vitamins: `${nutrition.vitamins}g`,
                         }).map(([key, value]) => (
                           parseFloat(value) > 0 && (
-                            <div key={key} className="bg-gray-800 p-3 rounded-lg">
-                              <p className="text-gray-400 text-xs">{key}</p>
-                              <p className="text-white font-semibold">{value}</p>
+                            <div key={key} className="bg-neutral-800 p-3 rounded-lg border border-neutral-600">
+                              <p className="text-neutral-400 text-xs">{key}</p>
+                              <p className="text-neutral-100 font-semibold">{value}</p>
                             </div>
                           )
                         ))}
@@ -495,11 +494,11 @@ const RecipeModal = ({
                           <h3 className="text-lg font-semibold text-emerald-400 mb-2">Recommendation</h3>
                           <ReactMarkdown
                             components={{
-                              p: ({ node, ...props }) => <p className="text-gray-300 text-sm mb-2" {...props} />,
+                              p: ({ node, ...props }) => <p className="text-neutral-300 text-sm mb-2" {...props} />,
                               ul: ({ node, ...props }) => (
-                                <ul className="list-disc list-inside text-gray-300 space-y-1" {...props} />
+                                <ul className="list-disc list-inside text-neutral-300 space-y-1" {...props} />
                               ),
-                              li: ({ node, ...props }) => <li className="text-gray-300" {...props} />,
+                              li: ({ node, ...props }) => <li className="text-neutral-300" {...props} />,
                               strong: ({ node, ...props }) => (
                                 <strong className="text-emerald-400 font-semibold" {...props} />
                               ),
@@ -523,20 +522,19 @@ const RecipeModal = ({
 
 export default RecipeModal;
 
-/* Custom Scrollbar CSS */
 const customScrollbarStyles = `
   .custom-scrollbar::-webkit-scrollbar {
     width: 8px;
   }
   .custom-scrollbar::-webkit-scrollbar-track {
-    background: transparent;
+    background: #1f2937;
   }
   .custom-scrollbar::-webkit-scrollbar-thumb {
-    background: #4CAF50;
+    background: #10B981;
     border-radius: 4px;
   }
   .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-    background: #45a049;
+    background: #059669;
   }
 `;
 const styleSheet = document.createElement("style");

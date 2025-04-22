@@ -98,16 +98,16 @@ const SignupPage = () => {
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-gray-900">
+    <div className="flex flex-col min-h-screen bg-gradient-to-br from-primary-light to-white">
       {/* Video Background */}
       <div className="absolute inset-0 h-full w-full">
-        <div className="absolute inset-0 bg-gray-900/70 z-10"></div>
+        <div className="absolute inset-0 bg-white/70 backdrop-blur-sm z-10"></div>
         <video
           autoPlay
           loop
           muted
           playsInline
-          className="w-full h-full object-cover opacity-50"
+          className="w-full h-full object-cover opacity-30"
         >
           <source
             src="/videos/mixkit-preparing-a-bowl-with-yogurt-and-fruit-43925-full-hd.mp4"
@@ -119,109 +119,121 @@ const SignupPage = () => {
 
       {/* Signup Form */}
       <div className="flex-grow flex items-center justify-center p-4 relative z-20">
-        <div className="w-full max-w-md bg-gray-800/90 backdrop-blur-lg rounded-xl shadow-xl p-8">
-          <h2 className="text-2xl font-semibold text-white text-center mb-6">
+        <div className="w-full max-w-md bg-white/80 backdrop-blur-lg rounded-2xl shadow-xl p-8 border border-neutral-200">
+          <h2 className="text-2xl font-semibold text-neutral-800 text-center mb-6">
             Create Account
           </h2>
 
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-1">
+              <label className="block text-sm font-medium text-neutral-700 mb-1">
                 Username
               </label>
               <div className="relative">
-                <FaUser className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" />
+                <FaUser className="absolute left-3 top-1/2 transform -translate-y-1/2 text-neutral-500" />
                 <input
                   type="text"
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
-                  className="w-full pl-10 pr-4 py-3 bg-gray-700/50 text-white border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 transition-all duration-200 placeholder-gray-400"
+                  className="w-full pl-10 pr-4 py-3 bg-white text-neutral-800 border border-neutral-300 rounded-lg 
+                  focus:outline-none focus:ring-2 focus:ring-primary-main/20 focus:border-primary-main 
+                  transition-all duration-200 placeholder-neutral-400"
                   placeholder="Enter your username"
                   required
                 />
               </div>
               {usernameError && (
-                <p className="text-red-400 text-xs mt-1">{usernameError}</p>
+                <p className="text-red-500 text-xs mt-1">{usernameError}</p>
               )}
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-1">
+              <label className="block text-sm font-medium text-neutral-700 mb-1">
                 Email
               </label>
               <div className="relative">
-                <FaEnvelope className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" />
+                <FaEnvelope className="absolute left-3 top-1/2 transform -translate-y-1/2 text-neutral-500" />
                 <input
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full pl-10 pr-4 py-3 bg-gray-700/50 text-white border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 transition-all duration-200 placeholder-gray-400"
+                  className="w-full pl-10 pr-4 py-3 bg-white text-neutral-800 border border-neutral-300 rounded-lg 
+                  focus:outline-none focus:ring-2 focus:ring-primary-main/20 focus:border-primary-main 
+                  transition-all duration-200 placeholder-neutral-400"
                   placeholder="Enter your email"
                   required
                 />
               </div>
               {emailError && (
-                <p className="text-red-400 text-xs mt-1">{emailError}</p>
+                <p className="text-red-500 text-xs mt-1">{emailError}</p>
               )}
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-1">
+              <label className="block text-sm font-medium text-neutral-700 mb-1">
                 Password
               </label>
               <div className="relative">
-                <FaLock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" />
+                <FaLock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-neutral-500" />
                 <input
                   type={showPassword ? "text" : "password"}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full pl-10 pr-12 py-3 bg-gray-700/50 text-white border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 transition-all duration-200 placeholder-gray-400"
+                  className="w-full pl-10 pr-12 py-3 bg-white text-neutral-800 border border-neutral-300 rounded-lg 
+                  focus:outline-none focus:ring-2 focus:ring-primary-main/20 focus:border-primary-main 
+                  transition-all duration-200 placeholder-neutral-400"
                   placeholder="Enter your password"
                   required
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-teal-400 transition-colors duration-200"
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-neutral-400 
+                  hover:text-primary-main transition-colors duration-200"
                 >
                   {showPassword ? <FaEyeSlash /> : <FaEye />}
                 </button>
               </div>
               {passwordError && (
-                <p className="text-red-400 text-xs mt-1">{passwordError}</p>
+                <p className="text-red-500 text-xs mt-1">{passwordError}</p>
               )}
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-300 mb-1">
+              <label className="block text-sm font-medium text-neutral-700 mb-1">
                 Confirm Password
               </label>
               <div className="relative">
-                <FaLock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" />
+                <FaLock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-neutral-500" />
                 <input
                   type={showConfirmPassword ? "text" : "password"}
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
-                  className="w-full pl-10 pr-12 py-3 bg-gray-700/50 text-white border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 transition-all duration-200 placeholder-gray-400"
+                  className="w-full pl-10 pr-12 py-3 bg-white text-neutral-800 border border-neutral-300 rounded-lg 
+                  focus:outline-none focus:ring-2 focus:ring-primary-main/20 focus:border-primary-main 
+                  transition-all duration-200 placeholder-neutral-400"
                   placeholder="Confirm your password"
                   required
                 />
                 <button
                   type="button"
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-teal-400 transition-colors duration-200"
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-neutral-400 
+                  hover:text-primary-main transition-colors duration-200"
                 >
                   {showConfirmPassword ? <FaEyeSlash /> : <FaEye />}
                 </button>
               </div>
               {confirmPasswordError && (
-                <p className="text-red-400 text-xs mt-1">{confirmPasswordError}</p>
+                <p className="text-red-500 text-xs mt-1">{confirmPasswordError}</p>
               )}
             </div>
 
             <button
               type="submit"
-              className="w-full bg-teal-600 text-white py-3 rounded-lg font-medium hover:bg-teal-700 transition-all duration-200 disabled:bg-teal-400 flex items-center justify-center"
+              className="w-full bg-primary-main text-white py-3 rounded-lg font-medium 
+              hover:bg-primary-dark transition-all duration-200 disabled:opacity-50 
+              flex items-center justify-center shadow-md hover:shadow-lg"
               disabled={isLoading}
             >
               {isLoading ? (
@@ -232,11 +244,11 @@ const SignupPage = () => {
             </button>
           </form>
 
-          <p className="text-center text-sm text-gray-300 mt-6">
+          <p className="text-center text-sm text-neutral-600 mt-6">
             Already have an account?{" "}
             <Link
               to="/login"
-              className="text-teal-400 hover:underline transition-colors duration-200"
+              className="text-primary-main hover:text-primary-dark transition-colors duration-200"
             >
               Log in here
             </Link>

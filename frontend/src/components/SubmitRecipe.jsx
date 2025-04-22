@@ -172,343 +172,527 @@ const RecipePostCreator = () => {
     "American",
   ];
 
+  // Add this function inside your component, before the return statement
+const calculateProgress = () => {
+  const requiredFields = [
+    'name',
+    'ingredients',
+    'instructions',
+    'cuisine',
+    'cookingTime',
+    'servings',
+    'description',
+    'image'
+  ];
+  
+  let completedFields = 0;
+  
+  // Check each required field
+  requiredFields.forEach(field => {
+    if (field === 'ingredients') {
+      // Check if ingredients array has at least one non-empty ingredient
+      if (recipe.ingredients.some(ing => ing.trim() !== '')) {
+        completedFields++;
+      }
+    } else if (field === 'image') {
+      // Check if image is uploaded
+      if (recipe.image) {
+        completedFields++;
+      }
+    } else {
+      // Check if other fields are filled
+      if (recipe[field] && recipe[field].toString().trim() !== '') {
+        completedFields++;
+      }
+    }
+  });
+
+  return Math.round((completedFields / requiredFields.length) * 100);
+};
+
   return (
-    <div className="min-h-screen bg-gray-900 text-white">
-      {/* Header */}
-      <header className="bg-gradient-to-r from-gray-800 to-teal-900 py-4 px-4 shadow-xl">
-        <h1 className="text-xl sm:text-2xl font-bold text-center text-emerald-400">
-          Create Recipe
-        </h1>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-white">
+      {/* Updated Header with more soothing colors */}
+      <header className="bg-gradient-to-r from-teal-500 to-blue-500 text-white py-12 px-4 relative overflow-hidden">
+        <div className="absolute inset-0 opacity-10">
+          <div className="absolute inset-0 bg-pattern opacity-20"></div>
+        </div>
+        <div className="container mx-auto max-w-4xl relative">
+          <h1 className="text-3xl sm:text-4xl font-bold text-center mb-4">
+            Create Your Recipe
+          </h1>
+          <p className="text-center text-blue-50 text-lg max-w-2xl mx-auto leading-relaxed">
+            Share your culinary inspiration with our community. Your recipe could be someone's next favorite dish.
+          </p>
+        </div>
       </header>
 
-      {/* Main Content */}
-      <main className="container mx-auto px-4 py-6">
-        <div className="max-w-4xl mx-auto">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="bg-gray-850 rounded-xl shadow-xl p-6 border border-emerald-500/20"
+      <div className="container mx-auto px-4 py-8 max-w-4xl">
+        {/* Updated Info Cards with softer shadows and transitions */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          <div className="bg-white p-6 rounded-xl shadow-sm border border-blue-100 transform transition-all duration-300 hover:shadow-md hover:-translate-y-1">
+            <div className="text-teal-500 text-xl mb-3 font-light">Step 1</div>
+            <h3 className="font-semibold text-gray-800 mb-2">Essential Details</h3>
+            <p className="text-gray-600 text-sm leading-relaxed">Start with your recipe's name and a beautiful photo that captures its essence.</p>
+          </div>
+          <div className="bg-white p-6 rounded-xl shadow-sm border border-blue-100 transform transition-all duration-300 hover:shadow-md hover:-translate-y-1">
+            <div className="text-teal-500 text-xl mb-3 font-light">Step 2</div>
+            <h3 className="font-semibold text-gray-800 mb-2">Ingredients List</h3>
+            <p className="text-gray-600 text-sm leading-relaxed">Detail your ingredients with precise measurements for perfect results every time.</p>
+          </div>
+          <div className="bg-white p-6 rounded-xl shadow-sm border border-blue-100 transform transition-all duration-300 hover:shadow-md hover:-translate-y-1">
+            <div className="text-teal-500 text-xl mb-3 font-light">Step 3</div>
+            <h3 className="font-semibold text-gray-800 mb-2">Cooking Steps</h3>
+            <p className="text-gray-600 text-sm leading-relaxed">Guide others through your cooking process with clear, step-by-step instructions.</p>
+          </div>
+        </div>
+
+        {/* Enhanced Form Container */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-white rounded-xl shadow-lg p-8 border border-blue-100"
+        >
+          {/* Updated Progress Bar */}
+          {/* Progress Bar */}
+          <div className="mb-8">
+            <div className="flex justify-between mb-2">
+              <span className="text-sm text-gray-600">Completion Progress</span>
+              <span className="text-sm text-teal-600 font-medium">
+                {calculateProgress()}%
+              </span>
+            </div>
+            <div className="w-full h-2 bg-blue-50 rounded-full overflow-hidden">
+              <div 
+                className="h-full bg-gradient-to-r from-teal-400 to-blue-500 rounded-full transition-all duration-500"
+                style={{ width: `${calculateProgress()}%` }}
+              />
+            </div>
+          </div>
+
+          {/* Enhanced Image Upload */}
+          <div
+            onClick={() => document.getElementById("image-upload").click()}
+            className="relative w-full h-64 rounded-xl bg-gradient-to-br from-blue-50 to-teal-50 flex items-center justify-center cursor-pointer mb-8 border-2 border-dashed border-blue-200 hover:border-teal-400 transition-all duration-300 group overflow-hidden"
           >
-            {/* Image Upload */}
-            <div
-              onClick={() => document.getElementById("image-upload").click()}
-              className="relative w-full h-48 rounded-lg bg-gray-800 flex items-center justify-center cursor-pointer mb-6"
-            >
-              {recipe.image ? (
+            {recipe.image ? (
+              <div className="relative w-full h-full">
                 <img
                   src={URL.createObjectURL(recipe.image)}
                   alt="Recipe"
                   className="w-full h-full object-cover rounded-lg"
                 />
-              ) : (
-                <div className="flex flex-col items-center">
-                  <FaCamera className="text-emerald-400 text-2xl mb-2" />
-                  <p className="text-gray-300 text-sm">Add Photo</p>
+                <div className="absolute inset-0 bg-black bg-opacity-40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                  <p className="text-white text-sm font-medium">Click to Change Photo</p>
                 </div>
-              )}
-              <input
-                type="file"
-                id="image-upload"
-                className="hidden"
-                accept="image/*"
-                onChange={handleImageUpload}
-              />
-            </div>
+              </div>
+            ) : (
+              <div className="flex flex-col items-center group-hover:scale-110 transition-transform duration-300">
+                <div className="w-16 h-16 bg-teal-100 rounded-full flex items-center justify-center mb-3">
+                  <FaCamera className="text-teal-500 text-xl" />
+                </div>
+                <p className="text-gray-600 text-sm font-medium">Add Your Recipe Photo</p>
+                <p className="text-gray-400 text-xs mt-1">Drag & drop or click to upload</p>
+              </div>
+            )}
+            <input
+              type="file"
+              id="image-upload"
+              className="hidden"
+              accept="image/*"
+              onChange={handleImageUpload}
+            />
+          </div>
 
-            {/* Section Navigation */}
-            <div className="flex flex-wrap justify-center gap-2 mb-6">
-              {sections.map((section) => (
-                <motion.button
-                  key={section.id}
-                  onClick={() => setActiveSection(section.id)}
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  className={`flex-1 min-w-[100px] px-2 py-1 rounded-full text-sm font-medium transition-all ${
-                    activeSection === section.id
-                      ? "bg-emerald-600 text-white"
-                      : "bg-gray-700 text-gray-300 hover:bg-gray-600"
-                  }`}
-                >
-                  {section.label}
-                </motion.button>
-              ))}
-            </div>
-
-            {/* Section Content */}
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={activeSection}
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: 20 }}
-                className="space-y-4"
+          {/* Enhanced Section Navigation */}
+          <div className="flex flex-wrap justify-center gap-4 mb-8">
+            {sections.map((section) => (
+              <motion.button
+                key={section.id}
+                onClick={() => setActiveSection(section.id)}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className={`flex items-center gap-2 px-6 py-3 rounded-xl text-sm font-medium transition-all duration-300 ${
+                  activeSection === section.id
+                    ? "bg-gradient-to-r from-teal-500 to-blue-500 text-white shadow-md"
+                    : "bg-blue-50 text-blue-600 hover:bg-blue-100"
+                }`}
               >
-                {activeSection === "basic" && (
-                  <>
+                <span>{section.label}</span>
+                <FaChevronRight className={`text-xs transition-transform ${
+                  activeSection === section.id ? "rotate-90" : ""
+                }`} />
+              </motion.button>
+            ))}
+          </div>
+
+          {/* Form Fields - Basic Info Section */}
+          {activeSection === "basic" && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="space-y-6"
+            >
+              <div className="space-y-2">
+                <label className="text-gray-700 font-medium block mb-1">Recipe Name</label>
+                <input
+                  type="text"
+                  name="name"
+                  value={recipe.name}
+                  onChange={handleChange}
+                  placeholder="What's your recipe called?"
+                  className="w-full text-lg bg-blue-50 border-0 rounded-xl focus:ring-2 focus:ring-teal-400 outline-none py-3 px-4 text-gray-800 placeholder-gray-400 transition-all duration-300"
+                />
+                {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name}</p>}
+              </div>
+
+              {/* Time and Servings in a grid */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <label className="text-gray-700 font-medium block mb-1">Cooking Time</label>
+                  <div className="relative group">
+                    <div className="absolute left-4 top-1/2 -translate-y-1/2 w-6 h-6 bg-teal-100 rounded-full flex items-center justify-center group-hover:bg-teal-200 transition-colors">
+                      <FaClock className="text-teal-500 text-sm" />
+                    </div>
+                    <input
+                      type="number"
+                      name="cookingTime"
+                      value={recipe.cookingTime}
+                      onChange={handleChange}
+                      placeholder="Minutes"
+                      className="w-full bg-blue-50 rounded-xl pl-12 pr-4 py-3 text-gray-800 placeholder-gray-400 focus:ring-2 focus:ring-teal-400 outline-none transition-all duration-300"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-gray-700 font-medium block mb-1">Servings</label>
+                  <div className="relative group">
+                    <div className="absolute left-4 top-1/2 -translate-y-1/2 w-6 h-6 bg-teal-100 rounded-full flex items-center justify-center group-hover:bg-teal-200 transition-colors">
+                      <FaUsers className="text-teal-500 text-sm" />
+                    </div>
+                    <input
+                      type="number"
+                      name="servings"
+                      value={recipe.servings}
+                      onChange={handleChange}
+                      placeholder="Number of people"
+                      className="w-full bg-blue-50 rounded-xl pl-12 pr-4 py-3 text-gray-800 placeholder-gray-400 focus:ring-2 focus:ring-teal-400 outline-none transition-all duration-300"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Cuisine Type Dropdown */}
+              <div className="space-y-2">
+                <label className="text-gray-700 font-medium block mb-1">Cuisine Type</label>
+                <select
+                  name="cuisine"
+                  value={recipe.cuisine}
+                  onChange={handleChange}
+                  className="w-full bg-blue-50 rounded-xl px-4 py-3 text-gray-800 focus:ring-2 focus:ring-teal-400 outline-none transition-all duration-300 cursor-pointer"
+                >
+                  <option value="">Select cuisine style</option>
+                  {cuisineTypes.map((cuisine) => (
+                    <option key={cuisine} value={cuisine}>{cuisine}</option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Description Text Area */}
+              <div className="space-y-2">
+                <label className="text-gray-700 font-medium block mb-1">Description</label>
+                <textarea
+                  name="description"
+                  value={recipe.description}
+                  onChange={handleChange}
+                  placeholder="Tell us about your recipe..."
+                  className="w-full bg-blue-50 rounded-xl px-4 py-3 text-gray-800 placeholder-gray-400 focus:ring-2 focus:ring-teal-400 outline-none transition-all duration-300 h-24 resize-none"
+                />
+              </div>
+
+              {/* Tags Input */}
+              <div className="space-y-3">
+                <label className="text-gray-700 font-medium block mb-1">Tags</label>
+                <div className="flex items-center gap-2">
+                  <div className="relative flex-1 group">
+                    <div className="absolute left-4 top-1/2 -translate-y-1/2 w-6 h-6 bg-teal-100 rounded-full flex items-center justify-center group-hover:bg-teal-200 transition-colors">
+                      <FaTag className="text-teal-500 text-sm" />
+                    </div>
                     <input
                       type="text"
-                      name="name"
-                      value={recipe.name}
-                      onChange={handleChange}
-                      placeholder="Recipe Name"
-                      className="w-full text-lg font-bold bg-transparent border-b border-gray-600 focus:border-emerald-400 outline-none py-2 text-gray-100 placeholder-gray-400"
+                      value={tagInput}
+                      onChange={(e) => setTagInput(e.target.value)}
+                      onKeyPress={(e) => e.key === "Enter" && handleTagAdd()}
+                      placeholder="Add recipe tags"
+                      className="w-full bg-blue-50 rounded-xl pl-12 pr-4 py-3 text-gray-800 placeholder-gray-400 focus:ring-2 focus:ring-teal-400 outline-none transition-all duration-300"
                     />
-                    {errors.name && <p className="text-red-400 text-xs">{errors.name}</p>}
-                    
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="relative">
-                        <FaClock className="absolute left-2 top-1/2 -translate-y-1/2 text-emerald-400 text-sm" />
-                        <input
-                          type="number"
-                          name="cookingTime"
-                          value={recipe.cookingTime}
-                          onChange={handleChange}
-                          placeholder="Time (mins)"
-                          className="w-full bg-gray-700 rounded-lg pl-8 pr-2 py-2 text-sm text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                        />
-                        {errors.cookingTime && <p className="text-red-400 text-xs">{errors.cookingTime}</p>}
-                      </div>
-                      <div className="relative">
-                        <FaUsers className="absolute left-2 top-1/2 -translate-y-1/2 text-emerald-400 text-sm" />
-                        <input
-                          type="number"
-                          name="servings"
-                          value={recipe.servings}
-                          onChange={handleChange}
-                          placeholder="Servings"
-                          className="w-full bg-gray-700 rounded-lg pl-8 pr-2 py-2 text-sm text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                        />
-                        {errors.servings && <p className="text-red-400 text-xs">{errors.servings}</p>}
-                      </div>
-                    </div>
-                    
-                    <select
-                      name="cuisine"
-                      value={recipe.cuisine}
-                      onChange={handleChange}
-                      className="w-full bg-gray-700 rounded-lg px-3 py-2 text-sm text-gray-100 focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                    >
-                      <option value="">Cuisine</option>
-                      {cuisineTypes.map((cuisine) => (
-                        <option key={cuisine} value={cuisine}>{cuisine}</option>
-                      ))}
-                    </select>
-                    {errors.cuisine && <p className="text-red-400 text-xs">{errors.cuisine}</p>}
-                    
-                    <textarea
-                      name="description"
-                      value={recipe.description}
-                      onChange={handleChange}
-                      placeholder="Description"
-                      className="w-full bg-gray-700 rounded-lg px-3 py-2 text-sm text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 h-20 resize-none"
-                    />
-                    
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-2">
-                        <FaTag className="text-emerald-400 text-sm" />
-                        <input
-                          type="text"
-                          value={tagInput}
-                          onChange={(e) => setTagInput(e.target.value)}
-                          onKeyPress={(e) => e.key === "Enter" && handleTagAdd()}
-                          placeholder="Add tag"
-                          className="flex-1 bg-gray-700 rounded-lg px-3 py-2 text-sm text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                        />
-                        <motion.button
-                          onClick={handleTagAdd}
-                          whileHover={{ scale: 1.1 }}
-                          className="bg-emerald-600 p-2 rounded-full"
-                        >
-                          <FaPlus className="text-white text-sm" />
-                        </motion.button>
-                      </div>
-                      <div className="flex flex-wrap gap-2">
-                        {recipe.tags.map((tag, index) => (
-                          <motion.span
-                            key={index}
-                            className="bg-emerald-700 text-white px-2 py-1 rounded-full text-xs flex items-center gap-1"
-                          >
-                            #{tag}
-                            <button onClick={() => handleTagRemove(tag)}>
-                              <FaTimes size={10} />
-                            </button>
-                          </motion.span>
-                        ))}
-                      </div>
-                    </div>
-                  </>
-                )}
-
-                {activeSection === "ingredients" && (
-                  <div className="space-y-3 max-h-64 overflow-y-auto">
-                    {recipe.ingredients.map((ingredient, index) => (
-                      <motion.div
-                        key={index}
-                        className="flex items-center gap-2"
-                      >
-                        <input
-                          type="text"
-                          value={ingredient}
-                          onChange={(e) => handleIngredientChange(index, e.target.value)}
-                          onKeyPress={(e) => handleIngredientKeyPress(e, index)}
-                          placeholder={`Ingredient ${index + 1}`}
-                          ref={(el) => (ingredientRefs.current[index] = el)}
-                          className="flex-1 bg-gray-700 rounded-lg px-3 py-2 text-sm text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                        />
-                        <motion.button
-                          onClick={() => removeIngredient(index)}
-                          whileHover={{ scale: 1.1 }}
-                          className="text-red-400 p-1"
-                        >
-                          <FaTimes size={14} />
-                        </motion.button>
-                      </motion.div>
-                    ))}
-                    <motion.button
-                      onClick={() => addIngredient(true)} // Focus new input when clicked
-                      whileHover={{ scale: 1.05 }}
-                      className="flex items-center gap-2 px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-all"
-                    >
-                      <FaPlus size={14} />
-                      Add Ingredient
-                    </motion.button>
-                    {errors.ingredients && <p className="text-red-400 text-xs">{errors.ingredients}</p>}
                   </div>
-                )}
-
-                {activeSection === "instructions" && (
-                  <div>
-                    <textarea
-                      name="instructions"
-                      value={recipe.instructions}
-                      onChange={handleChange}
-                      placeholder="Steps..."
-                      className="w-full bg-gray-700 rounded-lg px-3 py-2 text-sm text-gray-100 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 h-32 resize-none"
-                    />
-                    {errors.instructions && <p className="text-red-400 text-xs">{errors.instructions}</p>}
-                  </div>
-                )}
-              </motion.div>
-            </AnimatePresence>
-
-            {/* Buttons */}
-            <div className="flex gap-4 mt-6">
-              <motion.button
-                onClick={() => setShowPreview(true)}
-                whileHover={{ scale: 1.05 }}
-                className="flex-1 bg-gray-700 text-white py-2 rounded-lg text-sm"
-              >
-                Show Preview
-              </motion.button>
-              <motion.button
-                onClick={handleSubmit}
-                disabled={isLoading}
-                whileHover={{ scale: 1.05 }}
-                className="flex-1 bg-emerald-600 text-white py-2 rounded-lg text-sm disabled:opacity-50"
-              >
-                {isLoading ? "Sharing..." : "Share Recipe"}
-              </motion.button>
-            </div>
-
-            {successMessage && (
-              <motion.div
-                className="mt-4 p-3 bg-emerald-900/30 text-emerald-400 rounded-lg text-sm text-center"
-              >
-                {successMessage}
-              </motion.div>
-            )}
-          </motion.div>
-        </div>
-      </main>
-
-      {/* Preview Popup */}
-      {showPreview && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="fixed inset-0 bg-gray-800/90 flex items-center justify-center p-4 z-50"
-        >
-          <motion.div
-            initial={{ scale: 0.9 }}
-            animate={{ scale: 1 }}
-            className="bg-gray-850 rounded-xl p-6 w-full max-w-md max-h-[90vh] overflow-y-auto"
-          >
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-bold text-emerald-400">Preview</h3>
-              <button
-                onClick={() => setShowPreview(false)}
-                className="text-gray-300 hover:text-white"
-              >
-                <FaTimes size={16} />
-              </button>
-            </div>
-            {recipe.image && (
-              <img
-                src={URL.createObjectURL(recipe.image)}
-                alt="Recipe"
-                className="w-full h-40 object-cover rounded-lg mb-4"
-              />
-            )}
-            <h4 className="text-lg font-semibold text-white">
-              {recipe.name || "Your Recipe"}
-            </h4>
-            {recipe.cuisine && (
-              <p className="text-emerald-300 text-xs italic">{recipe.cuisine}</p>
-            )}
-            {(recipe.cookingTime || recipe.servings) && (
-              <div className="flex gap-4 text-gray-300 text-sm mt-2">
-                {recipe.cookingTime && (
-                  <div className="flex items-center gap-1">
-                    <FaClock className="text-emerald-400 text-sm" />
-                    <span>{recipe.cookingTime} mins</span>
-                  </div>
-                )}
-                {recipe.servings && (
-                  <div className="flex items-center gap-1">
-                    <FaUsers className="text-emerald-400 text-sm" />
-                    <span>{recipe.servings} servings</span>
-                  </div>
-                )}
-              </div>
-            )}
-            {recipe.description && (
-              <p className="text-gray-300 text-sm mt-2">{recipe.description}</p>
-            )}
-            {recipe.tags.length > 0 && (
-              <div className="flex flex-wrap gap-2 mt-2">
-                {recipe.tags.map((tag, index) => (
-                  <span
-                    key={index}
-                    className="bg-emerald-700 text-white px-2 py-1 rounded-full text-xs"
+                  <motion.button
+                    onClick={handleTagAdd}
+                    whileHover={{ scale: 1.05 }}
+                    className="bg-gradient-to-r from-teal-500 to-blue-500 p-3 rounded-xl text-white shadow-sm hover:shadow-md transition-all duration-300"
                   >
-                    #{tag}
-                  </span>
+                    <FaPlus className="text-sm" />
+                  </motion.button>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {recipe.tags.map((tag, index) => (
+                    <motion.span
+                      key={index}
+                      className="bg-blue-50 text-blue-600 px-4 py-2 rounded-xl text-sm flex items-center gap-2 group hover:bg-blue-100 transition-colors duration-300"
+                    >
+                      #{tag}
+                      <button 
+                        onClick={() => handleTagRemove(tag)}
+                        className="text-blue-400 group-hover:text-blue-600 transition-colors"
+                      >
+                        <FaTimes size={12} />
+                      </button>
+                    </motion.span>
+                  ))}
+                </div>
+              </div>
+            </motion.div>
+          )}
+
+          {/* Ingredients Section */}
+          {activeSection === "ingredients" && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="space-y-4"
+            >
+              <div className="max-h-[400px] overflow-y-auto space-y-3 pr-2 scrollbar-thin scrollbar-thumb-blue-200 scrollbar-track-blue-50">
+                {recipe.ingredients.map((ingredient, index) => (
+                  <motion.div
+                    key={index}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: index * 0.1 }}
+                    className="flex items-center gap-2"
+                  >
+                    <div className="flex-1 relative group">
+                      <input
+                        type="text"
+                        value={ingredient}
+                        onChange={(e) => handleIngredientChange(index, e.target.value)}
+                        onKeyPress={(e) => handleIngredientKeyPress(e, index)}
+                        placeholder={`Ingredient ${index + 1}`}
+                        ref={(el) => (ingredientRefs.current[index] = el)}
+                        className="w-full bg-blue-50 rounded-xl px-4 py-3 text-gray-800 placeholder-gray-400 focus:ring-2 focus:ring-teal-400 outline-none transition-all duration-300"
+                      />
+                    </div>
+                    <motion.button
+                      onClick={() => removeIngredient(index)}
+                      whileHover={{ scale: 1.1 }}
+                      className="text-red-400 hover:text-red-600 p-2 rounded-full hover:bg-red-50 transition-colors"
+                    >
+                      <FaTimes size={16} />
+                    </motion.button>
+                  </motion.div>
                 ))}
               </div>
+              <motion.button
+                onClick={() => addIngredient(true)}
+                whileHover={{ scale: 1.02 }}
+                className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-teal-500 to-blue-500 text-white rounded-xl hover:shadow-md transition-all duration-300 w-full justify-center font-medium"
+              >
+                <FaPlus size={14} />
+                Add Ingredient
+              </motion.button>
+            </motion.div>
+          )}
+
+          {/* Instructions Section */}
+          {activeSection === "instructions" && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="space-y-2"
+            >
+              <label className="text-gray-700 font-medium block mb-1">Cooking Instructions</label>
+              <textarea
+                name="instructions"
+                value={recipe.instructions}
+                onChange={handleChange}
+                placeholder="Share your cooking process step by step..."
+                className="w-full bg-blue-50 rounded-xl px-4 py-3 text-gray-800 placeholder-gray-400 focus:ring-2 focus:ring-teal-400 outline-none transition-all duration-300 h-[400px] resize-none scrollbar-thin scrollbar-thumb-blue-200 scrollbar-track-blue-50"
+              />
+            </motion.div>
+          )}
+
+          {/* Action Buttons */}
+          <div className="flex gap-4 mt-8">
+            <motion.button
+              onClick={() => setShowPreview(true)}
+              whileHover={{ scale: 1.02 }}
+              className="flex-1 bg-blue-50 text-blue-600 py-3 rounded-xl text-sm font-medium hover:bg-blue-100 transition-all duration-300"
+            >
+              Preview Recipe
+            </motion.button>
+            <motion.button
+              onClick={handleSubmit}
+              disabled={isLoading}
+              whileHover={{ scale: 1.02 }}
+              className="flex-1 bg-gradient-to-r from-teal-500 to-blue-500 text-white py-3 rounded-xl text-sm font-medium hover:shadow-md transition-all duration-300 disabled:opacity-50 disabled:hover:shadow-none"
+            >
+              {isLoading ? "Publishing..." : "Publish Recipe"}
+            </motion.button>
+          </div>
+        </motion.div>
+
+        {/* Preview Modal */}
+{showPreview && (
+  <motion.div
+    initial={{ opacity: 0 }}
+    animate={{ opacity: 1 }}
+    className="fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-50"
+  >
+    <motion.div
+      initial={{ scale: 0.9 }}
+      animate={{ scale: 1 }}
+      className="bg-white rounded-xl p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto"
+    >
+      <div className="flex justify-between items-center mb-6">
+        <h3 className="text-xl font-bold text-teal-600">Recipe Preview</h3>
+        <button
+          onClick={() => setShowPreview(false)}
+          className="text-gray-400 hover:text-gray-600 p-2 rounded-full hover:bg-gray-100 transition-colors"
+        >
+          <FaTimes size={20} />
+        </button>
+      </div>
+
+      <div className="space-y-6">
+        {recipe.image && (
+          <img
+            src={URL.createObjectURL(recipe.image)}
+            alt="Recipe"
+            className="w-full h-64 object-cover rounded-xl shadow-md"
+          />
+        )}
+
+        <div className="space-y-4">
+          <h4 className="text-2xl font-bold text-gray-800">
+            {recipe.name || "Untitled Recipe"}
+          </h4>
+
+          {recipe.cuisine && (
+            <p className="text-teal-500 font-medium">{recipe.cuisine} Cuisine</p>
+          )}
+
+          <div className="flex gap-6 text-gray-600">
+            {recipe.cookingTime && (
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 bg-teal-100 rounded-full flex items-center justify-center">
+                  <FaClock className="text-teal-500" />
+                </div>
+                <span>{recipe.cookingTime} minutes</span>
+              </div>
             )}
-            {recipe.ingredients.some((ing) => ing.trim()) && (
-              <div className="mt-4">
-                <h5 className="text-sm font-semibold text-emerald-400">Ingredients</h5>
-                <ul className="space-y-1 text-gray-300 text-sm mt-2">
-                  {recipe.ingredients.filter((ing) => ing.trim()).map((ingredient, index) => (
-                    <li key={index} className="flex items-center gap-2">
-                      <span className="w-1 h-1 bg-emerald-400 rounded-full" />
+            {recipe.servings && (
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 bg-teal-100 rounded-full flex items-center justify-center">
+                  <FaUsers className="text-teal-500" />
+                </div>
+                <span>Serves {recipe.servings}</span>
+              </div>
+            )}
+          </div>
+
+          {recipe.description && (
+            <p className="text-gray-600 leading-relaxed bg-blue-50 p-4 rounded-xl">
+              {recipe.description}
+            </p>
+          )}
+
+          {recipe.tags.length > 0 && (
+            <div className="flex flex-wrap gap-2">
+              {recipe.tags.map((tag, index) => (
+                <span
+                  key={index}
+                  className="bg-blue-50 text-blue-600 px-3 py-1 rounded-full text-sm"
+                >
+                  #{tag}
+                </span>
+              ))}
+            </div>
+          )}
+
+          {recipe.ingredients.some((ing) => ing.trim()) && (
+            <div className="space-y-3 bg-blue-50 p-6 rounded-xl">
+              <h5 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
+                <span className="w-8 h-8 bg-teal-100 rounded-full flex items-center justify-center">
+                  <FaTag className="text-teal-500" />
+                </span>
+                Ingredients
+              </h5>
+              <ul className="space-y-2">
+                {recipe.ingredients
+                  .filter((ing) => ing.trim())
+                  .map((ingredient, index) => (
+                    <li key={index} className="flex items-center gap-3 text-gray-600">
+                      <span className="w-2 h-2 bg-teal-400 rounded-full" />
                       {ingredient}
                     </li>
                   ))}
-                </ul>
+              </ul>
+            </div>
+          )}
+
+          {recipe.instructions && (
+            <div className="space-y-3 bg-blue-50 p-6 rounded-xl">
+              <h5 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
+                <span className="w-8 h-8 bg-teal-100 rounded-full flex items-center justify-center">
+                  <FaChevronRight className="text-teal-500" />
+                </span>
+                Instructions
+              </h5>
+              <div className="text-gray-600 leading-relaxed whitespace-pre-wrap">
+                {recipe.instructions}
               </div>
-            )}
-            {recipe.instructions && (
-              <div className="mt-4">
-                <h5 className="text-sm font-semibold text-emerald-400">Steps</h5>
-                <p className="text-gray-300 text-sm mt-2 whitespace-pre-wrap">{recipe.instructions}</p>
-              </div>
-            )}
-          </motion.div>
-        </motion.div>
-      )}
+            </div>
+          )}
+        </div>
+      </div>
+    </motion.div>
+  </motion.div>
+)}
+
+        {/* Community Stats Section */}
+        <div className="mt-12 text-center">
+          <p className="text-gray-600 mb-6 text-lg">
+            Join our growing community of food enthusiasts
+          </p>
+          <div className="flex justify-center gap-6">
+            <motion.div 
+              whileHover={{ y: -5 }}
+              className="bg-white px-6 py-4 rounded-xl shadow-sm border border-blue-100 transition-all duration-300"
+            >
+              <span className="text-teal-500 text-2xl font-bold block mb-1">1.2K+</span>
+              <span className="text-gray-600">Recipes Shared</span>
+            </motion.div>
+            <motion.div 
+              whileHover={{ y: -5 }}
+              className="bg-white px-6 py-4 rounded-xl shadow-sm border border-blue-100 transition-all duration-300"
+            >
+              <span className="text-teal-500 text-2xl font-bold block mb-1">5K+</span>
+              <span className="text-gray-600">Community Members</span>
+            </motion.div>
+            <motion.div 
+              whileHover={{ y: -5 }}
+              className="bg-white px-6 py-4 rounded-xl shadow-sm border border-blue-100 transition-all duration-300"
+            >
+              <span className="text-teal-500 text-2xl font-bold block mb-1">10K+</span>
+              <span className="text-gray-600">Recipe Saves</span>
+            </motion.div>
+          </div>
+        </div>
+      </div>
     </div>
+
+    
   );
 };
 

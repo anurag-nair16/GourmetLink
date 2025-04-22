@@ -146,23 +146,23 @@ const Profile = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-900 flex justify-center items-center">
-        <div className="text-emerald-500">Loading...</div>
+      <div className="min-h-screen bg-gradient-to-br from-primary-light to-white flex justify-center items-center">
+        <div className="text-primary-main">Loading...</div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-900 to-teal-900 text-white overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-primary-light to-white text-neutral-800">
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <motion.div
-          className="absolute top-10 left-10 w-40 h-40 bg-emerald-500/10 rounded-full blur-3xl"
-          animate={{ scale: [1, 1.2, 1], opacity: [0.5, 0.8, 0.5] }}
+          className="absolute top-10 left-10 w-40 h-40 bg-primary-main/5 rounded-full blur-3xl"
+          animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.5, 0.3] }}
           transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
         />
         <motion.div
-          className="absolute bottom-20 right-20 w-60 h-60 bg-teal-500/10 rounded-full blur-3xl"
-          animate={{ scale: [1, 1.3, 1], opacity: [0.5, 0.7, 0.5] }}
+          className="absolute bottom-20 right-20 w-60 h-60 bg-primary-main/5 rounded-full blur-3xl"
+          animate={{ scale: [1, 1.3, 1], opacity: [0.3, 0.4, 0.3] }}
           transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
         />
       </div>
@@ -172,7 +172,7 @@ const Profile = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.2 }}
-          className="bg-gray-850 rounded-3xl shadow-2xl p-8 mb-12 border border-emerald-500/20 max-w-4xl mx-auto"
+          className="bg-white rounded-3xl shadow-lg p-8 mb-12 border border-neutral-200 max-w-4xl mx-auto"
         >
           <div className="flex flex-col items-center md:flex-row md:items-start gap-8">
             <div className="relative">
@@ -181,21 +181,21 @@ const Profile = () => {
                 src={profileData.profile_image}
                 size="140"
                 round={true}
-                className="border-4 border-emerald-400 shadow-lg transform hover:scale-105 transition-all duration-300"
+                className="border-4 border-primary-main shadow-lg transform hover:scale-105 transition-all duration-300"
               />
               <motion.div
-                className="absolute -bottom-2 -right-2 bg-emerald-500 text-white rounded-full p-2"
+                className="absolute -bottom-2 -right-2 bg-primary-main text-white rounded-full p-2"
                 whileHover={{ scale: 1.1 }}
               >
                 <FaEdit size={16} />
               </motion.div>
             </div>
             <div className="text-center md:text-left flex-1">
-              <h2 className="text-3xl font-bold text-white mb-2">{profileData.username}</h2>
-              <p className="text-gray-400 mb-4">{profileData.email}</p>
-              <div className="flex justify-center md:justify-start gap-6 text-gray-300">
+              <h2 className="text-3xl font-bold text-neutral-800 mb-2">{profileData.username}</h2>
+              <p className="text-neutral-600 mb-4">{profileData.email}</p>
+              <div className="flex justify-center md:justify-start gap-6 text-neutral-600">
                 <div className="flex items-center gap-2">
-                  <FaUtensils className="text-emerald-400" />
+                  <FaUtensils className="text-primary-main" />
                   <span>{userRecipes.length} Recipes</span>
                 </div>
                 <div className="flex items-center gap-2">
@@ -203,13 +203,13 @@ const Profile = () => {
                   <span>{favouriteRecipes.length} Favorites</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <FaShoppingCart className="text-teal-400" />
+                  <FaShoppingCart className="text-primary-main" />
                   <span>{mealPlans.length} Plans</span>
                 </div>
               </div>
               <Link
                 to="/submit-recipe"
-                className="mt-6 inline-flex items-center gap-2 px-6 py-3 bg-emerald-600 text-white rounded-full font-semibold hover:bg-emerald-700 transition-all duration-300"
+                className="mt-6 inline-flex items-center gap-2 px-6 py-3 bg-primary-main text-white rounded-full font-semibold hover:bg-primary-dark transition-all duration-300"
               >
                 <FaPlus /> Add New Recipe
               </Link>
@@ -217,7 +217,6 @@ const Profile = () => {
           </div>
         </motion.section>
 
-        {/* Adjusted Section Navigation for Mobile */}
         <div className="relative flex justify-center gap-4 mb-12 max-w-2xl mx-auto">
           {sections.map((section, index) => (
             <motion.button
@@ -228,8 +227,8 @@ const Profile = () => {
               whileTap={{ scale: 0.95 }}
               className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 ${
                 activeSection === section.id
-                  ? "bg-emerald-600 text-white shadow-md"
-                  : "bg-gray-700 text-gray-300 hover:bg-gray-600"
+                  ? "bg-primary-main text-white shadow-md"
+                  : "bg-neutral-100 text-neutral-600 hover:bg-neutral-200"
               }`}
             >
               {section.icon}
@@ -245,7 +244,7 @@ const Profile = () => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.8, delay: 0.4 }}
-                className="text-3xl font-bold text-emerald-400 mb-8 text-center"
+                className="text-3xl font-bold text-neutral-800 mb-8 text-center"
               >
                 Your Recipes
               </motion.h2>
@@ -254,13 +253,13 @@ const Profile = () => {
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ duration: 0.8, delay: 0.6 }}
-                  className="text-center bg-gray-800 rounded-2xl p-12 text-gray-400 shadow-inner"
+                  className="text-center bg-white rounded-2xl p-12 text-neutral-600 shadow-inner border border-neutral-200"
                 >
-                  <FaUtensils className="text-emerald-400 text-4xl mx-auto mb-4" />
+                  <FaUtensils className="text-primary-main text-4xl mx-auto mb-4" />
                   <p className="text-lg">You haven’t shared any recipes yet. Start cooking!</p>
                   <Link
                     to="/submit-recipe"
-                    className="mt-4 inline-block px-6 py-3 bg-emerald-500 text-white rounded-full hover:bg-emerald-600 transition-all duration-300"
+                    className="mt-4 inline-block px-6 py-3 bg-primary-main text-white rounded-full hover:bg-primary-dark transition-all duration-300"
                   >
                     Create Your First Recipe
                   </Link>
@@ -274,23 +273,23 @@ const Profile = () => {
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ duration: 0.5, delay: index * 0.1 }}
                       onClick={() => handleRecipeClick(recipe.id)}
-                      className="bg-gray-800 rounded-2xl shadow-lg overflow-hidden cursor-pointer transform hover:scale-105 hover:shadow-emerald-500/20 transition-all duration-300"
+                      className="bg-white rounded-xl shadow-md overflow-hidden cursor-pointer transform hover:scale-105 hover:shadow-lg transition-all duration-300 border border-neutral-200"
                     >
                       <div className="relative aspect-video">
                         {recipe.image && (
                           <img src={recipe.image} alt={recipe.name} className="w-full h-full object-cover" />
                         )}
                         <div className="absolute inset-0 bg-gradient-to-t from-gray-900/80 to-transparent" />
-                        <span className="absolute bottom-2 right-2 bg-emerald-600 text-white px-3 py-1 rounded-full text-sm flex items-center gap-2">
+                        <span className="absolute bottom-2 right-2 bg-primary-main text-white px-3 py-1 rounded-full text-sm flex items-center gap-2">
                           <FaClock /> {recipe.prep_time || "N/A"} mins
                         </span>
                       </div>
                       <div className="p-5 space-y-3">
-                        <h3 className="text-lg font-semibold text-white line-clamp-1">{recipe.name}</h3>
-                        <p className="text-gray-400 text-sm line-clamp-2">{recipe.description}</p>
-                        <div className="flex justify-between items-center text-gray-300">
+                        <h3 className="text-lg font-semibold text-neutral-800 line-clamp-1">{recipe.name}</h3>
+                        <p className="text-neutral-600 text-sm line-clamp-2">{recipe.description}</p>
+                        <div className="flex justify-between items-center text-neutral-600">
                           <span className="flex items-center gap-2">
-                            <FaThumbsUp className="text-emerald-400" />
+                            <FaThumbsUp className="text-primary-main" />
                             {recipe.post?.likes?.length || 0}
                           </span>
                           <span className="flex items-center gap-2">
@@ -312,7 +311,7 @@ const Profile = () => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.8, delay: 0.4 }}
-                className="text-3xl font-bold text-emerald-400 mb-8 text-center"
+                className="text-3xl font-bold text-neutral-800 mb-8 text-center"
               >
                 Your Favourites
               </motion.h2>
@@ -321,13 +320,13 @@ const Profile = () => {
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ duration: 0.8, delay: 0.6 }}
-                  className="text-center bg-gray-800 rounded-2xl p-12 text-gray-400 shadow-inner"
+                  className="text-center bg-white rounded-2xl p-12 text-neutral-600 shadow-inner border border-neutral-200"
                 >
                   <FaHeart className="text-red-400 text-4xl mx-auto mb-4" />
                   <p className="text-lg">No favorite recipes yet. Explore and save some!</p>
                   <Link
                     to="/posts"
-                    className="mt-4 inline-block px-6 py-3 bg-emerald-500 text-white rounded-full hover:bg-emerald-600 transition-all duration-300"
+                    className="mt-4 inline-block px-6 py-3 bg-primary-main text-white rounded-full hover:bg-primary-dark transition-all duration-300"
                   >
                     Discover Recipes
                   </Link>
@@ -341,14 +340,14 @@ const Profile = () => {
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ duration: 0.5, delay: index * 0.1 }}
                       onClick={() => handleRecipeClick(recipe.id)}
-                      className="bg-gray-800 rounded-2xl shadow-lg overflow-hidden cursor-pointer transform hover:scale-105 hover:shadow-emerald-500/20 transition-all duration-300"
+                      className="bg-white rounded-xl shadow-md overflow-hidden cursor-pointer transform hover:scale-105 hover:shadow-lg transition-all duration-300 border border-neutral-200"
                     >
                       <div className="relative aspect-video">
                         {recipe.image && (
                           <img src={recipe.image} alt={recipe.name} className="w-full h-full object-cover" />
                         )}
                         <div className="absolute inset-0 bg-gradient-to-t from-gray-900/80 to-transparent" />
-                        <span className="absolute bottom-2 right-2 bg-emerald-600 text-white px-3 py-1 rounded-full text-sm flex items-center gap-2">
+                        <span className="absolute bottom-2 right-2 bg-primary-main text-white px-3 py-1 rounded-full text-sm flex items-center gap-2">
                           <FaClock /> {recipe.prep_time || "N/A"} mins
                         </span>
                         <span className="absolute top-2 right-2 bg-red-500/20 text-red-300 p-1 rounded-full">
@@ -356,11 +355,11 @@ const Profile = () => {
                         </span>
                       </div>
                       <div className="p-5 space-y-3">
-                        <h3 className="text-lg font-semibold text-white line-clamp-1">{recipe.name}</h3>
-                        <p className="text-gray-400 text-sm line-clamp-2">{recipe.description}</p>
-                        <div className="flex justify-between items-center text-gray-300">
+                        <h3 className="text-lg font-semibold text-neutral-800 line-clamp-1">{recipe.name}</h3>
+                        <p className="text-neutral-600 text-sm line-clamp-2">{recipe.description}</p>
+                        <div className="flex justify-between items-center text-neutral-600">
                           <span className="flex items-center gap-2">
-                            <FaThumbsUp className="text-emerald-400" />
+                            <FaThumbsUp className="text-primary-main" />
                             {recipe.post?.likes?.length || 0}
                           </span>
                           <span className="flex items-center gap-2">
@@ -382,7 +381,7 @@ const Profile = () => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.8, delay: 0.4 }}
-                className="text-3xl font-bold text-emerald-400 mb-8 text-center"
+                className="text-3xl font-bold text-neutral-800 mb-8 text-center"
               >
                 Your Meal Plans
               </motion.h2>
@@ -393,28 +392,27 @@ const Profile = () => {
                   initial="hidden"
                   animate="visible"
                 >
-                  <FaSpinner className="text-emerald-400 text-5xl animate-spin" />
-                  <p className="text-gray-300 mt-4 text-lg">Loading your meal plans...</p>
+                  <FaSpinner className="text-primary-main text-5xl animate-spin" />
+                  <p className="text-neutral-600 mt-4 text-lg">Loading your meal plans...</p>
                 </motion.div>
               ) : mealPlans.length === 0 ? (
                 <motion.div
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ duration: 0.8, delay: 0.6 }}
-                  className="text-center bg-gray-800 rounded-2xl p-12 text-gray-400 shadow-inner"
+                  className="text-center bg-white rounded-2xl p-12 text-neutral-600 shadow-inner border border-neutral-200"
                 >
-                  <FaShoppingCart className="text-teal-400 text-4xl mx-auto mb-4" />
+                  <FaShoppingCart className="text-primary-main text-4xl mx-auto mb-4" />
                   <p className="text-lg">No meal plans yet. Create one to get started!</p>
                   <Link
                     to="/meal-planner"
-                    className="mt-4 inline-block px-6 py-3 bg-emerald-500 text-white rounded-full hover:bg-emerald-600 transition-all duration-300"
+                    className="mt-4 inline-block px-6 py-3 bg-primary-main text-white rounded-full hover:bg-primary-dark transition-all duration-300"
                   >
                     Add Meal Plan
                   </Link>
                 </motion.div>
               ) : (
                 <div className="space-y-6">
-                  {/* Add Meal Plan Button */}
                   <motion.div
                     className="flex justify-end"
                     initial={{ opacity: 0, x: 20 }}
@@ -423,7 +421,7 @@ const Profile = () => {
                   >
                     <Link
                       to="/meal-planner"
-                      className="inline-flex items-center gap-2 px-6 py-3 bg-emerald-600 text-white rounded-full font-semibold hover:bg-emerald-700 transition-all duration-300"
+                      className="inline-flex items-center gap-2 px-6 py-3 bg-primary-main text-white rounded-full font-semibold hover:bg-primary-dark transition-all duration-300"
                     >
                       <FaPlus /> Add Meal Plan
                     </Link>
@@ -438,20 +436,20 @@ const Profile = () => {
                     {mealPlans.map((plan) => (
                       <motion.div
                         key={plan.id}
-                        className="bg-gray-800 rounded-2xl p-6 shadow-lg border border-emerald-500/20 hover:border-emerald-500/50 transition-all duration-300"
+                        className="bg-white rounded-xl p-6 shadow-md border border-neutral-200 hover:border-primary-main/50 transition-all duration-300"
                         variants={itemVariants}
-                        whileHover={{ scale: 1.03, boxShadow: "0 10px 20px rgba(0, 0, 0, 0.3)" }}
+                        whileHover={{ scale: 1.03, boxShadow: "0 10px 20px rgba(0, 0, 0, 0.15)" }}
                         whileTap={{ scale: 0.98 }}
                       >
-                        <h3 className="text-xl font-semibold text-white mb-2">{plan.name}</h3>
-                        <p className="text-gray-400 text-sm mb-4">
+                        <h3 className="text-xl font-semibold text-neutral-800 mb-2">{plan.name}</h3>
+                        <p className="text-neutral-600 text-sm mb-4">
                           {new Date(plan.start_date).toLocaleDateString()} -{" "}
                           {new Date(plan.end_date).toLocaleDateString()}
                         </p>
                         <div className="flex gap-3">
                           <motion.button
                             onClick={() => setSelectedPlan(plan)}
-                            className="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-full text-sm font-medium transition-colors"
+                            className="flex-1 bg-primary-main hover:bg-primary-dark text-white px-4 py-2 rounded-full text-sm font-medium transition-colors"
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}
                           >
@@ -487,24 +485,23 @@ const Profile = () => {
                 </div>
               )}
 
-              {/* Meal Plan Details Modal */}
               <AnimatePresence>
                 {selectedPlan && (
                   <motion.div
-                    className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4"
+                    className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 backdrop-blur-sm"
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
                   >
                     <motion.div
-                      className="bg-gray-850 rounded-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto p-8 shadow-2xl border border-emerald-500/30"
+                      className="bg-white rounded-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto p-8 shadow-xl border border-neutral-200"
                       variants={modalVariants}
                     >
                       <div className="flex justify-between items-center mb-8">
-                        <h3 className="text-3xl font-bold text-emerald-400 tracking-wide">{selectedPlan.name}</h3>
+                        <h3 className="text-3xl font-bold text-neutral-800 tracking-wide">{selectedPlan.name}</h3>
                         <motion.button
                           onClick={() => setSelectedPlan(null)}
-                          className="text-gray-300 hover:text-emerald-400 transition-colors"
+                          className="text-neutral-600 hover:text-primary-main transition-colors"
                           whileHover={{ rotate: 90 }}
                         >
                           <FaTimes size={28} />
@@ -523,10 +520,10 @@ const Profile = () => {
                         ).map((day) => (
                           <motion.div
                             key={day}
-                            className="bg-gray-800 p-6 rounded-xl border border-gray-700/50 shadow-md"
+                            className="bg-neutral-50 p-6 rounded-xl border border-neutral-200 shadow-md"
                             variants={itemVariants}
                           >
-                            <h4 className="text-xl font-semibold text-emerald-300 mb-4">
+                            <h4 className="text-xl font-semibold text-neutral-800 mb-4">
                               Day {day} -{" "}
                               {new Date(
                                 new Date(selectedPlan.start_date).getTime() + (day - 1) * 86400000
@@ -536,7 +533,7 @@ const Profile = () => {
                               {selectedPlan.entries.filter((e) => e.day === day).map((entry) => (
                                 <motion.div
                                   key={entry.meal_type}
-                                  className="flex items-center bg-gray-900 p-4 rounded-lg shadow-sm border border-gray-700/50 hover:border-emerald-500/30 transition-all duration-300"
+                                  className="flex items-center bg-white p-4 rounded-lg shadow-sm border border-neutral-200 hover:border-primary-main/30 transition-all duration-300"
                                   initial={{ opacity: 0, x: -20 }}
                                   animate={{ opacity: 1, x: 0 }}
                                   transition={{ duration: 0.4 }}
@@ -549,9 +546,9 @@ const Profile = () => {
                                     onError={(e) => (e.target.src = "https://via.placeholder.com/100?text=No+Image")}
                                   />
                                   <div className="flex-1">
-                                    <p className="text-gray-200 text-lg">
-                                      <span className="capitalize font-medium text-emerald-400">{entry.meal_type}:</span>{" "}
-                                      <span className="text-gray-100">{entry.recipe?.name || "No recipe selected"}</span>
+                                    <p className="text-neutral-800 text-lg">
+                                      <span className="capitalize font-medium text-primary-main">{entry.meal_type}:</span>{" "}
+                                      <span className="text-neutral-800">{entry.recipe?.name || "No recipe selected"}</span>
                                     </p>
                                   </div>
                                 </motion.div>
@@ -565,26 +562,25 @@ const Profile = () => {
                 )}
               </AnimatePresence>
 
-              {/* Ingredients Modal */}
               <AnimatePresence>
                 {showIngredients && (
                   <motion.div
-                    className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4"
+                    className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 backdrop-blur-sm"
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
                   >
                     <motion.div
-                      className="bg-gray-850 rounded-2xl w-full max-w-lg max-h-[85vh] overflow-y-auto p-8 shadow-2xl border border-emerald-500/30"
+                      className="bg-white rounded-xl w-full max-w-lg max-h-[85vh] overflow-y-auto p-8 shadow-xl border border-neutral-200"
                       variants={modalVariants}
                     >
                       <div className="flex justify-between items-center mb-6">
-                        <h3 className="text-3xl font-bold text-emerald-400 flex items-center gap-3 tracking-wide">
+                        <h3 className="text-3xl font-bold text-neutral-800 flex items-center gap-3 tracking-wide">
                           <FaShoppingCart /> Shopping List
                         </h3>
                         <motion.button
                           onClick={() => setShowIngredients(false)}
-                          className="text-gray-300 hover:text-emerald-400 transition-colors"
+                          className="text-neutral-600 hover:text-primary-main transition-colors"
                           whileHover={{ rotate: 90 }}
                         >
                           <FaTimes size={28} />
@@ -597,11 +593,11 @@ const Profile = () => {
                           initial="hidden"
                           animate="visible"
                         >
-                          <FaSpinner className="text-emerald-400 text-4xl animate-spin" />
-                          <p className="text-gray-300 mt-4 text-lg">Fetching your shopping list...</p>
+                          <FaSpinner className="text-primary-main text-4xl animate-spin" />
+                          <p className="text-neutral-600 mt-4 text-lg">Fetching your shopping list...</p>
                         </motion.div>
                       ) : ingredients.length === 0 ? (
-                        <p className="text-gray-300 text-center py-6 text-lg">No ingredients available.</p>
+                        <p className="text-neutral-600 text-center py-6 text-lg">No ingredients available.</p>
                       ) : (
                         <motion.ul
                           className="space-y-4"
@@ -612,11 +608,11 @@ const Profile = () => {
                           {ingredients.map((item, index) => (
                             <motion.li
                               key={index}
-                              className="text-gray-200 bg-gray-900 p-4 rounded-lg flex justify-between items-center shadow-sm border border-gray-700/50"
+                              className="text-neutral-800 bg-neutral-50 p-4 rounded-lg flex justify-between items-center shadow-sm border border-neutral-200"
                               variants={itemVariants}
                             >
-                              <span className="font-medium text-emerald-300">{item.name}</span>
-                              <span className="text-gray-300">
+                              <span className="font-medium text-primary-main">{item.name}</span>
+                              <span className="text-neutral-600">
                                 {item.quantity} {item.unit}
                               </span>
                             </motion.li>

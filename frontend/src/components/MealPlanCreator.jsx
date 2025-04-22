@@ -20,6 +20,31 @@ const MealPlannerCreator = ({ onPlanCreated }) => {
   const navigate = useNavigate();
   const searchInputRefs = useRef({});
 
+
+  const mealTypes = [
+    {
+      type: "breakfast",
+      icon: <FaCoffee />,
+      label: "Breakfast",
+      description: "Start your day right",
+      gradient: "from-yellow-500 to-orange-500"
+    },
+    {
+      type: "lunch",
+      icon: <FaUtensils />,
+      label: "Lunch",
+      description: "Midday energy boost",
+      gradient: "from-primary-main to-primary-dark"
+    },
+    {
+      type: "dinner",
+      icon: <FaPizzaSlice />,
+      label: "Dinner",
+      description: "Evening satisfaction",
+      gradient: "from-purple-500 to-indigo-500"
+    }
+  ];
+
   useEffect(() => {
     fetchRecipes();
   }, []);
@@ -175,31 +200,56 @@ const MealPlannerCreator = ({ onPlanCreated }) => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-teal-900 text-gray-100 p-4 flex flex-col">
-      <ToastContainer position="top-right" autoClose={3000} theme="dark" />
-      <motion.div
-        className="w-[90%] mx-auto bg-gray-900/95 rounded-xl p-4 sm:p-6 shadow-xl border border-teal-500/20 flex-1 flex flex-col relative" // 80% width and centered
-        initial={{ opacity: 0, y: 30 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, ease: "easeOut" }}
-      >
+    <div className="min-h-screen bg-gradient-to-br from-primary-light to-white text-neutral-800 p-4 flex flex-col">
+        <ToastContainer position="top-right" autoClose={3000} theme="light" />
+        <motion.div
+          className="w-[90%] mx-auto bg-white/95 rounded-xl p-6 sm:p-8 shadow-lg border border-neutral-200 flex-1 flex flex-col relative"
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, ease: "easeOut" }}
+        >
         {/* Header */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6">
-          <h2 className="text-xl sm:text-3xl font-bold text-teal-400 tracking-wide mb-4 sm:mb-0">
-            Craft Your Meal Plan
-          </h2>
-          <motion.button
-            onClick={handleSubmit}
-            className="bg-teal-600 hover:bg-teal-700 text-white py-2 px-6 rounded-full font-semibold transition-colors duration-300 disabled:opacity-50 flex items-center w-full sm:w-auto justify-center"
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            disabled={isSubmitting}
-          >
-            {isSubmitting ? <FaSpinner className="animate-spin mr-2" /> : null}
-            Save Plan
-          </motion.button>
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8">
+          <div>
+            <h2 className="text-2xl sm:text-3xl font-bold text-primary-main tracking-wide mb-2">
+              Create Your Meal Plan
+            </h2>
+            <p className="text-neutral-600">
+              Design your perfect week of meals with our easy-to-use planner
+            </p>
+          </div>
         </div>
 
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          <div className="bg-white/90 p-6 rounded-xl shadow-sm border border-primary-main/20">
+            <div className="text-primary-main text-xl mb-3">🎯</div>
+            <h3 className="font-semibold text-neutral-800 mb-2">Plan Smarter</h3>
+            <p className="text-neutral-600 text-sm">
+              Take control of your nutrition with our intelligent meal planning system. Save time and eat better.
+            </p>
+          </div>
+          <div className="bg-white/90 p-6 rounded-xl shadow-sm border border-primary-main/20">
+            <div className="text-primary-main text-xl mb-3">✨</div>
+            <h3 className="font-semibold text-neutral-800 mb-2">Eat Better</h3>
+            <p className="text-neutral-600 text-sm">
+              Choose from our curated collection of healthy, delicious recipes for balanced nutrition.
+            </p>
+          </div>
+          <div className="bg-white/90 p-6 rounded-xl shadow-sm border border-primary-main/20">
+            <div className="text-primary-main text-xl mb-3">💪</div>
+            <h3 className="font-semibold text-neutral-800 mb-2">Stay Consistent</h3>
+            <p className="text-neutral-600 text-sm">
+              Build healthy habits with organized meal plans that fit your lifestyle.
+            </p>
+          </div>
+        </div>
+
+        <div className="mb-2">
+          <h3 className="text-lg font-semibold text-primary-main mb-1">Plan Details</h3>
+          <p className="text-sm text-neutral-600">
+            Give your meal plan a name and set its duration
+          </p>
+        </div>
         {/* Form Inputs */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
           {[
@@ -260,6 +310,24 @@ const MealPlannerCreator = ({ onPlanCreated }) => {
                   ))}
                 </div>
               </div>
+            </div>
+
+            <div className="bg-primary-light rounded-xl p-4 mb-6">
+              <h4 className="text-primary-main font-semibold mb-2">Quick Tips:</h4>
+              <ul className="text-sm text-neutral-700 space-y-2">
+                <li className="flex items-center gap-2">
+                  <span className="text-primary-main">•</span>
+                  Plan breakfast, lunch, and dinner for each day
+                </li>
+                <li className="flex items-center gap-2">
+                  <span className="text-primary-main">•</span>
+                  Consider portion sizes and dietary restrictions
+                </li>
+                <li className="flex items-center gap-2">
+                  <span className="text-primary-main">•</span>
+                  Mix and match recipes for variety
+                </li>
+              </ul>
             </div>
 
             {/* Meal Selector */}
@@ -325,6 +393,48 @@ const MealPlannerCreator = ({ onPlanCreated }) => {
           </div>
         )}
 
+      <div className="mb-20"> {/* Increased bottom margin to prevent overlap */}
+        <div className="flex justify-between items-center mb-2">
+          <span className="text-sm text-neutral-600">Plan Progress</span>
+          <span className="text-sm font-medium text-primary-main">
+            {formData.entries.length ? 
+              Math.round((formData.entries.filter(e => e.recipe_id).length / formData.entries.length) * 100) : 0}%
+          </span>
+        </div>
+        <div className="w-full h-2 bg-neutral-100 rounded-full overflow-hidden">
+          <div 
+            className="h-full bg-primary-main rounded-full transition-all duration-500"
+            style={{ 
+              width: `${formData.entries.length ? 
+                Math.round((formData.entries.filter(e => e.recipe_id).length / formData.entries.length) * 100) : 0}%` 
+            }}
+          />
+        </div>
+      </div>
+      
+      <div className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-sm border-t border-neutral-200 p-4 z-50">
+  <div className="container mx-auto max-w-4xl flex flex-col sm:flex-row items-center justify-between gap-3">
+    <div className="text-sm text-neutral-600 order-2 sm:order-1">
+      <span className="font-medium text-primary-main">
+        {formData.entries.length ? 
+          Math.round((formData.entries.filter(e => e.recipe_id).length / formData.entries.length) * 100) : 0}%
+      </span> complete
+    </div>
+    <motion.button
+      onClick={handleSubmit}
+      className="w-full sm:w-auto bg-primary-main hover:bg-primary-dark text-white 
+        py-2.5 px-6 rounded-lg font-semibold transition-colors duration-300 
+        disabled:opacity-50 flex items-center justify-center gap-2 shadow-lg
+        order-1 sm:order-2"
+      whileHover={{ scale: 1.02 }}
+      whileTap={{ scale: 0.98 }}
+      disabled={isSubmitting}
+    >
+      {isSubmitting ? <FaSpinner className="animate-spin" /> : null}
+      {isSubmitting ? "Saving Plan..." : "Save Plan"}
+    </motion.button>
+  </div>
+</div>
         {/* Recipe Search Popup */}
         <AnimatePresence>
           {searchOpen && (

@@ -5,31 +5,34 @@ import PostCard from "./forms/PostCard";
 import PostDetails from "./forms/PostDetails";
 import { FaStar, FaRegStar, FaStarHalfAlt, FaChevronUp, FaChevronDown } from "react-icons/fa";
 
+const theme = {
+  primary: {
+    light: '#f0fdf4', // Light green background
+    main: '#22c55e',  // Main green
+    dark: '#15803d'   // Dark green
+  },
+  neutral: {
+    50: '#fafafa',
+    100: '#f4f4f5',
+    200: '#e4e4e7',
+    700: '#3f3f46',
+    800: '#27272a'
+  }
+};
+
 const PostCardSkeleton = () => (
-  <div className="bg-gray-800 rounded-lg overflow-hidden animate-pulse">
-    {/* Image skeleton */}
-    <div className="aspect-video bg-gray-700"></div>
-    
-    {/* Content skeleton */}
+  <div className="bg-white rounded-xl overflow-hidden shadow-sm animate-pulse border border-neutral-100">
+    <div className="aspect-video bg-neutral-100"></div>
     <div className="p-4 space-y-4">
-      {/* Title skeleton */}
-      <div className="h-6 bg-gray-700 rounded w-3/4"></div>
-      
-      {/* Rating skeleton */}
+      <div className="h-6 bg-neutral-100 rounded-md w-3/4"></div>
       <div className="flex space-x-1">
         {[...Array(5)].map((_, i) => (
-          <div key={i} className="w-5 h-5 bg-gray-700 rounded"></div>
+          <div key={i} className="w-5 h-5 bg-neutral-100 rounded-md"></div>
         ))}
       </div>
-      
-      {/* Stats skeleton */}
       <div className="flex justify-between items-center">
-        <div className="flex space-x-2">
-          {/* Like count skeleton */}
-          <div className="h-5 w-16 bg-gray-700 rounded"></div>
-        </div>
-        {/* Time skeleton */}
-        <div className="h-5 w-24 bg-gray-700 rounded"></div>
+        <div className="h-5 w-16 bg-neutral-100 rounded-md"></div>
+        <div className="h-5 w-24 bg-neutral-100 rounded-md"></div>
       </div>
     </div>
   </div>
@@ -353,52 +356,57 @@ const AllPostsPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-900 page-transition">
-      {/* Search and Filter Controls */}
-      <div className="sticky top-0 z-20 bg-gray-900 shadow-lg">
+    <div className="min-h-screen bg-gradient-to-br from-primary-light to-white">
+    {/* Search and Filter Controls */}
+    {/* Search and Filter Controls */}
+      <div className="sticky top-0 z-20 bg-white/95 backdrop-blur-sm shadow-md border-b border-neutral-200">
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center gap-4">
             {/* Search Bar */}
             <div className="relative flex-1">
               <input
                 type="text"
-                className="w-full py-3 px-4 rounded-lg bg-gray-800 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 transition-all"
+                className="w-full py-3 px-4 rounded-lg bg-neutral-50 text-neutral-800 
+                  placeholder-neutral-400 border border-neutral-200 focus:outline-none 
+                  focus:ring-2 focus:ring-primary-main/20 focus:border-primary-main 
+                  transition-all"
                 placeholder="Search for recipes..."
                 value={searchQuery}
                 onChange={handleSearch}
               />
-              <FaSearch className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+              <FaSearch className="absolute right-4 top-1/2 transform -translate-y-1/2 text-neutral-400" size={20} />
             </div>
 
             {/* Filter Toggle Button */}
             <button
               onClick={() => setShowFilters(!showFilters)}
-              className="flex items-center gap-2 px-4 py-3 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-all duration-300 group"
+              className="flex items-center gap-2 px-6 py-3 bg-primary-main text-white 
+                rounded-lg bg-emerald-500 hover:bg-emerald-600 transition-colors font-medium shadow-sm"
             >
-              <FaSlidersH className="mr-1" />
-              Filters
+              <FaSlidersH size={16} />
+              <span>Filters</span>
               {showFilters ? (
-                <FaChevronUp className="transform transition-transform duration-300 group-hover:-translate-y-0.5" />
+                <FaChevronUp className="ml-2" size={14} />
               ) : (
-                <FaChevronDown className="transform transition-transform duration-300 group-hover:translate-y-0.5" />
+                <FaChevronDown className="ml-2" size={14} />
               )}
             </button>
           </div>
 
-          {/* Expandable Filter Panel */}
+          {/* Filter Panel */}
           {showFilters && (
-            <div className="mt-4 p-4 bg-gray-800 rounded-lg animate-slideDown">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="mt-4 p-6 bg-white rounded-xl border border-neutral-200 shadow-lg">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 {/* Rating Filter */}
                 <div className="space-y-2">
-                  <label className="text-white">Minimum Rating</label>
+                  <label className="text-neutral-700 font-medium">Minimum Rating</label>
                   <div className="flex items-center gap-2">
                     {[1, 2, 3, 4, 5].map((star) => (
                       <button
                         key={star}
                         onClick={() => handleFilterChange('minRating', star)}
-                        className={`p-1 rounded ${
-                          filters.minRating >= star ? 'text-yellow-500' : 'text-gray-400'
+                        className={`p-1 rounded transition-colors ${
+                          filters.minRating >= star ? 'text-yellow-400' : 'text-neutral-300'
                         }`}
                       >
                         <FaStar size={24} />
@@ -407,28 +415,15 @@ const AllPostsPage = () => {
                   </div>
                 </div>
 
-                {/* Date Filter */}
-                <div className="space-y-2">
-                  <label className="text-white">Date Range</label>
-                  <select
-                    value={filters.dateRange}
-                    onChange={(e) => handleFilterChange('dateRange', e.target.value)}
-                    className="w-full p-2 rounded bg-gray-700 text-white border border-gray-600"
-                  >
-                    <option value="all">All Time</option>
-                    <option value="today">Today</option>
-                    <option value="week">This Week</option>
-                    <option value="month">This Month</option>
-                  </select>
-                </div>
-
                 {/* Sort By */}
                 <div className="space-y-2">
-                  <label className="text-white">Sort By</label>
+                  <label className="text-neutral-700 font-medium">Sort By</label>
                   <select
                     value={filters.sortBy}
                     onChange={(e) => handleFilterChange('sortBy', e.target.value)}
-                    className="w-full p-2 rounded bg-gray-700 text-white border border-gray-600"
+                    className="w-full p-3 rounded-lg bg-neutral-50 text-neutral-800 
+                      border border-neutral-200 focus:outline-none focus:ring-2 
+                      focus:ring-primary-main/20 focus:border-primary-main"
                   >
                     <option value="newest">Newest First</option>
                     <option value="oldest">Oldest First</option>
@@ -438,25 +433,34 @@ const AllPostsPage = () => {
                 </div>
 
                 {/* Additional Filters */}
-                <div className="space-y-2">
-                  <label className="text-white">Additional Filters</label>
-                  <div className="space-y-2">
-                    <label className="flex items-center space-x-2">
+                <div className="space-y-2 col-span-2">
+                  <label className="text-neutral-700 font-medium">Additional Filters</label>
+                  <div className="flex flex-wrap gap-4">
+                    <label className="flex items-center gap-2 cursor-pointer">
                       <input
                         type="checkbox"
                         checked={filters.likedByMe}
                         onChange={(e) => handleFilterChange('likedByMe', e.target.checked)}
-                        className="form-checkbox text-emerald-500"
+                        className="w-4 h-4 rounded text-primary-main focus:ring-primary-main/20"
                       />
-                      <span className="text-white">Liked by me</span>
+                      <span className="text-neutral-700">Liked by me</span>
+                    </label>
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={filters.myPosts}
+                        onChange={(e) => handleFilterChange('myPosts', e.target.checked)}
+                        className="w-4 h-4 rounded text-primary-main focus:ring-primary-main/20"
+                      />
+                      <span className="text-neutral-700">My recipes</span>
                     </label>
                   </div>
                 </div>
               </div>
 
               {/* Tags */}
-              <div className="mt-4">
-                <label className="text-white block mb-2">Tags</label>
+              <div className="mt-6">
+                <label className="text-neutral-700 font-medium block mb-3">Filter by Tags</label>
                 <div className="flex flex-wrap gap-2">
                   {availableTags.map(tag => (
                     <button
@@ -467,11 +471,11 @@ const AllPostsPage = () => {
                           : [...filters.tags, tag];
                         handleFilterChange('tags', newTags);
                       }}
-                      className={`px-3 py-1 rounded-full text-sm ${
-                        filters.tags.includes(tag)
-                          ? 'bg-emerald-600 text-white'
-                          : 'bg-gray-700 text-gray-300'
-                      } transition-colors`}
+                      className={`px-4 py-2 rounded-full text-sm font-medium transition-all
+                        ${filters.tags.includes(tag)
+                          ? 'bg-primary-main text-white shadow-sm'
+                          : 'bg-neutral-100 text-neutral-700 hover:bg-neutral-200'
+                        }`}
                     >
                       {tag}
                     </button>
@@ -480,12 +484,13 @@ const AllPostsPage = () => {
               </div>
 
               {/* Clear Filters */}
-              <div className="mt-4 flex justify-end">
+              <div className="mt-6 flex justify-end border-t border-neutral-200 pt-4">
                 <button
                   onClick={clearFilters}
-                  className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition-colors"
+                  className="px-6 py-2.5 text-white bg-red-500 hover:bg-red-600 
+                    rounded-lg transition-colors font-medium shadow-sm"
                 >
-                  Clear Filters
+                  Clear All Filters
                 </button>
               </div>
             </div>
@@ -494,41 +499,39 @@ const AllPostsPage = () => {
       </div>
 
       {/* Main Content */}
-      <main className="container mx-auto px-4 py-8">
-        {loading ? (
+    <main className="container mx-auto px-4 py-8">
+      {loading ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          {[...Array(8)].map((_, index) => (
+            <PostCardSkeleton key={index} />
+          ))}
+        </div>
+      ) : error ? (
+        <div className="text-red-600 text-center p-6 bg-red-50 rounded-xl border border-red-100">
+          {error}
+        </div>
+      ) : (
+        <>
+          <div className="mb-6 text-neutral-600 font-medium">
+            Showing {filteredPosts.length} of {posts.length} recipes
+          </div>
+          
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {[...Array(8)].map((_, index) => (
-              <PostCardSkeleton key={index} />
+            {filteredPosts.map((post, index) => (
+              <PostCard
+                key={post.id}
+                post={post}
+                profileData={profileData}
+                onLike={handleLike}
+                onOpenModal={openModal}
+                renderRatingStars={renderRatingStars}
+                index={index}
+              />
             ))}
           </div>
-        ) : error ? (
-          <div className="text-red-500 text-center p-4 bg-red-900/20 rounded-lg">
-            {error}
-          </div>
-        ) : (
-          <>
-            {/* Results Count */}
-            <div className="mb-4 text-gray-400">
-              Showing {filteredPosts.length} of {posts.length} recipes
-            </div>
-            
-            {/* Posts Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {filteredPosts.map((post, index) => (
-                <PostCard
-                  key={post.id}
-                  post={post}
-                  profileData={profileData}
-                  onLike={handleLike}
-                  onOpenModal={openModal}
-                  renderRatingStars={renderRatingStars}
-                  index={index}
-                />
-              ))}
-            </div>
-          </>
-        )}
-      </main>
+        </>
+      )}
+    </main>
 
       {/* Recipe Modal */}
       {selectedRecipe && (

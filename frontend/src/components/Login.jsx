@@ -86,16 +86,16 @@ const LoginPage = () => {
 
   return (
     <GoogleOAuthProvider clientId="YOUR_GOOGLE_CLIENT_ID">
-      <div className="flex flex-col min-h-screen bg-gray-900">
+      <div className="flex flex-col min-h-screen bg-gradient-to-br from-primary-light to-white">
         {/* Video Background */}
         <div className="absolute inset-0 h-full w-full">
-          <div className="absolute inset-0 bg-gray-900/70 z-10"></div>
+          <div className="absolute inset-0 bg-white/70 backdrop-blur-sm z-10"></div>
           <video
             autoPlay
             loop
             muted
             playsInline
-            className="w-full h-full object-cover opacity-50"
+            className="w-full h-full object-cover opacity-30"
           >
             <source
               src="/videos/mixkit-preparing-a-bowl-with-yogurt-and-fruit-43925-full-hd.mp4"
@@ -107,8 +107,8 @@ const LoginPage = () => {
 
         {/* Login Form */}
         <div className="flex-grow flex items-center justify-center p-4 relative z-20">
-          <div className="w-full max-w-md bg-gray-800/90 backdrop-blur-lg rounded-xl shadow-xl p-8">
-            <h2 className="text-2xl font-semibold text-white text-center mb-6">
+          <div className="w-full max-w-md bg-white/80 backdrop-blur-lg rounded-2xl shadow-xl p-8 border border-neutral-200">
+            <h2 className="text-2xl font-semibold text-neutral-800 text-center mb-6">
               Welcome Back
             </h2>
 
@@ -118,65 +118,71 @@ const LoginPage = () => {
 
             <form onSubmit={handleSubmit} className="space-y-5">
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-1">
+                <label className="block text-sm font-medium text-neutral-700 mb-1">
                   Email
                 </label>
                 <div className="relative">
-                  <FaEnvelope className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" />
+                  <FaEnvelope className="absolute left-3 top-1/2 transform -translate-y-1/2 text-neutral-500" />
                   <input
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="w-full pl-10 pr-4 py-3 bg-gray-700/50 text-white border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 transition-all duration-200 placeholder-gray-400"
+                    className="w-full pl-10 pr-4 py-3 bg-white text-neutral-800 border border-neutral-300 rounded-lg 
+                    focus:outline-none focus:ring-2 focus:ring-primary-main/20 focus:border-primary-main 
+                    transition-all duration-200 placeholder-neutral-400"
                     placeholder="Enter your email"
                     required
                   />
                 </div>
                 {emailError && (
-                  <p className="text-red-400 text-xs mt-1">{emailError}</p>
+                  <p className="text-red-500 text-xs mt-1">{emailError}</p>
                 )}
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-1">
+                <label className="block text-sm font-medium text-neutral-700 mb-1">
                   Password
                 </label>
                 <div className="relative">
-                  <FaLock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500" />
+                  <FaLock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-neutral-500" />
                   <input
                     type={showPassword ? "text" : "password"}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="w-full pl-10 pr-12 py-3 bg-gray-700/50 text-white border border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 transition-all duration-200 placeholder-gray-400"
+                    className="w-full pl-10 pr-12 py-3 bg-white text-neutral-800 border border-neutral-300 rounded-lg 
+                    focus:outline-none focus:ring-2 focus:ring-primary-main/20 focus:border-primary-main 
+                    transition-all duration-200 placeholder-neutral-400"
                     placeholder="Enter your password"
                     required
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-teal-400 transition-colors duration-200"
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-neutral-400 
+                    hover:text-primary-main transition-colors duration-200"
                   >
                     {showPassword ? <FaEyeSlash /> : <FaEye />}
                   </button>
                 </div>
                 {passwordError && (
-                  <p className="text-red-400 text-xs mt-1">{passwordError}</p>
+                  <p className="text-red-500 text-xs mt-1">{passwordError}</p>
                 )}
               </div>
 
               <div className="flex items-center justify-between text-sm">
-                <label className="flex items-center text-gray-300">
+                <label className="flex items-center text-neutral-600">
                   <input
                     type="checkbox"
                     checked={rememberMe}
                     onChange={(e) => setRememberMe(e.target.checked)}
-                    className="mr-2 text-teal-500 rounded focus:ring-teal-500 bg-gray-700 border-gray-600"
+                    className="mr-2 text-primary-main rounded focus:ring-primary-main/20 
+                    bg-white border-neutral-300"
                   />
                   Remember me
                 </label>
                 <a
                   href="www.google.com"
-                  className="text-teal-400 hover:underline transition-colors duration-200"
+                  className="text-primary-main hover:text-primary-dark transition-colors duration-200"
                 >
                   Forgot password?
                 </a>
@@ -184,7 +190,9 @@ const LoginPage = () => {
 
               <button
                 type="submit"
-                className="w-full bg-teal-600 text-white py-3 rounded-lg font-medium hover:bg-teal-700 transition-all duration-200 disabled:bg-teal-400 flex items-center justify-center"
+                className="w-full bg-primary-main text-white py-3 rounded-lg font-medium 
+                hover:bg-primary-dark transition-all duration-200 disabled:opacity-50 
+                flex items-center justify-center shadow-md hover:shadow-lg"
                 disabled={isLoading}
               >
                 {isLoading ? (
@@ -196,23 +204,23 @@ const LoginPage = () => {
             </form>
 
             <div className="flex items-center my-6">
-              <hr className="flex-grow border-gray-600" />
-              <span className="px-3 text-gray-400 text-sm">OR</span>
-              <hr className="flex-grow border-gray-600" />
+              <hr className="flex-grow border-neutral-200" />
+              <span className="px-3 text-neutral-500 text-sm">OR</span>
+              <hr className="flex-grow border-neutral-200" />
             </div>
 
             <GoogleLogin
               onSuccess={handleGoogleSuccess}
               onError={handleGoogleFailure}
               buttonText="Continue with Google"
-              className="w-full bg-gray-700 text-white py-3 rounded-lg flex justify-center items-center hover:bg-gray-600 transition-all duration-200"
+              className="w-full"
             />
 
-            <p className="text-center text-sm text-gray-300 mt-6">
-              Don’t have an account?{" "}
+            <p className="text-center text-sm text-neutral-600 mt-6">
+              Don't have an account?{" "}
               <Link
                 to="/signup"
-                className="text-teal-400 hover:underline transition-colors duration-200"
+                className="text-primary-main hover:text-primary-dark transition-colors duration-200"
               >
                 Sign up here
               </Link>
@@ -220,10 +228,6 @@ const LoginPage = () => {
           </div>
         </div>
 
-        {/* Footer */}
-        <footer className="bg-gray-800 text-gray-300 py-4 text-center">
-          <p className="text-sm">&copy; 2025 Gourmet Link. All rights reserved.</p>
-        </footer>
       </div>
     </GoogleOAuthProvider>
   );

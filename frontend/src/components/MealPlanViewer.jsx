@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { motion, AnimatePresence } from "framer-motion";
-import { FaShoppingCart, FaFilePdf, FaTimes, FaSpinner } from "react-icons/fa";
+import { FaShoppingCart, FaFilePdf, FaTimes, FaSpinner, FaLink } from "react-icons/fa";
 
 // Cache TTL: 5 minutes
 const CACHE_TTL = 5 * 60 * 1000; // 5 minutes in milliseconds
@@ -36,6 +36,7 @@ const MealPlannerViewer = () => {
   const [loadingMealPlans, setLoadingMealPlans] = useState(true);
   const [loadingIngredients, setLoadingIngredients] = useState(false);
   const [loadingPdf, setLoadingPdf] = useState({});
+  const [jiomartLinks, setJiomartLinks] = useState([]);
 
   useEffect(() => {
     fetchMealPlans();
@@ -83,6 +84,21 @@ const MealPlannerViewer = () => {
     } finally {
       setLoadingIngredients(false);
     }
+  };
+
+  const generateJioMartLinks = () => {
+    if (ingredients.length === 0) {
+      alert("No ingredients to send to JioMart.");
+      return;
+    }
+
+    // Generate a separate search link for each ingredient
+    const links = ingredients.map((item) => {
+      const searchQuery = `${item.quantity} ${item.unit} ${item.name}`;
+      const encodedQuery = encodeURIComponent(searchQuery);
+      return `https://www.jiomart.com/search/${encodedQuery}`;
+    });
+    setJiomartLinks(links); // Set the array of links
   };
 
   const downloadPdf = async (planId) => {
@@ -298,66 +314,102 @@ const MealPlannerViewer = () => {
 
       {/* Ingredients Modal */}
       <AnimatePresence>
-        {showIngredients && (
-          <motion.div
-            className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-          >
+          {showIngredients && (
             <motion.div
-              className="bg-gray-850/90 backdrop-blur-lg rounded-2xl w-full max-w-lg max-h-[85vh] overflow-y-auto p-8 shadow-2xl border border-emerald-500/30"
-              variants={modalVariants}
+              className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
             >
-              <div className="flex justify-between items-center mb-6">
-                <h3 className="text-3xl font-bold text-emerald-400 flex items-center gap-3 tracking-wide">
-                  <FaShoppingCart /> Shopping List
-                </h3>
-                <motion.button
-                  onClick={() => setShowIngredients(false)}
-                  className="text-gray-300 hover:text-emerald-400 transition-colors"
-                  whileHover={{ rotate: 90 }}
-                >
-                  <FaTimes size={28} />
-                </motion.button>
-              </div>
-              {loadingIngredients ? (
-                <motion.div
-                  className="flex flex-col items-center justify-center py-10"
-                  variants={loadingVariants}
-                  initial="hidden"
-                  animate="visible"
-                >
-                  <FaSpinner className="text-emerald-400 text-4xl animate-spin" />
-                  <p className="text-gray-300 mt-4 text-lg">Fetching your shopping list...</p>
-                </motion.div>
-              ) : ingredients.length === 0 ? (
-                <p className="text-gray-300 text-center py-6 text-lg">No ingredients available.</p>
-              ) : (
-                <motion.ul
-                  className="space-y-4"
-                  variants={containerVariants}
-                  initial="hidden"
-                  animate="visible"
-                >
-                  {ingredients.map((item, index) => (
-                    <motion.li
-                      key={index}
-                      className="text-gray-200 bg-gray-900/50 p-4 rounded-lg flex justify-between items-center shadow-sm border border-gray-700/50"
-                      variants={itemVariants}
+              <motion.div
+                className="bg-gray-850 rounded-2xl w-full max-w-lg max-h-[85vh] overflow-y-auto p-8 shadow-2xl border border-emerald-500/30"
+                variants={modalVariants}
+              >
+                <div className="flex justify-between items-center mb-6">
+                  <h3 className="text-3xl font-bold text-emerald-400 flex items-center gap-3 tracking-wide">
+                    <FaShoppingCart /> Shopping List
+                  </h3>
+                  <motion.button
+                    onClick={() => {
+                      setShowIngredients(false);
+                      setJiomartLinks([]); // Reset links when closing modal
+                    }}
+                    className="text-gray-300 hover:text-emerald-400 transition-colors"
+                    whileHover={{ rotate: 90 }}
+                  >
+                    <FaTimes size={28} />
+                  </motion.button>
+                </div>
+                {loadingIngredients ? (
+                  <motion.div
+                    className="flex flex-col items-center justify-center py-10"
+                    variants={loadingVariants}
+                    initial="hidden"
+                    animate="visible"
+                  >
+                    <FaSpinner className="text-emerald-400 text-4xl animate-spin" />
+                    <p className="text-gray-300 mt-4 text-lg">Fetching your shopping list...</p>
+                  </motion.div>
+                ) : ingredients.length === 0 ? (
+                  <p className="text-gray-300 text-center py-6 text-lg">No ingredients available.</p>
+                ) : (
+                  <>
+                    <motion.ul
+                      className="space-y-4"
+                      variants={containerVariants}
+                      initial="hidden"
+                      animate="visible"
                     >
-                      <span className="font-medium text-emerald-300">{item.name}</span>
-                      <span className="text-gray-300">
-                        {item.quantity} {item.unit}
-                      </span>
-                    </motion.li>
-                  ))}
-                </motion.ul>
-              )}
+                      {ingredients.map((item, index) => (
+                        <motion.li
+                          key={index}
+                          className="text-gray-200 bg-gray-900 p-4 rounded-lg flex justify-between items-center shadow-sm border border-gray-700/50"
+                          variants={itemVariants}
+                        >
+                          <span className="font-medium text-emerald-300">{item.name}</span>
+                          <span className="text-gray-300">
+                            {item.quantity} {item.unit}
+                          </span>
+                        </motion.li>
+                      ))}
+                    </motion.ul>
+                    <motion.button
+                      onClick={generateJioMartLinks}
+                      className="mt-6 w-full bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-full text-sm font-medium transition-colors"
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                    >
+                      Generate JioMart Links
+                    </motion.button>
+                    {jiomartLinks.length > 0 && (
+                      <motion.div
+                        className="mt-4 space-y-2"
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.3 }}
+                      >
+                        <p className="text-gray-300 text-sm">Click each link to shop on JioMart:</p>
+                        {jiomartLinks.map((link, index) => (
+                          <div key={index} className="flex items-center gap-2">
+                            <FaLink className="text-emerald-400" />
+                            <a
+                              href={link}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-emerald-400 underline text-sm break-all"
+                            >
+                              {ingredients[index].quantity} {ingredients[index].unit} {ingredients[index].name}
+                            </a>
+                          </div>
+                        ))}
+                      </motion.div>
+                    )}
+                  </>
+                )}
+              </motion.div>
             </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+          )}
+        </AnimatePresence>
     </div>
   );
 };
