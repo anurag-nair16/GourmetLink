@@ -4,33 +4,33 @@ import { FaCamera, FaImage, FaSpinner, FaUtensils, FaList, FaSlidersH, FaTimes }
 import FormattedRecipe from "./forms/FormattedRecipe";
 
 const Stepper = ({ currentStep }) => {
-  const steps = ['Upload', 'Ingredients', 'Preferences', 'Recipe'];
-
-  return (
-    <div className="flex justify-center items-center gap-4 py-4 mb-8">
-      {steps.map((step, index) => (
-        <div key={index} className="flex items-center">
-          <div
-            className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold transition-all ${
-              index <= currentStep
-                ? 'bg-emerald-500 text-white'
-                : 'bg-gray-200 text-gray-500'
-            }`}
-          >
-            {index + 1}
-          </div>
-          {index < steps.length - 1 && (
+    const steps = ['Upload', 'Ingredients', 'Preferences', 'Recipe'];
+  
+    return (
+      <div className="flex justify-center items-center gap-2 py-4 mb-6 px-4 max-w-md mx-auto">
+        {steps.map((step, index) => (
+          <div key={index} className="flex items-center">
             <div
-              className={`w-12 h-1 mx-2 ${
-                index < currentStep ? 'bg-emerald-500' : 'bg-gray-200'
+              className={`w-6 h-6 max-sm:w-5 max-sm:h-5 rounded-full flex items-center justify-center text-sm max-sm:text-xs font-semibold transition-all ${
+                index <= currentStep
+                  ? 'bg-emerald-500 text-white'
+                  : 'bg-gray-200 text-gray-500'
               }`}
-            />
-          )}
-        </div>
-      ))}
-    </div>
-  );
-};
+            >
+              {index + 1}
+            </div>
+            {index < steps.length - 1 && (
+              <div
+                className={`w-8 max-sm:w-6 h-1 mx-1 ${
+                  index < currentStep ? 'bg-emerald-500' : 'bg-gray-200'
+                }`}
+              />
+            )}
+          </div>
+        ))}
+      </div>
+    );
+  };
 
 const LoadingAnimation = ({ type }) => {
   const ingredients = ['🥕', '🍅', '🥬', '🧀', '🍗', '🥚'];
