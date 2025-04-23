@@ -24,6 +24,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Secret Key
 SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', 'django-insecure-)8b0a-@sq0#q#%ombex$jgpg&pw+4uhk)mu0*=f!m-v)i56x8@')
+GOOGLE_GENAI_API_KEY_2  = os.getenv('GOOGLE_GENAI_API_KEY_2')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv('DEBUG', 'False') == 'True'
@@ -44,6 +45,7 @@ INSTALLED_APPS = [
     'corsheaders',
     'cloudinary_storage',
     'features',
+    'recipe_generator',
 ]
 
 REST_FRAMEWORK = {

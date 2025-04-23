@@ -7,5 +7,6 @@ from django.conf.urls.static import static
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', include('api.urls'),),
-    path('features/', include('features.urls'),)
+    path('features/', include('features.urls'),),
+    path('recipe-generator/', include('recipe_generator.urls')),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
