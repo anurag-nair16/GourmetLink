@@ -4,7 +4,6 @@ import "./index.css";
 import Navbar from './components/Navbar';
 import SubmitRecipe from './components/SubmitRecipe';
 import Footer from './components/Footer';
-import Home from './components/Home';
 import Login from './components/Login';
 import SignUp from './components/Signup';
 import ProtectedRoute from './components/ProtectedRoute';
@@ -18,6 +17,7 @@ import LanguageSwitcher from './components/LanguageSwitcher';
 import MealPlannerCreator from './components/MealPlanCreator';
 import MealPlannerViewer from './components/MealPlanViewer';
 import RecipeGenerator from './components/RecipeGenerator';
+import Navigation from './components/Navigation';
 
 const App = () => {
   useEffect(() => {
@@ -62,6 +62,7 @@ const App = () => {
     <TranslationProvider>
       <Navbar />
       <main>
+        <Navigation />
         <Routes>
           <Route 
             path="/" 
@@ -106,7 +107,7 @@ const App = () => {
         </Routes>
       </main>
       <Footer />
-      <LanguageSwitcher/>
+      {/* <LanguageSwitcher/> */}
     </TranslationProvider>
   );
 };

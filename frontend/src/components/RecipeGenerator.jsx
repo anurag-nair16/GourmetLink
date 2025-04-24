@@ -154,7 +154,7 @@ const RecipeGenerator = () => {
         throw new Error('No authentication token found. Please login again.');
       }
 
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/recipe-generator/analyze-ingredients/`, {
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/ai/analyze-ingredients/`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -201,7 +201,7 @@ const RecipeGenerator = () => {
         throw new Error('No authentication token found');
       }
 
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/recipe-generator/generate-recipe/`, {
+      const response = await fetch(`${process.env.REACT_APP_API_URL}/ai/generate-recipe/`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

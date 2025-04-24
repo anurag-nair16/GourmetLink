@@ -29,9 +29,9 @@ const RecipePostCreator = () => {
   };
 
   const handleImageUpload = (e) => {
-    const file = e.target.files[0];  // Get the file
-    if (file && file.size <= 10485760) {  // Check file size
-      setRecipe({ ...recipe, image: file });  // Store the actual file, not the URL
+    const file = e.target.files[0];
+    if (file && file.size <= 10485760) {
+      setRecipe({ ...recipe, image: file });
     }
   };
 
@@ -46,16 +46,16 @@ const RecipePostCreator = () => {
     setRecipe({ ...recipe, ingredients: newIngredients });
     if (focusNew) {
       setTimeout(() => {
-        const newIndex = newIngredients.length - 1; // Target the last (new) input
-        ingredientRefs.current[newIndex]?.focus(); // Focus the new input
-      }, 10); // Small delay to ensure DOM update
+        const newIndex = newIngredients.length - 1;
+        ingredientRefs.current[newIndex]?.focus();
+      }, 10);
     }
   };
 
   const handleIngredientKeyPress = (e, index) => {
     if (e.key === "Enter" && recipe.ingredients[index].trim()) {
-      e.preventDefault(); // Prevent form submission
-      addIngredient(true); // Add new ingredient and focus it
+      e.preventDefault();
+      addIngredient(true);
     }
   };
 
@@ -80,10 +80,8 @@ const RecipePostCreator = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    // Initialize an empty errors object
     let validationErrors = {};
     
-    // Validate required fields
     if (!recipe.name) validationErrors.name = "Recipe name is required.";
     if (recipe.ingredients.length === 0 || recipe.ingredients.some(ingredient => ingredient.trim() === "")) {
       validationErrors.ingredients = "At least one ingredient is required.";
@@ -93,20 +91,16 @@ const RecipePostCreator = () => {
     if (!recipe.cookingTime) validationErrors.cookingTime = "Cooking time is required.";
     if (!recipe.servings) validationErrors.servings = "Servings are required.";
     
-    // Check if there are any validation errors
     if (Object.keys(validationErrors).length > 0) {
-      setErrors(validationErrors);  // Set the errors state to display error messages
-      return;  // Stop the submission process
+      setErrors(validationErrors);
+      return;
     }
     
-    // Proceed with the API request if there are no errors
-    const authToken = localStorage.getItem("token"); // Retrieve the token from localStorage
+    const authToken = localStorage.getItem("token");
     
     const formData = new FormData();
     formData.append("name", recipe.name);
-    formData.append("ingredients", recipe.ingredients);  // Directly append the array
-    // console.log(recipe.tags)
-    // console.log(recipe.ingredients)
+    formData.append("ingredients", recipe.ingredients);
     formData.append("instructions", recipe.instructions);
     formData.append("cuisine", recipe.cuisine);
     formData.append("prep_time", recipe.cookingTime);
@@ -114,13 +108,10 @@ const RecipePostCreator = () => {
     formData.append("tags", recipe.tags);
     formData.append("description", recipe.description);
 
-    // Add the image file (not just the URL)
     if (recipe.image && recipe.image instanceof File) {
       formData.append("image", recipe.image);
     }
 
-    console.log(formData)
-  
     setIsLoading(true);
   
     fetch(`${process.env.REACT_APP_API_URL}/submit-recipe/`, {
@@ -135,7 +126,6 @@ const RecipePostCreator = () => {
         setIsLoading(false);
         console.log("Recipe submitted:", data);
         setSuccessMessage("Recipe submitted successfully!");
-        // Clear the form
         setRecipe({
           name: "",
           ingredients: [""],
@@ -172,52 +162,47 @@ const RecipePostCreator = () => {
     "American",
   ];
 
-  // Add this function inside your component, before the return statement
-const calculateProgress = () => {
-  const requiredFields = [
-    'name',
-    'ingredients',
-    'instructions',
-    'cuisine',
-    'cookingTime',
-    'servings',
-    'description',
-    'image'
-  ];
-  
-  let completedFields = 0;
-  
-  // Check each required field
-  requiredFields.forEach(field => {
-    if (field === 'ingredients') {
-      // Check if ingredients array has at least one non-empty ingredient
-      if (recipe.ingredients.some(ing => ing.trim() !== '')) {
-        completedFields++;
+  const calculateProgress = () => {
+    const requiredFields = [
+      'name',
+      'ingredients',
+      'instructions',
+      'cuisine',
+      'cookingTime',
+      'servings',
+      'description',
+      'image'
+    ];
+    
+    let completedFields = 0;
+    
+    requiredFields.forEach(field => {
+      if (field === 'ingredients') {
+        if (recipe.ingredients.some(ing => ing.trim() !== '')) {
+          completedFields++;
+        }
+      } else if (field === 'image') {
+        if (recipe.image) {
+          completedFields++;
+        }
+      } else {
+        if (recipe[field] && recipe[field].toString().trim() !== '') {
+          completedFields++;
+        }
       }
-    } else if (field === 'image') {
-      // Check if image is uploaded
-      if (recipe.image) {
-        completedFields++;
-      }
-    } else {
-      // Check if other fields are filled
-      if (recipe[field] && recipe[field].toString().trim() !== '') {
-        completedFields++;
-      }
-    }
-  });
+    });
 
-  return Math.round((completedFields / requiredFields.length) * 100);
-};
+    return Math.round((completedFields / requiredFields.length) * 100);
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-white">
-      {/* Updated Header with more soothing colors */}
-      <header className="bg-gradient-to-r from-teal-500 to-blue-500 text-white py-12 px-4 relative overflow-hidden">
+      {/* Updated Header */}
+      <header className="bg-gradient-to-r from-teal-500 to-blue-500 text-white py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
         <div className="absolute inset-0 opacity-10">
           <div className="absolute inset-0 bg-pattern opacity-20"></div>
         </div>
-        <div className="container mx-auto max-w-4xl relative">
+        <div className="w-full max-w-4xl mx-auto">
           <h1 className="text-3xl sm:text-4xl font-bold text-center mb-4">
             Create Your Recipe
           </h1>
@@ -227,8 +212,8 @@ const calculateProgress = () => {
         </div>
       </header>
 
-      <div className="container mx-auto px-4 py-8 max-w-4xl">
-        {/* Updated Info Cards with softer shadows and transitions */}
+      <div className="w-full max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Updated Info Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
           <div className="bg-white p-6 rounded-xl shadow-sm border border-blue-100 transform transition-all duration-300 hover:shadow-md hover:-translate-y-1">
             <div className="text-teal-500 text-xl mb-3 font-light">Step 1</div>
@@ -247,13 +232,12 @@ const calculateProgress = () => {
           </div>
         </div>
 
-        {/* Enhanced Form Container */}
+        {/* Form Container */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           className="bg-white rounded-xl shadow-lg p-8 border border-blue-100"
         >
-          {/* Updated Progress Bar */}
           {/* Progress Bar */}
           <div className="mb-8">
             <div className="flex justify-between mb-2">
@@ -270,7 +254,7 @@ const calculateProgress = () => {
             </div>
           </div>
 
-          {/* Enhanced Image Upload */}
+          {/* Image Upload */}
           <div
             onClick={() => document.getElementById("image-upload").click()}
             className="relative w-full h-64 rounded-xl bg-gradient-to-br from-blue-50 to-teal-50 flex items-center justify-center cursor-pointer mb-8 border-2 border-dashed border-blue-200 hover:border-teal-400 transition-all duration-300 group overflow-hidden"
@@ -304,7 +288,7 @@ const calculateProgress = () => {
             />
           </div>
 
-          {/* Enhanced Section Navigation */}
+          {/* Section Navigation */}
           <div className="flex flex-wrap justify-center gap-4 mb-8">
             {sections.map((section) => (
               <motion.button
@@ -326,7 +310,7 @@ const calculateProgress = () => {
             ))}
           </div>
 
-          {/* Form Fields - Basic Info Section */}
+          {/* Basic Info Section */}
           {activeSection === "basic" && (
             <motion.div
               initial={{ opacity: 0, y: 10 }}
@@ -346,7 +330,7 @@ const calculateProgress = () => {
                 {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name}</p>}
               </div>
 
-              {/* Time and Servings in a grid */}
+              {/* Time and Servings */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
                   <label className="text-gray-700 font-medium block mb-1">Cooking Time</label>
@@ -383,7 +367,7 @@ const calculateProgress = () => {
                 </div>
               </div>
 
-              {/* Cuisine Type Dropdown */}
+              {/* Cuisine Type */}
               <div className="space-y-2">
                 <label className="text-gray-700 font-medium block mb-1">Cuisine Type</label>
                 <select
@@ -399,7 +383,7 @@ const calculateProgress = () => {
                 </select>
               </div>
 
-              {/* Description Text Area */}
+              {/* Description */}
               <div className="space-y-2">
                 <label className="text-gray-700 font-medium block mb-1">Description</label>
                 <textarea
@@ -411,7 +395,7 @@ const calculateProgress = () => {
                 />
               </div>
 
-              {/* Tags Input */}
+              {/* Tags */}
               <div className="space-y-3">
                 <label className="text-gray-700 font-medium block mb-1">Tags</label>
                 <div className="flex items-center gap-2">
@@ -543,156 +527,124 @@ const calculateProgress = () => {
         </motion.div>
 
         {/* Preview Modal */}
-{showPreview && (
-  <motion.div
-    initial={{ opacity: 0 }}
-    animate={{ opacity: 1 }}
-    className="fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-50"
-  >
-    <motion.div
-      initial={{ scale: 0.9 }}
-      animate={{ scale: 1 }}
-      className="bg-white rounded-xl p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto"
-    >
-      <div className="flex justify-between items-center mb-6">
-        <h3 className="text-xl font-bold text-teal-600">Recipe Preview</h3>
-        <button
-          onClick={() => setShowPreview(false)}
-          className="text-gray-400 hover:text-gray-600 p-2 rounded-full hover:bg-gray-100 transition-colors"
-        >
-          <FaTimes size={20} />
-        </button>
-      </div>
-
-      <div className="space-y-6">
-        {recipe.image && (
-          <img
-            src={URL.createObjectURL(recipe.image)}
-            alt="Recipe"
-            className="w-full h-64 object-cover rounded-xl shadow-md"
-          />
-        )}
-
-        <div className="space-y-4">
-          <h4 className="text-2xl font-bold text-gray-800">
-            {recipe.name || "Untitled Recipe"}
-          </h4>
-
-          {recipe.cuisine && (
-            <p className="text-teal-500 font-medium">{recipe.cuisine} Cuisine</p>
-          )}
-
-          <div className="flex gap-6 text-gray-600">
-            {recipe.cookingTime && (
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 bg-teal-100 rounded-full flex items-center justify-center">
-                  <FaClock className="text-teal-500" />
-                </div>
-                <span>{recipe.cookingTime} minutes</span>
-              </div>
-            )}
-            {recipe.servings && (
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 bg-teal-100 rounded-full flex items-center justify-center">
-                  <FaUsers className="text-teal-500" />
-                </div>
-                <span>Serves {recipe.servings}</span>
-              </div>
-            )}
-          </div>
-
-          {recipe.description && (
-            <p className="text-gray-600 leading-relaxed bg-blue-50 p-4 rounded-xl">
-              {recipe.description}
-            </p>
-          )}
-
-          {recipe.tags.length > 0 && (
-            <div className="flex flex-wrap gap-2">
-              {recipe.tags.map((tag, index) => (
-                <span
-                  key={index}
-                  className="bg-blue-50 text-blue-600 px-3 py-1 rounded-full text-sm"
+        {showPreview && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-50"
+          >
+            <motion.div
+              initial={{ scale: 0.9 }}
+              animate={{ scale: 1 }}
+              className="bg-white rounded-xl p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto"
+            >
+              <div className="flex justify-between items-center mb-6">
+                <h3 className="text-xl font-bold text-teal-600">Recipe Preview</h3>
+                <button
+                  onClick={() => setShowPreview(false)}
+                  className="text-gray-400 hover:text-gray-600 p-2 rounded-full hover:bg-gray-100 transition-colors"
                 >
-                  #{tag}
-                </span>
-              ))}
-            </div>
-          )}
-
-          {recipe.ingredients.some((ing) => ing.trim()) && (
-            <div className="space-y-3 bg-blue-50 p-6 rounded-xl">
-              <h5 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
-                <span className="w-8 h-8 bg-teal-100 rounded-full flex items-center justify-center">
-                  <FaTag className="text-teal-500" />
-                </span>
-                Ingredients
-              </h5>
-              <ul className="space-y-2">
-                {recipe.ingredients
-                  .filter((ing) => ing.trim())
-                  .map((ingredient, index) => (
-                    <li key={index} className="flex items-center gap-3 text-gray-600">
-                      <span className="w-2 h-2 bg-teal-400 rounded-full" />
-                      {ingredient}
-                    </li>
-                  ))}
-              </ul>
-            </div>
-          )}
-
-          {recipe.instructions && (
-            <div className="space-y-3 bg-blue-50 p-6 rounded-xl">
-              <h5 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
-                <span className="w-8 h-8 bg-teal-100 rounded-full flex items-center justify-center">
-                  <FaChevronRight className="text-teal-500" />
-                </span>
-                Instructions
-              </h5>
-              <div className="text-gray-600 leading-relaxed whitespace-pre-wrap">
-                {recipe.instructions}
+                  <FaTimes size={20} />
+                </button>
               </div>
-            </div>
-          )}
-        </div>
-      </div>
-    </motion.div>
-  </motion.div>
-)}
 
-        {/* Community Stats Section */}
-        <div className="mt-12 text-center">
-          <p className="text-gray-600 mb-6 text-lg">
-            Join our growing community of food enthusiasts
-          </p>
-          <div className="flex justify-center gap-6">
-            <motion.div 
-              whileHover={{ y: -5 }}
-              className="bg-white px-6 py-4 rounded-xl shadow-sm border border-blue-100 transition-all duration-300"
-            >
-              <span className="text-teal-500 text-2xl font-bold block mb-1">1.2K+</span>
-              <span className="text-gray-600">Recipes Shared</span>
+              <div className="space-y-6">
+                {recipe.image && (
+                  <img
+                    src={URL.createObjectURL(recipe.image)}
+                    alt="Recipe"
+                    className="w-full h-64 object-cover rounded-xl shadow-md"
+                  />
+                )}
+
+                <div className="space-y-4">
+                  <h4 className="text-2xl font-bold text-gray-800">
+                    {recipe.name || "Untitled Recipe"}
+                  </h4>
+
+                  {recipe.cuisine && (
+                    <p className="text-teal-500 font-medium">{recipe.cuisine} Cuisine</p>
+                  )}
+
+                  <div className="flex gap-6 text-gray-600">
+                    {recipe.cookingTime && (
+                      <div className="flex items-center gap-2">
+                        <div className="w-8 h-8 bg-teal-100 rounded-full flex items-center justify-center">
+                          <FaClock className="text-teal-500" />
+                        </div>
+                        <span>{recipe.cookingTime} minutes</span>
+                      </div>
+                    )}
+                    {recipe.servings && (
+                      <div className="flex items-center gap-2">
+                        <div className="w-8 h-8 bg-teal-100 rounded-full flex items-center justify-center">
+                          <FaUsers className="text-teal-500" />
+                        </div>
+                        <span>Serves {recipe.servings}</span>
+                      </div>
+                    )}
+                  </div>
+
+                  {recipe.description && (
+                    <p className="text-gray-600 leading-relaxed bg-blue-50 p-4 rounded-xl">
+                      {recipe.description}
+                    </p>
+                  )}
+
+                  {recipe.tags.length > 0 && (
+                    <div className="flex flex-wrap gap-2">
+                      {recipe.tags.map((tag, index) => (
+                        <span
+                          key={index}
+                          className="bg-blue-50 text-blue-600 px-3 py-1 rounded-full text-sm"
+                        >
+                          #{tag}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+
+                  {recipe.ingredients.some((ing) => ing.trim()) && (
+                    <div className="space-y-3 bg-blue-50 p-6 rounded-xl">
+                      <h5 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
+                        <span className="w-8 h-8 bg-teal-100 rounded-full flex items-center justify-center">
+                          <FaTag className="text-teal-500" />
+                        </span>
+                        Ingredients
+                      </h5>
+                      <ul className="space-y-2">
+                        {recipe.ingredients
+                          .filter((ing) => ing.trim())
+                          .map((ingredient, index) => (
+                            <li key={index} className="flex items-center gap-3 text-gray-600">
+                              <span className="w-2 h-2 bg-teal-400 rounded-full" />
+                              {ingredient}
+                            </li>
+                          ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  {recipe.instructions && (
+                    <div className="space-y-3 bg-blue-50 p-6 rounded-xl">
+                      <h5 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
+                        <span className="w-8 h-8 bg-teal-100 rounded-full flex items-center justify-center">
+                          <FaChevronRight className="text-teal-500" />
+                        </span>
+                        Instructions
+                      </h5>
+                      <div className="text-gray-600 leading-relaxed whitespace-pre-wrap">
+                        {recipe.instructions}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
             </motion.div>
-            <motion.div 
-              whileHover={{ y: -5 }}
-              className="bg-white px-6 py-4 rounded-xl shadow-sm border border-blue-100 transition-all duration-300"
-            >
-              <span className="text-teal-500 text-2xl font-bold block mb-1">5K+</span>
-              <span className="text-gray-600">Community Members</span>
-            </motion.div>
-            <motion.div 
-              whileHover={{ y: -5 }}
-              className="bg-white px-6 py-4 rounded-xl shadow-sm border border-blue-100 transition-all duration-300"
-            >
-              <span className="text-teal-500 text-2xl font-bold block mb-1">10K+</span>
-              <span className="text-gray-600">Recipe Saves</span>
-            </motion.div>
-          </div>
-        </div>
+          </motion.div>
+        )}
       </div>
     </div>
-
-    
   );
 };
 
