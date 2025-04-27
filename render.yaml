@@ -18,12 +18,16 @@ services:
         fromDatabase:
           name: gourmetlink-db
           property: connectionString
-
-  - type: web
-    name: react-frontend
-    env: node
-    buildCommand: npm install && npm run build
-    startCommand: npm run start
-    envVars:
-      - key: REACT_APP_API_URL
-        value: https://gourmetlink.onrender.com
+      # Email settings
+      - key: EMAIL_HOST
+        value: "smtp.gmail.com"
+      - key: EMAIL_PORT
+        value: "587"
+      - key: EMAIL_USE_TLS
+        value: "True"
+      - key: EMAIL_HOST_USER
+        value: "teamgourmetlink@gmail.com"
+      - key: EMAIL_HOST_PASSWORD
+        value: "yffv zrtg vfle jpnx"
+      - key: DEFAULT_FROM_EMAIL
+        value: "teamgourmetlink@gmail.com"

@@ -11,7 +11,6 @@ import Profile from './components/Profile';
 import HomePage from './components/HomePage';
 import PostDetailPage from './components/PostDetailPage';
 import AllPosts from './components/AllPosts';
-// Import TranslationProvider
 import { TranslationProvider } from './context/TranslationContext';
 import LanguageSwitcher from './components/LanguageSwitcher';
 import MealPlannerCreator from './components/MealPlanCreator';
@@ -58,11 +57,10 @@ const App = () => {
   }, [location]);
 
   return (
-    // Wrap the entire app with TranslationProvider
     <TranslationProvider>
       <Navbar />
       <main>
-        <Navigation />
+        {location.pathname !== "/profile" && <Navigation />}
         <Routes>
           <Route 
             path="/" 
@@ -106,7 +104,7 @@ const App = () => {
           />
         </Routes>
       </main>
-      <Footer />
+      {location.pathname !== "/profile" && <Footer />}
       {/* <LanguageSwitcher/> */}
     </TranslationProvider>
   );

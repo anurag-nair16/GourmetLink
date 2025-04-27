@@ -2,54 +2,81 @@ import { useEffect, useState, useRef } from "react";
 import axios from "axios";
 import { useNavigate, Link } from "react-router-dom";
 import Avatar from "react-avatar";
-import { FaClock, FaEdit, FaUtensils, FaStar, FaPlus, FaHeart, FaThumbsUp, FaShoppingCart, FaFilePdf, FaTimes, FaSpinner } from "react-icons/fa";
+import Skeleton from "react-loading-skeleton";
+import "react-loading-skeleton/dist/skeleton.css";
+import { FaClock, FaEdit, FaUtensils, FaStar, FaPlus, FaHeart, FaThumbsUp, FaShoppingCart, FaFilePdf, FaTimes, FaSpinner, FaCalendar, FaSearch, FaMagic, FaMapMarkerAlt } from "react-icons/fa";
 import { motion, AnimatePresence } from "framer-motion";
+import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
+import "leaflet/dist/leaflet.css";
+import L from "leaflet";
+
+// Fix Leaflet marker icon issue
+delete L.Icon.Default.prototype._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
+  iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
+  shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
+});
 
 // Cache TTL: 5 minutes
-const CACHE_TTL = 5 * 60 * 1000; // 5 minutes in milliseconds
+const CACHE_TTL = 5 * 60 * 1000;
 
 // Helper functions for localStorage cache
-const getCachedIngredients = (planId) => {
-  const cached = localStorage.getItem(`ingredients_${planId}`);
+const getCachedData = (key) => {
+  const cached = localStorage.getItem(key);
   if (cached) {
     const { data, timestamp } = JSON.parse(cached);
     if (Date.now() - timestamp < CACHE_TTL) {
-      console.log(`Using cached ingredients from localStorage for plan ${planId}`);
+      console.log(`Using cached ${key} from localStorage`);
       return data;
     } else {
-      console.log(`Cache expired for plan ${planId}`);
-      localStorage.removeItem(`ingredients_${planId}`);
+      console.log(`Cache expired for ${key}`);
+      localStorage.removeItem(key);
     }
   }
   return null;
 };
 
-const setCachedIngredients = (planId, data) => {
+const setCachedData = (key, data) => {
   const cacheEntry = { data, timestamp: Date.now() };
-  localStorage.setItem(`ingredients_${planId}`, JSON.stringify(cacheEntry));
-  console.log(`Cached ingredients for plan ${planId} in localStorage`);
+  localStorage.setItem(key, JSON.stringify(cacheEntry));
+  console.log(`Cached ${key} in localStorage`);
 };
 
 const Profile = () => {
-  const [profileData, setProfileData] = useState({});
+  const [profileData, setProfileData] = useState(null);
   const [userRecipes, setUserRecipes] = useState([]);
   const [favouriteRecipes, setFavouriteRecipes] = useState([]);
   const [mealPlans, setMealPlans] = useState([]);
   const [selectedPlan, setSelectedPlan] = useState(null);
   const [ingredients, setIngredients] = useState([]);
+  const [checkedIngredients, setCheckedIngredients] = useState([]);
   const [showIngredients, setShowIngredients] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [loadingMealPlans, setLoadingMealPlans] = useState(true);
   const [loadingIngredients, setLoadingIngredients] = useState(false);
   const [loadingPdf, setLoadingPdf] = useState({});
   const [activeSection, setActiveSection] = useState("recipes");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [showMap, setShowMap] = useState(false);
+  const [userLocation, setUserLocation] = useState(null);
+  const [nearbyStores, setNearbyStores] = useState([]);
   const navigate = useNavigate();
   const sectionRefs = useRef([]);
 
   useEffect(() => {
     const fetchProfileData = async () => {
+      const token = localStorage.getItem("token");
+      const cachedProfile = getCachedData("profile_data");
+      if (cachedProfile) {
+        setProfileData(cachedProfile.profile);
+        setUserRecipes(cachedProfile.recipes);
+        setFavouriteRecipes(cachedProfile.favourites);
+        setMealPlans(cachedProfile.mealPlans);
+        setLoading(false);
+        return;
+      }
+
       try {
-        const token = localStorage.getItem("token");
         const [profileResponse, recipesResponse, favouritesResponse, mealPlansResponse] = await Promise.all([
           axios.get(`${process.env.REACT_APP_API_URL}/profile/`, { headers: { Authorization: `Bearer ${token}` } }),
           axios.get(`${process.env.REACT_APP_API_URL}/recipes/`, { headers: { Authorization: `Bearer ${token}` } }),
@@ -57,21 +84,68 @@ const Profile = () => {
           axios.get(`${process.env.REACT_APP_API_URL}/features/mealplans/`, { headers: { Authorization: `Bearer ${token}` } }),
         ]);
 
+        const profileData = {
+          profile: profileResponse.data,
+          recipes: recipesResponse.data,
+          favourites: favouritesResponse.data,
+          mealPlans: mealPlansResponse.data,
+        };
+
         setProfileData(profileResponse.data);
         setUserRecipes(recipesResponse.data);
         setFavouriteRecipes(favouritesResponse.data);
         setMealPlans(mealPlansResponse.data);
+        setCachedData("profile_data", profileData);
         setLoading(false);
-        setLoadingMealPlans(false);
       } catch (error) {
         console.error("Error fetching profile data:", error);
         setLoading(false);
-        setLoadingMealPlans(false);
       }
     };
 
     fetchProfileData();
   }, []);
+
+  useEffect(() => {
+    // Fetch user location for map
+    if (showIngredients && showMap) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const { latitude, longitude } = position.coords;
+          setUserLocation({ lat: latitude, lng: longitude });
+          fetchNearbyStores(latitude, longitude);
+        },
+        () => {
+          // Fallback to New York City if location access is denied
+          setUserLocation({ lat: 40.7128, lng: -74.0060 });
+          fetchNearbyStores(40.7128, -74.0060);
+        }
+      );
+    }
+  }, [showIngredients, showMap]);
+
+  const fetchNearbyStores = async (lat, lng) => {
+    try {
+      const overpassQuery = `
+        [out:json];
+        node
+          ["shop"="supermarket"]
+          (around:5000,${lat},${lng});
+        out body;
+      `;
+      const response = await axios.post("https://overpass-api.de/api/interpreter", overpassQuery);
+      const stores = response.data.elements.map((element) => ({
+        id: element.id,
+        lat: element.lat,
+        lng: element.lon,
+        name: element.tags.name || "Supermarket",
+      }));
+      setNearbyStores(stores);
+    } catch (error) {
+      console.error("Error fetching nearby stores:", error);
+      setNearbyStores([]);
+    }
+  };
 
   const handleRecipeClick = (recipeId) => {
     navigate(`/recipe/${recipeId}`);
@@ -79,9 +153,10 @@ const Profile = () => {
 
   const fetchIngredients = async (planId) => {
     const token = localStorage.getItem("token");
-    const cachedData = getCachedIngredients(planId);
+    const cachedData = getCachedData(`ingredients_${planId}`);
     if (cachedData) {
       setIngredients(cachedData);
+      setCheckedIngredients(cachedData.map(() => false));
       setShowIngredients(true);
       return;
     }
@@ -94,11 +169,13 @@ const Profile = () => {
         { headers: { Authorization: `Bearer ${token}` } }
       );
       const ingredientsData = response.data.items;
-      setCachedIngredients(planId, ingredientsData);
+      setCachedData(`ingredients_${planId}`, ingredientsData);
       setIngredients(ingredientsData);
+      setCheckedIngredients(ingredientsData.map(() => false));
     } catch (error) {
       console.error("Error fetching ingredients:", error);
       setIngredients([]);
+      setCheckedIngredients([]);
     } finally {
       setLoadingIngredients(false);
     }
@@ -128,10 +205,60 @@ const Profile = () => {
     }
   };
 
+  const handleCheckboxChange = (index) => {
+    setCheckedIngredients((prev) =>
+      prev.map((checked, i) => (i === index ? !checked : checked))
+    );
+  };
+
+  const handleSelectAll = () => {
+    const allChecked = checkedIngredients.every((checked) => checked);
+    setCheckedIngredients(ingredients.map(() => !allChecked));
+  };
+
+  const handlePrint = () => {
+    const selectedItems = ingredients.filter((_, index) => checkedIngredients[index]);
+    if (selectedItems.length === 0) {
+      alert("Please select at least one ingredient to print.");
+      return;
+    }
+
+    const printContent = `
+      <html>
+        <head>
+          <title>Shopping List</title>
+          <style>
+            body { font-family: Arial, sans-serif; padding: 20px; }
+            h1 { color: #2dd4bf; text-align: center; }
+            ul { list-style: none; padding: 0; }
+            li { padding: 10px 0; font-size: 16px; }
+            .item { display: flex; justify-content: space-between; }
+          </style>
+        </head>
+        <body>
+          <h1>Shopping List</h1>
+          <ul>
+            ${selectedItems
+              .map(
+                (item) =>
+                  `<li><div class="item"><span>${item.name}</span><span>${item.quantity} ${item.unit}</span></div></li>`
+              )
+              .join("")}
+          </ul>
+        </body>
+      </html>
+    `;
+
+    const printWindow = window.open("", "_blank");
+    printWindow.document.write(printContent);
+    printWindow.document.close();
+    printWindow.print();
+  };
+
   const sections = [
-    { id: "recipes", label: "Your Recipes", icon: <FaUtensils /> },
+    { id: "recipes", label: "Recipes", icon: <FaUtensils /> },
     { id: "favourites", label: "Favourites", icon: <FaHeart /> },
-    { id: "mealplans", label: "Meal Plans", icon: <FaShoppingCart /> },
+    { id: "mealplans", label: "Meal Plans", icon: <FaCalendar /> },
   ];
 
   // Animation Variants
@@ -142,161 +269,249 @@ const Profile = () => {
     visible: { opacity: 1, scale: 1, transition: { duration: 0.3, ease: "easeOut" } },
     exit: { opacity: 0, scale: 0.95, transition: { duration: 0.2 } },
   };
-  const loadingVariants = { hidden: { opacity: 0 }, visible: { opacity: 1, transition: { duration: 0.3 } } };
+
+  const mapContainerStyle = {
+    width: "100%",
+    height: "300px",
+    borderRadius: "16px",
+    boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
+  };
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-primary-light to-white flex justify-center items-center">
-        <div className="text-primary-main">Loading...</div>
+      <div className="min-h-screen bg-gray-100 p-4">
+        <div className="max-w-7xl mx-auto">
+          <Skeleton height={250} className="rounded-3xl mb-8" />
+          <Skeleton height={40} width={200} className="mb-6 mx-auto" />
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {Array(6)
+              .fill()
+              .map((_, i) => (
+                <Skeleton key={i} height={350} className="rounded-2xl" />
+              ))}
+          </div>
+        </div>
       </div>
     );
   }
 
+  const filteredRecipes = userRecipes.filter((recipe) =>
+    recipe.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+  const filteredFavourites = favouriteRecipes.filter((recipe) =>
+    recipe.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+  const filteredMealPlans = mealPlans.filter((plan) =>
+    plan.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-light to-white text-neutral-800">
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <motion.div
-          className="absolute top-10 left-10 w-40 h-40 bg-primary-main/5 rounded-full blur-3xl"
-          animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.5, 0.3] }}
-          transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
-        />
-        <motion.div
-          className="absolute bottom-20 right-20 w-60 h-60 bg-primary-main/5 rounded-full blur-3xl"
-          animate={{ scale: [1, 1.3, 1], opacity: [0.3, 0.4, 0.3] }}
-          transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
-        />
-      </div>
-
-      <main className="container mx-auto px-4 sm:px-6 py-12 relative z-10">
-        <motion.section
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.2 }}
-          className="bg-white rounded-3xl shadow-lg p-8 mb-12 border border-neutral-200 max-w-4xl mx-auto"
-        >
-          <div className="flex flex-col items-center md:flex-row md:items-start gap-8">
-            <div className="relative">
-              <Avatar
-                name={profileData.username}
-                src={profileData.profile_image}
-                size="140"
-                round={true}
-                className="border-4 border-primary-main shadow-lg transform hover:scale-105 transition-all duration-300"
-              />
-              <motion.div
-                className="absolute -bottom-2 -right-2 bg-primary-main text-white rounded-full p-2"
-                whileHover={{ scale: 1.1 }}
-              >
-                <FaEdit size={16} />
-              </motion.div>
-            </div>
-            <div className="text-center md:text-left flex-1">
-              <h2 className="text-3xl font-bold text-neutral-800 mb-2">{profileData.username}</h2>
-              <p className="text-neutral-600 mb-4">{profileData.email}</p>
-              <div className="flex justify-center md:justify-start gap-6 text-neutral-600">
-                <div className="flex items-center gap-2">
-                  <FaUtensils className="text-primary-main" />
-                  <span>{userRecipes.length} Recipes</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <FaHeart className="text-red-400" />
-                  <span>{favouriteRecipes.length} Favorites</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <FaShoppingCart className="text-primary-main" />
-                  <span>{mealPlans.length} Plans</span>
-                </div>
-              </div>
-              <Link
-                to="/submit-recipe"
-                className="mt-6 inline-flex items-center gap-2 px-6 py-3 bg-primary-main text-white rounded-full font-semibold hover:bg-primary-dark transition-all duration-300"
-              >
-                <FaPlus /> Add New Recipe
-              </Link>
-            </div>
-          </div>
-        </motion.section>
-
-        <div className="relative flex justify-center gap-4 mb-12 max-w-2xl mx-auto">
-          {sections.map((section, index) => (
+    <div className="min-h-screen bg-gray-100 font-sans text-gray-900">
+      {/* Sidebar for Desktop */}
+      <motion.aside
+        className="fixed top-0 left-0 h-full w-64 bg-white shadow-lg p-6 hidden lg:block"
+        initial={{ x: "-100%" }}
+        animate={{ x: 0 }}
+        transition={{ duration: 0.5 }}
+      >
+        <div className="flex items-center gap-3 mb-8">
+          <Avatar
+            name={profileData?.username}
+            src={profileData?.profile_image}
+            size="40"
+            round={true}
+            className="border-2 border-teal-500"
+          />
+          <h2 className="text-lg font-semibold text-gray-900">{profileData?.username || "User"}</h2>
+        </div>
+        <nav className="space-y-2">
+          {sections.map((section) => (
             <motion.button
               key={section.id}
-              ref={(el) => (sectionRefs.current[index] = el)}
               onClick={() => setActiveSection(section.id)}
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-300 ${
+                activeSection === section.id
+                  ? "bg-teal-500 text-white"
+                  : "text-gray-600 hover:bg-gray-100"
+              }`}
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
-              className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 ${
-                activeSection === section.id
-                  ? "bg-primary-main text-white shadow-md"
-                  : "bg-neutral-100 text-neutral-600 hover:bg-neutral-200"
-              }`}
             >
               {section.icon}
               {section.label}
             </motion.button>
           ))}
+        </nav>
+      </motion.aside>
+
+      {/* Main Content */}
+      <main className="lg:ml-64 p-4 sm:p-6 min-h-screen">
+        {/* Mobile Header */}
+        <header className="lg:hidden flex items-center justify-between mb-6">
+          <div className="w-6"></div>
+          <div className="w-6"></div>
+        </header>
+
+        {/* Profile Section */}
+        <motion.section
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8 }}
+          className="bg-white rounded-3xl shadow-sm p-6 sm:p-8 mb-8"
+        >
+          <div className="flex flex-col items-center sm:flex-row sm:items-start gap-6">
+            <div className="relative">
+              <Avatar
+                name={profileData?.username}
+                src={profileData?.profile_image}
+                size="100"
+                round={true}
+                className="border-4 border-teal-500 shadow-lg transition-transform duration-300 hover:scale-105"
+              />
+              <motion.button
+                className="absolute -bottom-2 -right-2 bg-teal-500 text-white rounded-full p-2"
+                whileHover={{ scale: 1.1 }}
+                aria-label="Edit profile"
+              >
+                <FaEdit size={16} />
+              </motion.button>
+            </div>
+            <div className="text-center sm:text-left flex-1">
+              <h2 className="text-2xl font-bold text-gray-900">{profileData?.username || "User"}</h2>
+              <p className="text-gray-600 text-sm mt-1">{profileData?.email || "No email"}</p>
+              <div className="grid grid-cols-3 gap-4 mt-4 text-gray-600 text-sm">
+                <div className="flex flex-col items-center sm:items-start">
+                  <div className="flex items-center gap-1.5">
+                    <FaUtensils className="text-teal-500" />
+                    <span>{userRecipes.length}</span>
+                  </div>
+                  <span>Recipes</span>
+                </div>
+                <div className="flex flex-col items-center sm:items-start">
+                  <div className="flex items-center gap-1.5">
+                    <FaHeart className="text-red-400" />
+                    <span>{favouriteRecipes.length}</span>
+                  </div>
+                  <span>Favorites</span>
+                </div>
+                <div className="flex flex-col items-center sm:items-start">
+                  <div className="flex items-center gap-1.5">
+                    <FaCalendar className="text-teal-500" />
+                    <span>{mealPlans.length}</span>
+                  </div>
+                  <span>Plans</span>
+                </div>
+              </div>
+              <div className="mt-6 flex flex-col sm:flex-row gap-3">
+                <Link
+                  to="/submit-recipe"
+                  className="inline-flex items-center gap-2 px-5 py-2.5 bg-teal-500 text-white rounded-lg font-medium hover:bg-teal-600 transition-all duration-300"
+                  aria-label="Add a new recipe"
+                >
+                  <FaPlus /> Add Recipe
+                </Link>
+                <Link
+                  to="/recipe-generator"
+                  className="inline-flex items-center gap-2 px-5 py-2.5 bg-purple-500 text-white rounded-lg font-medium hover:bg-purple-600 transition-all duration-300"
+                  aria-label="Generate a custom recipe"
+                >
+                  <FaMagic /> Generate Recipe
+                </Link>
+              </div>
+            </div>
+          </div>
+        </motion.section>
+
+        {/* Search Bar */}
+        <div className="mb-6">
+          <div className="relative max-w-md mx-auto">
+            <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder={`Search ${activeSection}...`}
+              className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-teal-500"
+              aria-label={`Search ${activeSection}`}
+            />
+          </div>
         </div>
 
-        <section className="max-w-7xl mx-auto">
+        {/* Content Sections */}
+        <section>
           {activeSection === "recipes" && (
             <>
               <motion.h2
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.8, delay: 0.4 }}
-                className="text-3xl font-bold text-neutral-800 mb-8 text-center"
+                transition={{ duration: 0.8 }}
+                className="text-2xl font-bold text-gray-900 mb-6 text-center sm:text-left"
               >
                 Your Recipes
               </motion.h2>
-              {userRecipes.length === 0 ? (
+              {filteredRecipes.length === 0 ? (
                 <motion.div
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
-                  transition={{ duration: 0.8, delay: 0.6 }}
-                  className="text-center bg-white rounded-2xl p-12 text-neutral-600 shadow-inner border border-neutral-200"
+                  transition={{ duration: 0.8 }}
+                  className="text-center bg-white rounded-3xl p-12 text-gray-600 shadow-sm border border-gray-200"
                 >
-                  <FaUtensils className="text-primary-main text-4xl mx-auto mb-4" />
-                  <p className="text-lg">You haven’t shared any recipes yet. Start cooking!</p>
+                  <FaUtensils className="text-teal-500 text-4xl mx-auto mb-4" />
+                  <p className="text-lg">
+                    {searchQuery ? "No recipes match your search." : "You haven’t shared any recipes yet."}
+                  </p>
                   <Link
                     to="/submit-recipe"
-                    className="mt-4 inline-block px-6 py-3 bg-primary-main text-white rounded-full hover:bg-primary-dark transition-all duration-300"
+                    className="mt-4 inline-block px-5 py-2.5 bg-teal-500 text-white rounded-lg hover:bg-teal-600 transition-all duration-300"
                   >
                     Create Your First Recipe
                   </Link>
                 </motion.div>
               ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                  {userRecipes.map((recipe, index) => (
+                <div className="columns-1 sm:columns-2 lg:columns-3 gap-6">
+                  {filteredRecipes.map((recipe, index) => (
                     <motion.div
                       key={recipe.id}
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ duration: 0.5, delay: index * 0.1 }}
-                      onClick={() => handleRecipeClick(recipe.id)}
-                      className="bg-white rounded-xl shadow-md overflow-hidden cursor-pointer transform hover:scale-105 hover:shadow-lg transition-all duration-300 border border-neutral-200"
+                      className="bg-white rounded-2xl shadow-sm overflow-hidden cursor-pointer mb-6 break-inside-avoid"
                     >
-                      <div className="relative aspect-video">
-                        {recipe.image && (
+                      <div className="relative aspect-[4/3]">
+                        {recipe.image ? (
                           <img src={recipe.image} alt={recipe.name} className="w-full h-full object-cover" />
+                        ) : (
+                          <div className="w-full h-full bg-gray-200 flex items-center justify-center">
+                            <FaUtensils className="text-gray-400 text-4xl" />
+                          </div>
                         )}
-                        <div className="absolute inset-0 bg-gradient-to-t from-gray-900/80 to-transparent" />
-                        <span className="absolute bottom-2 right-2 bg-primary-main text-white px-3 py-1 rounded-full text-sm flex items-center gap-2">
+                        <div className="absolute inset-0 bg-gradient-to-t from-gray-900/70 to-transparent" />
+                        <div className="absolute bottom-4 left-4 right-4">
+                          <h3 className="text-lg font-semibold text-white truncate">{recipe.name}</h3>
+                          <p className="text-sm text-gray-200 line-clamp-2">{recipe.description}</p>
+                        </div>
+                        <span className="absolute top-4 right-4 bg-teal-500 text-white px-2.5 py-1 rounded-full text-xs flex items-center gap-1">
                           <FaClock /> {recipe.prep_time || "N/A"} mins
                         </span>
                       </div>
-                      <div className="p-5 space-y-3">
-                        <h3 className="text-lg font-semibold text-neutral-800 line-clamp-1">{recipe.name}</h3>
-                        <p className="text-neutral-600 text-sm line-clamp-2">{recipe.description}</p>
-                        <div className="flex justify-between items-center text-neutral-600">
-                          <span className="flex items-center gap-2">
-                            <FaThumbsUp className="text-primary-main" />
+                      <div className="p-4 flex justify-between items-center">
+                        <div className="flex gap-4 text-gray-600 text-sm">
+                          <span className="flex items-center gap-1">
+                            <FaThumbsUp className="text-teal-500" />
                             {recipe.post?.likes?.length || 0}
                           </span>
-                          <span className="flex items-center gap-2">
+                          <span className="flex items-center gap-1">
                             <FaStar className="text-yellow-400" />
                             {recipe.post?.average_rating || "N/A"}
                           </span>
                         </div>
+                        <motion.button
+                          onClick={() => handleRecipeClick(recipe.id)}
+                          className="text-teal-500 hover:text-teal-600"
+                          whileHover={{ scale: 1.1 }}
+                        >
+                          View
+                        </motion.button>
                       </div>
                     </motion.div>
                   ))}
@@ -310,63 +525,77 @@ const Profile = () => {
               <motion.h2
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.8, delay: 0.4 }}
-                className="text-3xl font-bold text-neutral-800 mb-8 text-center"
+                transition={{ duration: 0.8 }}
+                className="text-2xl font-bold text-gray-900 mb-6 text-center sm:text-left"
               >
                 Your Favourites
               </motion.h2>
-              {favouriteRecipes.length === 0 ? (
+              {filteredFavourites.length === 0 ? (
                 <motion.div
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
-                  transition={{ duration: 0.8, delay: 0.6 }}
-                  className="text-center bg-white rounded-2xl p-12 text-neutral-600 shadow-inner border border-neutral-200"
+                  transition={{ duration: 0.8 }}
+                  className="text-center bg-white rounded-3xl p-12 text-gray-600 shadow-sm border border-gray-200"
                 >
                   <FaHeart className="text-red-400 text-4xl mx-auto mb-4" />
-                  <p className="text-lg">No favorite recipes yet. Explore and save some!</p>
+                  <p className="text-lg">
+                    {searchQuery ? "No favorites match your search." : "No favorite recipes yet."}
+                  </p>
                   <Link
                     to="/posts"
-                    className="mt-4 inline-block px-6 py-3 bg-primary-main text-white rounded-full hover:bg-primary-dark transition-all duration-300"
+                    className="mt-4 inline-block px-5 py-2.5 bg-teal-500 text-white rounded-lg hover:bg-teal-600 transition-all duration-300"
                   >
                     Discover Recipes
                   </Link>
                 </motion.div>
               ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                  {favouriteRecipes.map((recipe, index) => (
+                <div className="columns-1 sm:columns-2 lg:columns-3 gap-6">
+                  {filteredFavourites.map((recipe, index) => (
                     <motion.div
                       key={recipe.id}
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ duration: 0.5, delay: index * 0.1 }}
-                      onClick={() => handleRecipeClick(recipe.id)}
-                      className="bg-white rounded-xl shadow-md overflow-hidden cursor-pointer transform hover:scale-105 hover:shadow-lg transition-all duration-300 border border-neutral-200"
+                      className="bg-white rounded-2xl shadow-sm overflow-hidden cursor-pointer mb-6 break-inside-avoid"
                     >
-                      <div className="relative aspect-video">
-                        {recipe.image && (
+                      <div className="relative aspect-[4/3]">
+                        {recipe.image ? (
                           <img src={recipe.image} alt={recipe.name} className="w-full h-full object-cover" />
+                        ) : (
+                          <div className="w-full h-full bg-gray-200 flex items-center justify-center">
+                            <FaUtensils className="text-gray-400 text-4xl" />
+                          </div>
                         )}
-                        <div className="absolute inset-0 bg-gradient-to-t from-gray-900/80 to-transparent" />
-                        <span className="absolute bottom-2 right-2 bg-primary-main text-white px-3 py-1 rounded-full text-sm flex items-center gap-2">
+                        <div className="absolute inset-0 bg-gradient-to-t from-gray-900/70 to-transparent" />
+                        <div className="absolute bottom-4 left-4 right-4">
+                          <h3 className="text-lg font-semibold text-white truncate">{recipe.name}</h3>
+                          <p className="text-sm text-gray-200 line-clamp-2">{recipe.description}</p>
+                        </div>
+                        <span className="absolute top-4 right-4 bg-teal-500 text-white px-2.5 py-1 rounded-full text-xs flex items-center gap-1">
                           <FaClock /> {recipe.prep_time || "N/A"} mins
                         </span>
-                        <span className="absolute top-2 right-2 bg-red-500/20 text-red-300 p-1 rounded-full">
+                        <span className="absolute top-4 left-4 bg-red-500/30 text-red-400 p-1.5 rounded-full">
                           <FaHeart size={16} />
                         </span>
                       </div>
-                      <div className="p-5 space-y-3">
-                        <h3 className="text-lg font-semibold text-neutral-800 line-clamp-1">{recipe.name}</h3>
-                        <p className="text-neutral-600 text-sm line-clamp-2">{recipe.description}</p>
-                        <div className="flex justify-between items-center text-neutral-600">
-                          <span className="flex items-center gap-2">
-                            <FaThumbsUp className="text-primary-main" />
+                      <div className="p-4 flex justify-between items-center">
+                        <div className="flex gap-4 text-gray-600 text-sm">
+                          <span className="flex items-center gap-1">
+                            <FaThumbsUp className="text-teal-500" />
                             {recipe.post?.likes?.length || 0}
                           </span>
-                          <span className="flex items-center gap-2">
+                          <span className="flex items-center gap-1">
                             <FaStar className="text-yellow-400" />
                             {recipe.post?.average_rating || "N/A"}
                           </span>
                         </div>
+                        <motion.button
+                          onClick={() => handleRecipeClick(recipe.id)}
+                          className="text-teal-500 hover:text-teal-600"
+                          whileHover={{ scale: 1.1 }}
+                        >
+                          View
+                        </motion.button>
                       </div>
                     </motion.div>
                   ))}
@@ -380,104 +609,92 @@ const Profile = () => {
               <motion.h2
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.8, delay: 0.4 }}
-                className="text-3xl font-bold text-neutral-800 mb-8 text-center"
+                transition={{ duration: 0.8 }}
+                className="text-2xl font-bold text-gray-900 mb-6 text-center sm:text-left"
               >
                 Your Meal Plans
               </motion.h2>
-              {loadingMealPlans ? (
-                <motion.div
-                  className="flex flex-col items-center justify-center min-h-[50vh]"
-                  variants={loadingVariants}
-                  initial="hidden"
-                  animate="visible"
-                >
-                  <FaSpinner className="text-primary-main text-5xl animate-spin" />
-                  <p className="text-neutral-600 mt-4 text-lg">Loading your meal plans...</p>
-                </motion.div>
-              ) : mealPlans.length === 0 ? (
+              {filteredMealPlans.length === 0 ? (
                 <motion.div
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
-                  transition={{ duration: 0.8, delay: 0.6 }}
-                  className="text-center bg-white rounded-2xl p-12 text-neutral-600 shadow-inner border border-neutral-200"
+                  transition={{ duration: 0.8 }}
+                  className="text-center bg-white rounded-3xl p-12 text-gray-600 shadow-sm border border-gray-200"
                 >
-                  <FaShoppingCart className="text-primary-main text-4xl mx-auto mb-4" />
-                  <p className="text-lg">No meal plans yet. Create one to get started!</p>
+                  <FaCalendar className="text-teal-500 text-4xl mx-auto mb-4" />
+                  <p className="text-lg">
+                    {searchQuery ? "No meal plans match your search." : "No meal plans yet."}
+                  </p>
                   <Link
                     to="/meal-planner"
-                    className="mt-4 inline-block px-6 py-3 bg-primary-main text-white rounded-full hover:bg-primary-dark transition-all duration-300"
+                    className="mt-4 inline-block px-5 py-2.5 bg-teal-500 text-white rounded-lg hover:bg-teal-600 transition-all duration-300"
                   >
                     Add Meal Plan
                   </Link>
                 </motion.div>
               ) : (
                 <div className="space-y-6">
-                  <motion.div
-                    className="flex justify-end"
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ duration: 0.8, delay: 0.6 }}
-                  >
+                  <div className="flex justify-end mb-4">
                     <Link
                       to="/meal-planner"
-                      className="inline-flex items-center gap-2 px-6 py-3 bg-primary-main text-white rounded-full font-semibold hover:bg-primary-dark transition-all duration-300"
+                      className="inline-flex items-center gap-2 px-5 py-2.5 bg-teal-500 text-white rounded-lg font-medium hover:bg-teal-600 transition-all duration-300"
                     >
                       <FaPlus /> Add Meal Plan
                     </Link>
-                  </motion.div>
-
+                  </div>
                   <motion.div
-                    className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
+                    className="space-y-6"
                     variants={containerVariants}
                     initial="hidden"
                     animate="visible"
                   >
-                    {mealPlans.map((plan) => (
+                    {filteredMealPlans.map((plan) => (
                       <motion.div
                         key={plan.id}
-                        className="bg-white rounded-xl p-6 shadow-md border border-neutral-200 hover:border-primary-main/50 transition-all duration-300"
+                        className="bg-white rounded-2xl p-6 shadow-sm border border-gray-200 hover:border-teal-200 transition-all duration-300"
                         variants={itemVariants}
-                        whileHover={{ scale: 1.03, boxShadow: "0 10px 20px rgba(0, 0, 0, 0.15)" }}
-                        whileTap={{ scale: 0.98 }}
                       >
-                        <h3 className="text-xl font-semibold text-neutral-800 mb-2">{plan.name}</h3>
-                        <p className="text-neutral-600 text-sm mb-4">
-                          {new Date(plan.start_date).toLocaleDateString()} -{" "}
-                          {new Date(plan.end_date).toLocaleDateString()}
-                        </p>
-                        <div className="flex gap-3">
-                          <motion.button
-                            onClick={() => setSelectedPlan(plan)}
-                            className="flex-1 bg-primary-main hover:bg-primary-dark text-white px-4 py-2 rounded-full text-sm font-medium transition-colors"
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.95 }}
-                          >
-                            View Plan
-                          </motion.button>
-                          <motion.button
-                            onClick={() => fetchIngredients(plan.id)}
-                            className="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-full text-sm font-medium flex items-center justify-center gap-2 transition-colors"
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.95 }}
-                          >
-                            <FaShoppingCart /> List
-                          </motion.button>
-                          <motion.button
-                            onClick={() => downloadPdf(plan.id)}
-                            className="flex-1 bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-full text-sm font-medium flex items-center justify-center gap-2 transition-colors relative"
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.95 }}
-                            disabled={loadingPdf[plan.id]}
-                          >
-                            {loadingPdf[plan.id] ? (
-                              <FaSpinner className="animate-spin" />
-                            ) : (
-                              <>
-                                <FaFilePdf /> PDF
-                              </>
-                            )}
-                          </motion.button>
+                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                          <div>
+                            <h3 className="text-lg font-semibold text-gray-900">{plan.name}</h3>
+                            <p className="text-gray-600 text-sm mt-1">
+                              {new Date(plan.start_date).toLocaleDateString()} -{" "}
+                              {new Date(plan.end_date).toLocaleDateString()}
+                            </p>
+                          </div>
+                          <div className="flex gap-2">
+                            <motion.button
+                              onClick={() => setSelectedPlan(plan)}
+                              className="px-4 py-2 bg-teal-500 text-white rounded-lg text-sm font-medium hover:bg-teal-600 transition-colors"
+                              whileHover={{ scale: 1.05 }}
+                              whileTap={{ scale: 0.95 }}
+                            >
+                              View Plan
+                            </motion.button>
+                            <motion.button
+                              onClick={() => fetchIngredients(plan.id)}
+                              className="px-4 py-2 bg-indigo-500 text-white rounded-lg text-sm font-medium flex items-center gap-1 hover:bg-indigo-600 transition-colors"
+                              whileHover={{ scale: 1.05 }}
+                              whileTap={{ scale: 0.95 }}
+                            >
+                              <FaShoppingCart /> List
+                            </motion.button>
+                            <motion.button
+                              onClick={() => downloadPdf(plan.id)}
+                              className="px-4 py-2 bg-purple-500 text-white rounded-lg text-sm font-medium flex items-center gap-1 hover:bg-purple-600 transition-colors"
+                              whileHover={{ scale: 1.05 }}
+                              whileTap={{ scale: 0.95 }}
+                              disabled={loadingPdf[plan.id]}
+                            >
+                              {loadingPdf[plan.id] ? (
+                                <FaSpinner className="animate-spin" />
+                              ) : (
+                                <>
+                                  <FaFilePdf /> PDF
+                                </>
+                              )}
+                            </motion.button>
+                          </div>
                         </div>
                       </motion.div>
                     ))}
@@ -488,26 +705,48 @@ const Profile = () => {
               <AnimatePresence>
                 {selectedPlan && (
                   <motion.div
-                    className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 backdrop-blur-sm"
+                    className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4 backdrop-blur-sm"
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
                   >
                     <motion.div
-                      className="bg-white rounded-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto p-8 shadow-xl border border-neutral-200"
+                      className="bg-white rounded-3xl w-full max-w-4xl max-h-[90vh] overflow-y-auto p-6 sm:p-8 shadow-2xl"
                       variants={modalVariants}
                     >
-                      <div className="flex justify-between items-center mb-8">
-                        <h3 className="text-3xl font-bold text-neutral-800 tracking-wide">{selectedPlan.name}</h3>
+                      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 gap-4">
+                        <h3 className="text-2xl font-bold text-gray-900">{selectedPlan.name}</h3>
                         <motion.button
                           onClick={() => setSelectedPlan(null)}
-                          className="text-neutral-600 hover:text-primary-main transition-colors"
+                          className="text-gray-600 hover:text-teal-500 transition-colors"
                           whileHover={{ rotate: 90 }}
+                          aria-label="Close modal"
                         >
-                          <FaTimes size={28} />
+                          <FaTimes size={24} />
                         </motion.button>
                       </div>
-                      <motion.div className="space-y-8" variants={containerVariants} initial="hidden" animate="visible">
+                      <div className="flex flex-wrap gap-2 mb-6">
+                        {Array.from(
+                          {
+                            length:
+                              Math.ceil(
+                                (new Date(selectedPlan.end_date) - new Date(selectedPlan.start_date)) /
+                                  (1000 * 60 * 60 * 24)
+                              ) + 1,
+                          },
+                          (_, i) => i + 1
+                        ).map((day) => (
+                          <motion.button
+                            key={day}
+                            className="px-4 py-2 rounded-lg bg-gray-100 text-gray-700 hover:bg-teal-500 hover:text-white transition-colors text-sm"
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                          >
+                            Day {day}
+                          </motion.button>
+                        ))}
+                      </div>
+                      <motion.div className="space-y-6" variants={containerVariants} initial="hidden" animate="visible">
                         {Array.from(
                           {
                             length:
@@ -520,35 +759,35 @@ const Profile = () => {
                         ).map((day) => (
                           <motion.div
                             key={day}
-                            className="bg-neutral-50 p-6 rounded-xl border border-neutral-200 shadow-md"
+                            className="bg-gray-50 rounded-2xl p-6 shadow-sm border border-gray-200"
                             variants={itemVariants}
                           >
-                            <h4 className="text-xl font-semibold text-neutral-800 mb-4">
+                            <h4 className="text-lg font-semibold text-gray-900 mb-4">
                               Day {day} -{" "}
                               {new Date(
                                 new Date(selectedPlan.start_date).getTime() + (day - 1) * 86400000
                               ).toLocaleDateString()}
                             </h4>
-                            <div className="space-y-4">
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                               {selectedPlan.entries.filter((e) => e.day === day).map((entry) => (
                                 <motion.div
                                   key={entry.meal_type}
-                                  className="flex items-center bg-white p-4 rounded-lg shadow-sm border border-neutral-200 hover:border-primary-main/30 transition-all duration-300"
+                                  className="flex items-center bg-white rounded-lg p-4 shadow-sm border border-gray-200 hover:border-teal-200 transition-all duration-300"
                                   initial={{ opacity: 0, x: -20 }}
                                   animate={{ opacity: 1, x: 0 }}
                                   transition={{ duration: 0.4 }}
                                   whileHover={{ scale: 1.02 }}
                                 >
                                   <img
-                                    src={entry.recipe?.image || "https://via.placeholder.com/100?text=No+Image"}
+                                    src={entry.recipe?.image || "https://via.placeholder.com/80?text=No+Image"}
                                     alt={entry.recipe?.name || "Recipe"}
-                                    className="w-20 h-20 object-cover rounded-lg mr-4 shadow-md"
-                                    onError={(e) => (e.target.src = "https://via.placeholder.com/100?text=No+Image")}
+                                    className="w-16 h-16 object-cover rounded-lg mr-4 shadow-sm"
+                                    onError={(e) => (e.target.src = "https://via.placeholder.com/80?text=No+Image")}
                                   />
                                   <div className="flex-1">
-                                    <p className="text-neutral-800 text-lg">
-                                      <span className="capitalize font-medium text-primary-main">{entry.meal_type}:</span>{" "}
-                                      <span className="text-neutral-800">{entry.recipe?.name || "No recipe selected"}</span>
+                                    <p className="text-gray-900 text-sm font-medium">
+                                      <span className="capitalize text-teal-500">{entry.meal_type}:</span>{" "}
+                                      {entry.recipe?.name || "No recipe selected"}
                                     </p>
                                   </div>
                                 </motion.div>
@@ -565,59 +804,128 @@ const Profile = () => {
               <AnimatePresence>
                 {showIngredients && (
                   <motion.div
-                    className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 backdrop-blur-sm"
+                    className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4 backdrop-blur-sm"
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
                   >
                     <motion.div
-                      className="bg-white rounded-xl w-full max-w-lg max-h-[85vh] overflow-y-auto p-8 shadow-xl border border-neutral-200"
+                      className="bg-white rounded-3xl w-full max-w-lg max-h-[85vh] overflow-y-auto p-6 shadow-2xl"
                       variants={modalVariants}
                     >
-                      <div className="flex justify-between items-center mb-6">
-                        <h3 className="text-3xl font-bold text-neutral-800 flex items-center gap-3 tracking-wide">
+                      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 gap-4">
+                        <h3 className="text-xl font-bold text-gray-900 flex items-center gap-2">
                           <FaShoppingCart /> Shopping List
                         </h3>
                         <motion.button
                           onClick={() => setShowIngredients(false)}
-                          className="text-neutral-600 hover:text-primary-main transition-colors"
+                          className="text-gray-600 hover:text-teal-500 transition-colors"
                           whileHover={{ rotate: 90 }}
+                          aria-label="Close shopping list"
                         >
-                          <FaTimes size={28} />
+                          <FaTimes size={24} />
                         </motion.button>
                       </div>
                       {loadingIngredients ? (
-                        <motion.div
-                          className="flex flex-col items-center justify-center py-10"
-                          variants={loadingVariants}
-                          initial="hidden"
-                          animate="visible"
-                        >
-                          <FaSpinner className="text-primary-main text-4xl animate-spin" />
-                          <p className="text-neutral-600 mt-4 text-lg">Fetching your shopping list...</p>
-                        </motion.div>
+                        <div className="space-y-4">
+                          {Array(5)
+                            .fill()
+                            .map((_, i) => (
+                              <Skeleton key={i} height={40} className="rounded-lg" />
+                            ))}
+                        </div>
                       ) : ingredients.length === 0 ? (
-                        <p className="text-neutral-600 text-center py-6 text-lg">No ingredients available.</p>
+                        <p className="text-gray-600 text-center py-6 text-sm">No ingredients available.</p>
                       ) : (
-                        <motion.ul
+                        <motion.div
                           className="space-y-4"
                           variants={containerVariants}
                           initial="hidden"
                           animate="visible"
                         >
-                          {ingredients.map((item, index) => (
-                            <motion.li
-                              key={index}
-                              className="text-neutral-800 bg-neutral-50 p-4 rounded-lg flex justify-between items-center shadow-sm border border-neutral-200"
-                              variants={itemVariants}
+                          <div className="flex justify-between items-center">
+                            <span className="text-gray-600 text-sm">
+                              {ingredients.length} items
+                            </span>
+                            <div className="flex gap-2">
+                              <motion.button
+                                onClick={handleSelectAll}
+                                className="text-teal-500 hover:text-teal-600 text-sm"
+                                whileHover={{ scale: 1.1 }}
+                                whileTap={{ scale: 0.95 }}
+                              >
+                                {checkedIngredients.every((checked) => checked) ? "Deselect All" : "Select All"}
+                              </motion.button>
+                              <motion.button
+                                onClick={handlePrint}
+                                className="text-teal-500 hover:text-teal-600 text-sm"
+                                whileHover={{ scale: 1.1 }}
+                                whileTap={{ scale: 0.95 }}
+                              >
+                                Print Selected
+                              </motion.button>
+                            </div>
+                          </div>
+                          <motion.ul className="space-y-3">
+                            {ingredients.map((item, index) => (
+                              <motion.li
+                                key={index}
+                                className="flex items-center bg-gray-50 p-3 rounded-lg border border-gray-200"
+                                variants={itemVariants}
+                              >
+                                <input
+                                  type="checkbox"
+                                  checked={checkedIngredients[index]}
+                                  onChange={() => handleCheckboxChange(index)}
+                                  className="mr-3 h-4 w-4 text-teal-500 focus:ring-teal-500"
+                                  aria-label={`Check ${item.name}`}
+                                />
+                                <span className="flex-1 text-gray-900">{item.name}</span>
+                                <span className="text-gray-600 text-sm">
+                                  {item.quantity} {item.unit}
+                                </span>
+                              </motion.li>
+                            ))}
+                          </motion.ul>
+                          <motion.button
+                            onClick={() => setShowMap(!showMap)}
+                            className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-teal-500 text-white rounded-lg text-sm font-medium hover:bg-teal-600 transition-colors"
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                          >
+                            <FaMapMarkerAlt /> {showMap ? "Hide Nearby Stores" : "Show Nearby Stores"}
+                          </motion.button>
+                          {showMap && userLocation && (
+                            <motion.div
+                              initial={{ opacity: 0, height: 0 }}
+                              animate={{ opacity: 1, height: "auto" }}
+                              exit={{ opacity: 0, height: 0 }}
+                              transition={{ duration: 0.3 }}
                             >
-                              <span className="font-medium text-primary-main">{item.name}</span>
-                              <span className="text-neutral-600">
-                                {item.quantity} {item.unit}
-                              </span>
-                            </motion.li>
-                          ))}
-                        </motion.ul>
+                              <MapContainer
+                                center={[userLocation.lat, userLocation.lng]}
+                                zoom={14}
+                                style={mapContainerStyle}
+                              >
+                                <TileLayer
+                                  url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                                  attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                                />
+                                <Marker position={[userLocation.lat, userLocation.lng]}>
+                                  <Popup>You are here</Popup>
+                                </Marker>
+                                {nearbyStores.map((store) => (
+                                  <Marker
+                                    key={store.id}
+                                    position={[store.lat, store.lng]}
+                                  >
+                                    <Popup>{store.name}</Popup>
+                                  </Marker>
+                                ))}
+                              </MapContainer>
+                            </motion.div>
+                          )}
+                        </motion.div>
                       )}
                     </motion.div>
                   </motion.div>
@@ -627,6 +935,25 @@ const Profile = () => {
           )}
         </section>
       </main>
+
+      {/* Mobile Bottom Navigation */}
+      <nav className="fixed bottom-0 left-0 right-0 bg-white shadow-lg p-4 flex justify-around lg:hidden">
+        {sections.map((section) => (
+          <motion.button
+            key={section.id}
+            onClick={() => setActiveSection(section.id)}
+            className={`flex flex-col items-center text-sm ${
+              activeSection === section.id ? "text-teal-500" : "text-gray-600"
+            }`}
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.95 }}
+            aria-label={section.label}
+          >
+            {section.icon}
+            <span className="mt-1">{section.label}</span>
+          </motion.button>
+        ))}
+      </nav>
     </div>
   );
 };
