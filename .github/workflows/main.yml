@@ -49,7 +49,7 @@ jobs:
         if [ -d "backend" ]; then
           cd backend
         fi
-        python manage.py cleanup_mealplans --verbosity 2
+        python manage.py cleanup_expired_mealplans --verbosity 2
 
     - name: Log completion time
       if: always()  # Run even if previous steps failed
