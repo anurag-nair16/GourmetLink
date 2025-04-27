@@ -18,31 +18,6 @@ L.Icon.Default.mergeOptions({
   shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
 });
 
-// Cache TTL: 5 minutes
-const CACHE_TTL = 5 * 60 * 1000;
-
-// Helper functions for localStorage cache
-const getCachedData = (key) => {
-  const cached = localStorage.getItem(key);
-  if (cached) {
-    const { data, timestamp } = JSON.parse(cached);
-    if (Date.now() - timestamp < CACHE_TTL) {
-      console.log(`Using cached ${key} from localStorage`);
-      return data;
-    } else {
-      console.log(`Cache expired for ${key}`);
-      localStorage.removeItem(key);
-    }
-  }
-  return null;
-};
-
-const setCachedData = (key, data) => {
-  const cacheEntry = { data, timestamp: Date.now() };
-  localStorage.setItem(key, JSON.stringify(cacheEntry));
-  console.log(`Cached ${key} in localStorage`);
-};
-
 const Profile = () => {
   const [profileData, setProfileData] = useState(null);
   const [userRecipes, setUserRecipes] = useState([]);
@@ -66,15 +41,6 @@ const Profile = () => {
   useEffect(() => {
     const fetchProfileData = async () => {
       const token = localStorage.getItem("token");
-      const cachedProfile = getCachedData("profile_data");
-      if (cachedProfile) {
-        setProfileData(cachedProfile.profile);
-        setUserRecipes(cachedProfile.recipes);
-        setFavouriteRecipes(cachedProfile.favourites);
-        setMealPlans(cachedProfile.mealPlans);
-        setLoading(false);
-        return;
-      }
 
       try {
         const [profileResponse, recipesResponse, favouritesResponse, mealPlansResponse] = await Promise.all([
@@ -84,18 +50,10 @@ const Profile = () => {
           axios.get(`${process.env.REACT_APP_API_URL}/features/mealplans/`, { headers: { Authorization: `Bearer ${token}` } }),
         ]);
 
-        const profileData = {
-          profile: profileResponse.data,
-          recipes: recipesResponse.data,
-          favourites: favouritesResponse.data,
-          mealPlans: mealPlansResponse.data,
-        };
-
         setProfileData(profileResponse.data);
         setUserRecipes(recipesResponse.data);
         setFavouriteRecipes(favouritesResponse.data);
         setMealPlans(mealPlansResponse.data);
-        setCachedData("profile_data", profileData);
         setLoading(false);
       } catch (error) {
         console.error("Error fetching profile data:", error);
@@ -153,14 +111,6 @@ const Profile = () => {
 
   const fetchIngredients = async (planId) => {
     const token = localStorage.getItem("token");
-    const cachedData = getCachedData(`ingredients_${planId}`);
-    if (cachedData) {
-      setIngredients(cachedData);
-      setCheckedIngredients(cachedData.map(() => false));
-      setShowIngredients(true);
-      return;
-    }
-
     setLoadingIngredients(true);
     setShowIngredients(true);
     try {
@@ -169,7 +119,6 @@ const Profile = () => {
         { headers: { Authorization: `Bearer ${token}` } }
       );
       const ingredientsData = response.data.items;
-      setCachedData(`ingredients_${planId}`, ingredientsData);
       setIngredients(ingredientsData);
       setCheckedIngredients(ingredientsData.map(() => false));
     } catch (error) {
@@ -909,7 +858,7 @@ const Profile = () => {
                               >
                                 <TileLayer
                                   url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                                  attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                                  attribution='© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                                 />
                                 <Marker position={[userLocation.lat, userLocation.lng]}>
                                   <Popup>You are here</Popup>
