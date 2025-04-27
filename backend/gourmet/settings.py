@@ -15,7 +15,28 @@ from datetime import timedelta
 import os
 from dotenv import load_dotenv
 import dj_database_url
+# settings.py
+from celery.schedules import crontab
 
+# Add Celery settings (add these at the bottom of settings.py)
+CELERY_BROKER_URL = os.getenv('REDIS_URL', 'redis://localhost:6379/0')
+CELERY_RESULT_BACKEND = 'django-db'
+CELERY_ACCEPT_CONTENT = ['application/json']
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+CELERY_TIMEZONE = 'UTC'
+
+# Update your existing CELERY_BEAT_SCHEDULE to match your app name
+CELERY_BEAT_SCHEDULE = {
+    'cleanup-expired-mealplans': {
+        'task': 'features.tasks.cleanup_expired_mealplans',  # Update this to match your app name
+        'schedule': crontab(hour=0, minute=0),
+    },
+    'notify-expiring-soon': {
+        'task': 'features.tasks.notify_expiring_soon',  # Update this to match your app name
+        'schedule': crontab(hour=9, minute=0),
+    },
+}
 # Load environment variables from .env file
 load_dotenv()
 
@@ -46,6 +67,8 @@ INSTALLED_APPS = [
     'cloudinary_storage',
     'features',
     'recipe_generator',
+    'django_celery_beat',
+    'django_celery_results',
 ]
 
 REST_FRAMEWORK = {
