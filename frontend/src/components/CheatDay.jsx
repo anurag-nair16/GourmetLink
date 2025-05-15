@@ -1,80 +1,26 @@
-import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Link } from 'react-router-dom';
-import { FaMapMarkerAlt, FaSpinner, FaArrowRight } from 'react-icons/fa';
-import axios from 'axios';
-import CryptoJS from 'crypto-js';
-import debounce from 'lodash/debounce';
+import React, { useState, useRef, useEffect, useCallback } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import axios from "axios";
+import debounce from "lodash/debounce";
 
 const CheatDay = ({ recipe }) => {
   const [restaurants, setRestaurants] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [location, setLocation] = useState(() => {
-    const cached = localStorage.getItem('cheatDayLocation');
+    const cached = localStorage.getItem("cheatDayLocation");
     return cached ? JSON.parse(cached) : null;
   });
   const [showConsent, setShowConsent] = useState(false);
-  const [searchQuery, setSearchQuery] = useState(recipe ? recipe.cuisine || recipe.name : '');
+  const [searchQuery, setSearchQuery] = useState(
+    recipe ? recipe.cuisine || recipe.name : ""
+  );
   const [suggestions, setSuggestions] = useState([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
-  const [loadingText, setLoadingText] = useState('Finding tasty spots...');
   const inputRef = useRef(null);
   const dropdownRef = useRef(null);
 
-  // Zomato-inspired loading messages
-  const loadingMessages = [
-    'Finding tasty spots...',
-    'Hangry? We’re on it!',
-    'Searching for deliciousness...',
-    'Chasing the best eats...',
-    'Your cheat day awaits!',
-  ];
-
-  // Rotate loading messages
-  useEffect(() => {
-    if (!loading) return;
-    const interval = setInterval(() => {
-      setLoadingText(prev => {
-        const currentIndex = loadingMessages.indexOf(prev);
-        return loadingMessages[(currentIndex + 1) % loadingMessages.length];
-      });
-    }, 2000);
-    return () => clearInterval(interval);
-  }, [loading]);
-
-  // Generate OAuth 1.0a signature for FatSecret API
-  const generateOAuthSignature = (method, url, params) => {
-    const consumerKey = process.env.REACT_APP_FATSECRET_CLIENT_ID;
-    const consumerSecret = process.env.REACT_APP_FATSECRET_CLIENT_SECRET;
-    const nonce = Math.random().toString(36).substring(2);
-    const timestamp = Math.floor(Date.now() / 1000);
-
-    const baseParams = {
-      ...params,
-      oauth_consumer_key: consumerKey,
-      oauth_nonce: nonce,
-      oauth_signature_method: 'HMAC-SHA1',
-      oauth_timestamp: timestamp,
-      oauth_version: '1.0',
-    };
-
-    const sortedParams = Object.keys(baseParams)
-      .sort()
-      .map(key => `${encodeURIComponent(key)}=${encodeURIComponent(baseParams[key])}`)
-      .join('&');
-
-    const baseString = `${method}&${encodeURIComponent(url)}&${encodeURIComponent(sortedParams)}`;
-    const signingKey = `${encodeURIComponent(consumerSecret)}&`;
-    const signature = CryptoJS.HmacSHA1(baseString, signingKey).toString(CryptoJS.enc.Base64);
-
-    return {
-      ...baseParams,
-      oauth_signature: signature,
-    };
-  };
-
-  // Fetch autocomplete suggestions from FatSecret API
+  // Fetch autocomplete suggestions
   const fetchSuggestions = useCallback(
     debounce(async (query) => {
       if (!query.trim()) {
@@ -82,25 +28,24 @@ const CheatDay = ({ recipe }) => {
         setShowSuggestions(false);
         return;
       }
-
       try {
-        const url = 'https://platform.fatsecret.com/rest/server.api';
-        const params = {
-          method: 'foods.search',
-          search_expression: query,
-          format: 'json',
-          max_results: 10,
-        };
-
-        const oauthParams = generateOAuthSignature('GET', url, params);
-        const response = await axios.get(url, { params: oauthParams });
-
-        const foods = response.data.foods?.food || [];
-        const suggestionNames = foods.map(food => food.food_name);
+        const response = await axios.get(
+          "https://trackapi.nutritionix.com/v2/search/instant",
+          {
+            params: { query, common: true },
+            headers: {
+              "x-app-id": process.env.REACT_APP_NUTRITIONIX_APP_ID,
+              "x-app-key": process.env.REACT_APP_NUTRITIONIX_API_KEY,
+            },
+          }
+        );
+        const suggestionNames = (response.data.common || []).map(
+          (item) => item.food_name
+        );
         setSuggestions(suggestionNames);
         setShowSuggestions(suggestionNames.length > 0);
       } catch (err) {
-        console.error('FatSecret autocomplete error:', err);
+        console.error("Nutritionix autocomplete error:", err);
         setSuggestions([]);
         setShowSuggestions(false);
       }
@@ -125,16 +70,15 @@ const CheatDay = ({ recipe }) => {
         setShowSuggestions(false);
       }
     };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
   const handleGetRestaurants = async () => {
     if (!searchQuery.trim()) {
-      setError('Please enter a cuisine or dish.');
+      setError("Please enter a cuisine or dish.");
       return;
     }
-
     if (location) {
       fetchRestaurants(location.latitude, location.longitude);
     } else {
@@ -147,23 +91,22 @@ const CheatDay = ({ recipe }) => {
     setLoading(true);
     setError(null);
     setRestaurants([]);
-
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         async (position) => {
           const { latitude, longitude } = position.coords;
           const newLocation = { latitude, longitude };
           setLocation(newLocation);
-          localStorage.setItem('cheatDayLocation', JSON.stringify(newLocation));
+          localStorage.setItem("cheatDayLocation", JSON.stringify(newLocation));
           fetchRestaurants(latitude, longitude);
         },
         (err) => {
-          setError('Location access denied. Please enable location services.');
+          setError("Location access denied. Please enable location services.");
           setLoading(false);
         }
       );
     } else {
-      setError('Geolocation is not supported by your browser.');
+      setError("Geolocation is not supported by your browser.");
       setLoading(false);
     }
   };
@@ -172,22 +115,23 @@ const CheatDay = ({ recipe }) => {
     setLoading(true);
     setRestaurants([]);
     setError(null);
-
     try {
-      const response = await fetch(`${process.env.REACT_APP_API_URL}/features/cheat-day/`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          cuisine: '',
-          dish: searchQuery.trim(),
-          latitude,
-          longitude,
-        }),
-      });
-
+      const response = await fetch(
+        `${process.env.REACT_APP_API_URL}/features/cheat-day/`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            cuisine: "",
+            dish: searchQuery.trim(),
+            latitude,
+            longitude,
+          }),
+        }
+      );
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to fetch restaurants');
+        throw new Error(errorData.error || "Failed to fetch restaurants");
       }
       const data = await response.json();
       setRestaurants(data.restaurants || []);
@@ -208,71 +152,84 @@ const CheatDay = ({ recipe }) => {
     setShowSuggestions(true);
   };
 
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: { staggerChildren: 0.2 },
-    },
-  };
-
-  const cardVariants = {
-    hidden: { opacity: 0, y: 30 },
-    visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: 'easeOut' } },
-    hover: { y: -5, boxShadow: '0 10px 20px rgba(0, 0, 0, 0.15)', transition: { duration: 0.2 } },
-  };
-
-  const suggestionVariants = {
-    hidden: { opacity: 0, y: -10 },
-    visible: { opacity: 1, y: 0, transition: { duration: 0.3, ease: 'easeOut' } },
-  };
-
-  const loadingVariants = {
-    hidden: { opacity: 0, scale: 0.8 },
-    visible: { opacity: 1, scale: 1, transition: { duration: 0.5 } },
-    exit: { opacity: 0, scale: 0.8, transition: { duration: 0.3 } },
-  };
-
   return (
-    <div className="py-12 bg-gradient-to-b from-gray-50 to-white font-sans">
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-        <motion.div
-          initial={{ opacity: 0, y: 50 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, ease: 'easeOut' }}
-          className="text-center mb-12"
-        >
-          <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4 tracking-tight">
-            Your Cheat Day Adventure Awaits
-          </h2>
-          <p className="text-lg text-gray-600 max-w-2xl mx-auto mb-6 font-medium">
-            Discover top-rated restaurants serving your favorite cuisine or dish, anywhere.
+    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 font-sans">
+      {/* Hero Section */}
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-16">
+        <div className="max-w-2xl mx-auto text-center">
+          <h1 className="text-4xl font-bold text-gray-900 mb-4">
+            Discover Your Perfect Cheat Meal
+          </h1>
+          <p className="text-lg text-gray-600 mb-8">
+            Find the best restaurants near you for your favorite cuisine or dish.
           </p>
-          <div className="relative max-w-lg mx-auto">
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={handleInputChange}
-              placeholder="Craving something? (e.g., Sushi, Spicy Noodles)"
-              className="w-full px-5 py-3 bg-white border border-gray-200 rounded-full focus:outline-none focus:ring-2 focus:ring-orange-400 text-gray-900 text-base shadow-sm hover:shadow-md transition-shadow duration-300"
-              ref={inputRef}
-              onFocus={() => searchQuery.trim() && setShowSuggestions(suggestions.length > 0)}
-            />
+          <div className="relative max-w-xl mx-auto">
+            <div className="flex items-center bg-white rounded-full shadow-lg p-2">
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={handleInputChange}
+                placeholder="What are you craving? (e.g., Pizza, Sushi)"
+                className="flex-1 px-4 py-3 text-gray-700 focus:outline-none rounded-l-full"
+                ref={inputRef}
+              />
+              <button
+                onClick={handleGetRestaurants}
+                className="bg-orange-500 text-white px-6 py-3 rounded-full hover:bg-orange-600 transition flex items-center"
+              >
+                {loading ? (
+                  <svg
+                    className="animate-spin h-5 w-5 mr-2 text-white"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    ></circle>
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8v8h8a8 8 0 01-16 0z"
+                    ></path>
+                  </svg>
+                ) : (
+                  <svg
+                    className="h-5 w-5 mr-2"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth="2"
+                      d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                    ></path>
+                  </svg>
+                )}
+                Search
+              </button>
+            </div>
             <AnimatePresence>
               {showSuggestions && suggestions.length > 0 && (
                 <motion.ul
-                  initial="hidden"
-                  animate="visible"
-                  exit="hidden"
-                  variants={containerVariants}
-                  className="absolute z-20 w-full mt-2 bg-white border border-gray-200 rounded-lg shadow-xl max-h-64 overflow-y-auto"
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  className="absolute z-50 mt-2 w-full bg-white border border-gray-200 rounded-lg shadow-xl max-h-60 overflow-y-auto"
                   ref={dropdownRef}
                 >
                   {suggestions.map((suggestion, index) => (
                     <motion.li
                       key={index}
-                      variants={suggestionVariants}
-                      className="px-5 py-3 text-gray-700 hover:bg-orange-50 hover:text-orange-600 cursor-pointer text-base transition-colors duration-200"
+                      className="px-4 py-3 text-gray-700 hover:bg-orange-50 cursor-pointer transition"
                       onClick={() => handleSelectSuggestion(suggestion)}
                     >
                       {suggestion}
@@ -282,123 +239,88 @@ const CheatDay = ({ recipe }) => {
               )}
             </AnimatePresence>
           </div>
-          <button
-            onClick={handleGetRestaurants}
-            className="mt-6 px-8 py-3 bg-orange-500 text-white rounded-full font-semibold hover:bg-orange-600 focus:ring-4 focus:ring-orange-200 text-base shadow-lg hover:shadow-xl transition-all duration-300"
-          >
-            Find Restaurants <FaMapMarkerAlt className="ml-2 inline" />
-          </button>
-        </motion.div>
-
-        <AnimatePresence>
+          {error && <p className="mt-4 text-red-500 text-sm">{error}</p>}
           {showConsent && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 bg-black/60 flex items-center justify-center z-50"
-              key="consent-popup"
-            >
-              <motion.div
-                initial={{ scale: 0.8, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                exit={{ scale: 0.8, opacity: 0 }}
-                className="bg-white p-8 rounded-2xl shadow-2xl max-w-md w-full mx-4"
+            <div className="mt-6 p-4 bg-white rounded-lg shadow-lg">
+              <p className="text-gray-700 mb-4">
+                We need your location to find nearby restaurants.
+              </p>
+              <button
+                onClick={requestLocation}
+                className="bg-orange-500 text-white px-4 py-2 rounded-full hover:bg-orange-600 transition"
               >
-                <h3 className="text-2xl font-semibold text-gray-900 mb-4">
-                  We Need Your Location
-                </h3>
-                <p className="text-gray-600 mb-6 text-base">
-                  To find the best restaurants near you, please allow location access. We’ll only use it for this search and won’t store it.
-                </p>
-                <div className="flex justify-end gap-4">
-                  <button
-                    onClick={() => setShowConsent(false)}
-                    className="px-4 py-2 text-gray-600 font-medium hover:text-gray-800 text-base"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    onClick={requestLocation}
-                    className="px-6 py-2 bg-orange-500 text-white rounded-full font-semibold hover:bg-orange-600 text-base"
-                  >
-                    Allow
-                  </button>
-                </div>
-              </motion.div>
-            </motion.div>
+                Allow Location Access
+              </button>
+            </div>
           )}
-        </AnimatePresence>
+        </div>
+      </div>
 
-        <AnimatePresence>
-          {loading && (
-            <motion.div
-              initial="hidden"
-              animate="visible"
-              exit="exit"
-              variants={loadingVariants}
-              className="fixed inset-0 bg-white/90 flex flex-col items-center justify-center z-40"
-              key="loading-screen"
-            >
-              <FaSpinner className="text-5xl text-orange-500 animate-spin mb-4" />
-              <motion.p
-                animate={{ opacity: [1, 0.5, 1] }}
-                transition={{ repeat: Infinity, duration: 2 }}
-                className="text-xl font-medium text-gray-800"
-              >
-                {loadingText}
-              </motion.p>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        {error && (
-          <motion.p
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="text-red-500 text-center mb-6 text-base font-medium"
-          >
-            {error}
-          </motion.p>
-        )}
-
-        {restaurants.length > 0 && (
-          <motion.div
-            variants={containerVariants}
-            initial="hidden"
-            animate="visible"
-            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
-          >
+      {/* Restaurants Section */}
+      {restaurants.length > 0 && (
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 pb-16">
+          <h2 className="text-2xl font-semibold text-gray-900 mb-8">
+            Nearby Restaurants
+          </h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {restaurants.map((restaurant, index) => (
               <motion.div
                 key={index}
-                variants={cardVariants}
-                whileHover="hover"
-                className="bg-white p-6 rounded-xl shadow-md border border-orange-100 relative overflow-hidden"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.1 }}
+                className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition"
               >
-                <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-orange-500 to-orange-300" />
-                <h3 className="text-lg font-semibold text-gray-900 mb-2 truncate">
-                  {restaurant.name}
-                </h3>
-                <p className="text-gray-600 text-sm mb-1">
-                  Rating: {restaurant.rating} / 5 ({restaurant.user_ratings_total} reviews)
-                </p>
-                <p className="text-gray-600 text-sm mb-4 line-clamp-2">
-                  {restaurant.vicinity}
-                </p>
-                <a
-                  href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(restaurant.name + ' ' + restaurant.vicinity)}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center text-orange-500 font-medium hover:text-orange-600 text-sm"
-                >
-                  View on Map <FaArrowRight className="ml-2" />
-                </a>
+                <div className="p-6">
+                  <h3 className="text-lg font-semibold text-gray-900 truncate">
+                    {restaurant.name}
+                  </h3>
+                  <div className="flex items-center mt-2">
+                    <svg
+                      className="h-5 w-5 text-yellow-400"
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                    >
+                      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                    </svg>
+                    <p className="ml-1 text-sm text-gray-600">
+                      {restaurant.rating} / 5 ({restaurant.user_ratings_total}{" "}
+                      reviews)
+                    </p>
+                  </div>
+                  <p className="mt-2 text-sm text-gray-500 truncate">
+                    {restaurant.vicinity}
+                  </p>
+                  <a
+                    href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+                      restaurant.name + " " + restaurant.vicinity
+                    )}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="mt-4 inline-flex items-center text-orange-500 hover:text-orange-600 text-sm font-medium"
+                  >
+                    View on Map
+                    <svg
+                      className="ml-1 h-4 w-4"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                        d="M9 5l7 7-7 7"
+                      ></path>
+                    </svg>
+                  </a>
+                </div>
               </motion.div>
             ))}
-          </motion.div>
-        )}
-      </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

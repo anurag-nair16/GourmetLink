@@ -333,7 +333,7 @@ const Profile = () => {
       </motion.aside>
 
       {/* Main Content */}
-      <main className="lg:ml-64 p-4 sm:p-6 min-h-screen">
+      <main className="lg:ml-64 p-4 sm:p-6 min-h-screen pb-[80px] lg:pb-0">
         {/* Mobile Header */}
         <header className="lg:hidden flex items-center justify-between mb-6">
           <div className="w-6"></div>

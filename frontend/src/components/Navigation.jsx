@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FaUtensils, FaCalendarAlt, FaMagic, FaPlus, FaTimes } from 'react-icons/fa';
+import { FaUtensils, FaCalendarAlt, FaMagic, FaPlus, FaTimes, FaSearch } from 'react-icons/fa';
 
 const Navigation = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -30,10 +30,17 @@ const Navigation = () => {
       description: 'Generate custom recipes from your available ingredients',
       color: 'bg-purple-500',
     },
+    {
+      path: '/cheat-day',
+      name: 'Cheat Day',
+      icon: FaSearch,
+      description: 'Find nearby restaurants for your favorite dishes',
+      color: 'bg-orange-500',
+    },
   ];
 
   const buttonSize = 56; // Floating button size (w-14 h-14 = 56px)
-  const radius = 90; // Radius of the concentric circle
+  const radius = 105; // Radius of the concentric circle
   // Top-left quarter (90° to 180°, i.e., from π/2 to π radians)
   const startAngle = Math.PI / 2; // 90° (top)
   const endAngle = Math.PI; // 180° (left)
@@ -109,19 +116,23 @@ const Navigation = () => {
                           exit={{ opacity: 0, y: 10 }}
                           className="absolute z-[100] w-48"
                           style={{
-                            // Custom positioning based on index with increased offsets
+                            // Custom positioning for tooltips based on index
                             top:
                               index === 0
-                                ? 'calc(-160% - 60px)' // More above for Submit Recipe
+                                ? 'calc(-160% - 60px)' // Submit Recipe (topmost)
                                 : index === 1
-                                ? 'calc(-120% - 50px)' // More above for Meal Plan
-                                : 'calc(-100% - 10px)', // Standard above for Recipe Generator
+                                ? 'calc(-120% - 50px)' // Meal Plan
+                                : index === 2
+                                ? 'calc(-100% - 40px)' // Recipe Generator
+                                : 'calc(-80% - 30px)', // Cheat Day (leftmost)
                             left:
                               index === 0
-                                ? 'calc(-80% - 80px)' // More left for Submit Recipe
+                                ? 'calc(-80% - 80px)' // Submit Recipe
                                 : index === 1
-                                ? 'calc(-190% - 40px)' // More left for Meal Plan
-                                : 'calc(-220% - 100px)', // More left for Recipe Generator
+                                ? 'calc(-190% - 40px)' // Meal Plan
+                                : index === 2
+                                ? 'calc(-220% - 100px)' // Recipe Generator
+                                : 'calc(-240% - 120px)', // Cheat Day
                             transform: 'translateX(0)', // Reset transform for custom positioning
                           }}
                         >
@@ -137,10 +148,12 @@ const Navigation = () => {
                               style={{
                                 left:
                                   index === 0
-                                    ? '70%' // Adjust arrow for Submit Recipe
+                                    ? '70%' // Submit Recipe
                                     : index === 1
-                                    ? '80%' // Adjust arrow for Meal Plan
-                                    : '40%', // Adjust arrow for Recipe Generator
+                                    ? '80%' // Meal Plan
+                                    : index === 2
+                                    ? '40%' // Recipe Generator
+                                    : '30%', // Cheat Day
                               }}
                             ></div>
                           </div>
@@ -176,4 +189,4 @@ const Navigation = () => {
   );
 };
 
-export default Navigation;
+export default Navigation;  
