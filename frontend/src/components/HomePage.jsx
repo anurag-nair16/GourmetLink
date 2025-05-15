@@ -1,14 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import {
-  FaUtensils,
-  FaSearch,
-  FaHeart,
-  FaUserFriends,
-  FaArrowRight,
-  FaQuoteLeft,
-} from 'react-icons/fa';
+import { FaUtensils, FaCamera, FaListAlt, FaShoppingCart, FaMapMarkerAlt, FaArrowRight } from 'react-icons/fa';
 
 import italianImage from '../assets/images/italian.jpeg';
 import japaneseImage from '../assets/images/japanese.jpeg';
@@ -25,16 +18,19 @@ import seafoodImage from '../assets/images/seafood.jpeg';
 
 const Home = () => {
   const [isPageLoaded, setIsPageLoaded] = useState(false);
-  const [showModal, setShowModal] = useState(false);
+  const [scrollPosition, setScrollPosition] = useState(0);
   const [hoveredCuisine, setHoveredCuisine] = useState(null);
+  const containerRef = useRef(null);
 
   useEffect(() => {
     setIsPageLoaded(true);
-    const hasVisited = localStorage.getItem('hasVisited');
-    if (!hasVisited) {
-      setTimeout(() => setShowModal(true), 2000);
-      localStorage.setItem('hasVisited', 'true');
-    }
+    const interval = setInterval(() => {
+      if (containerRef.current) {
+        const maxScroll = containerRef.current.scrollWidth - containerRef.current.clientWidth;
+        setScrollPosition((prev) => (prev >= maxScroll ? 0 : prev + 1));
+      }
+    }, 30);
+    return () => clearInterval(interval);
   }, []);
 
   const cuisineImages = [
@@ -54,136 +50,77 @@ const Home = () => {
 
   const features = [
     {
-      icon: <FaUtensils className="text-4xl text-orange-500" />,
-      title: 'Share Recipes',
-      description: 'Showcase your culinary creations with vibrant photos and step-by-step guides.',
+      icon: <FaUtensils className="text-5xl text-orange-500" />,
+      title: 'Share & Discover Recipes',
+      description: 'Upload your culinary creations and explore a world of recipes from global food enthusiasts.',
     },
     {
-      icon: <FaSearch className="text-4xl text-orange-500" />,
-      title: 'Discover',
-      description: 'Uncover authentic recipes from chefs and home cooks worldwide.',
+      icon: <FaCamera className="text-5xl text-orange-500" />,
+      title: 'AI Ingredient Scanner',
+      description: 'Snap a photo of your ingredients, and our AI suggests personalized recipes based on your preferences.',
     },
     {
-      icon: <FaHeart className="text-4xl text-orange-500" />,
-      title: 'Save Favorites',
-      description: 'Build your personal recipe library for every mood and moment.',
+      icon: <FaListAlt className="text-5xl text-orange-500" />,
+      title: 'Smart Meal Planning',
+      description: 'Create or let our AI assistant generate meal plans using community recipes, tailored to your needs.',
     },
     {
-      icon: <FaUserFriends className="text-4xl text-orange-500" />,
-      title: 'Community',
-      description: 'Engage with food lovers, swap tips, and join tasty challenges.',
+      icon: <FaShoppingCart className="text-5xl text-orange-500" />,
+      title: 'Shop Ingredients',
+      description: 'Get a shopping list for your meal plan and find nearby stores to purchase ingredients.',
+    },
+    {
+      icon: <FaMapMarkerAlt className="text-5xl text-orange-500" />,
+      title: 'Cheat Day Adventures',
+      description: 'Indulge with top-rated restaurants nearby offering your favorite dishes or cuisines.',
     },
   ];
 
-  const testimonials = [
-    {
-      quote: "This platform transformed my cooking game—endless inspiration!",
-      author: "Emma L., Home Cook",
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.2,
+      },
     },
-    {
-      quote: "Connecting with foodies globally has been a delight.",
-      author: "Raj S., Culinary Enthusiast",
-    },
-    {
-      quote: "The best place to share and discover unique recipes.",
-      author: "Sophie M., Chef",
-    },
-  ];
-
-  const modalVariants = {
-    hidden: { opacity: 0, scale: 0.95 },
-    visible: { opacity: 1, scale: 1, transition: { duration: 0.5, ease: 'easeOut' } },
-    exit: { opacity: 0, scale: 0.95, transition: { duration: 0.3 } },
   };
 
-  // Simple scrolling effect for cuisine images
-  const [scrollPosition, setScrollPosition] = useState(0);
-  const containerRef = useRef(null);
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      if (containerRef.current) {
-        const maxScroll = containerRef.current.scrollWidth - containerRef.current.clientWidth;
-        setScrollPosition((prev) => (prev >= maxScroll ? 0 : prev + 1));
-      }
-    }, 30);
-    return () => clearInterval(interval);
-  }, []);
+  const cardVariants = {
+    hidden: { opacity: 0, y: 50 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: {
+        duration: 0.6,
+        ease: 'easeOut',
+      },
+    },
+    hover: {
+      y: -10,
+      boxShadow: '0 10px 20px rgba(0, 0, 0, 0.1)',
+      transition: {
+        duration: 0.3,
+      },
+    },
+  };
 
   return (
-    <div className="min-h-screen bg-white text-gray-800 overflow-x-hidden">
-      {/* Welcome Modal */}
-      <AnimatePresence>
-        {showModal && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm"
-          >
-            <motion.div
-              variants={modalVariants}
-              initial="hidden"
-              animate="visible"
-              exit="exit"
-              className="bg-white rounded-lg overflow-hidden max-w-lg w-full shadow-xl"
-            >
-              <div className="relative h-48 overflow-hidden">
-                <img
-                  src="https://images.unsplash.com/photo-1543352634-99a5d50ae78e?ixlib=rb-1.2.1"
-                  alt="Food collage"
-                  className="w-full h-full object-cover"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
-                <button
-                  onClick={() => setShowModal(false)}
-                  className="absolute top-4 right-4 w-8 h-8 rounded-full bg-white/80 flex items-center justify-center text-gray-800 hover:bg-white transition-all duration-300"
-                >
-                  ✕
-                </button>
-              </div>
-              <div className="p-8 text-center">
-                <h3 className="text-2xl font-bold text-gray-900 mb-4">
-                  Welcome to Culinary Connect
-                </h3>
-                <p className="text-gray-600 mb-6">
-                  Discover, create, and connect with a global community of food enthusiasts.
-                </p>
-                <div className="flex justify-center gap-4">
-                  <Link
-                    to="/signup"
-                    className="px-6 py-2 bg-orange-500 text-white rounded-md font-medium hover:bg-orange-600 transition-all duration-300 shadow-sm"
-                    onClick={() => setShowModal(false)}
-                  >
-                    Get Started
-                  </Link>
-                  <button
-                    onClick={() => setShowModal(false)}
-                    className="px-6 py-2 bg-white text-orange-500 border border-orange-500 rounded-md hover:bg-orange-50 transition-all duration-300"
-                  >
-                    Explore Now
-                  </button>
-                </div>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
+    <div className="min-h-screen bg-gray-50 text-gray-900 font-sans">
       {/* Hero Section */}
       <motion.section
         initial={{ opacity: 0 }}
         animate={{ opacity: isPageLoaded ? 1 : 0 }}
         transition={{ duration: 1 }}
-        className="relative min-h-screen flex items-center justify-center bg-white"
+        className="relative min-h-screen flex items-center justify-center bg-gradient-to-br from-orange-100 to-white overflow-hidden"
       >
-        <div className="absolute inset-0 z-0 opacity-20">
+        <div className="absolute inset-0 z-0">
           <video
             autoPlay
             loop
             muted
             playsInline
-            className="w-full h-full object-cover"
+            className="w-full h-full object-cover opacity-20"
           >
             <source
               src="/videos/mixkit-preparing-a-bowl-with-yogurt-and-fruit-43925-full-hd.mp4"
@@ -191,127 +128,126 @@ const Home = () => {
             />
           </video>
         </div>
-        
-        <div className="container mx-auto px-6 relative z-10 py-20">
-          <div className="flex flex-col lg:flex-row items-center justify-center text-center lg:text-center">
-            <div className="lg:w-1/2 mb-12 lg:mb-0">
-              <motion.h1
-                initial={{ opacity: 0, y: 30 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.3, duration: 0.8 }}
-                className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 mb-6 leading-tight text-center"
-              >
-                Discover & Share
-                <span className="block text-orange-500">Exceptional Recipes</span>
-              </motion.h1>
-              <motion.p
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.5, duration: 0.8 }}
-                className="text-lg text-gray-600 mb-8 max-w-lg mx-auto"
-              >
-                Connect with a global community of culinary enthusiasts. Find inspiration, share your creations, and elevate your cooking experience.
-              </motion.p>
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.7, duration: 0.8 }}
-                className="flex flex-col lg:flex-row gap-4 justify-center"
-              >
+        <div className="container mx-auto px-6 relative z-10 py-16">
+          <div className="flex flex-col lg:flex-row items-center justify-between">
+            <motion.div
+              initial={{ opacity: 0, x: -50 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.8 }}
+              className="lg:w-1/2 text-center lg:text-left"
+            >
+              <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold text-gray-900 mb-6 leading-tight">
+                Cook, Share, & Savor
+                <span className="block text-orange-500">Your Culinary Journey</span>
+              </h1>
+              <p className="text-lg text-gray-700 mb-8 max-w-md mx-auto lg:mx-0">
+                Join a vibrant community to share recipes, get AI-driven nutritional insights, plan meals, and explore local dining for your cheat days.
+              </p>
+              <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
                 <Link
-                  to="/submit-recipe"
-                  className="px-6 py-3 bg-orange-500 text-white rounded-md font-medium hover:bg-orange-600 transition-all duration-300 shadow-md flex items-center justify-center"
+                  to="/signup"
+                  className="px-8 py-3 bg-orange-500 text-white rounded-full font-semibold hover:bg-orange-600 transition-all duration-300 shadow-lg"
                 >
-                  Start Cooking
-                  <FaArrowRight className="ml-2" />
+                  Get Started
                 </Link>
                 <Link
                   to="/posts"
-                  className="px-6 py-3 bg-white border border-orange-500 text-orange-500 rounded-md font-medium hover:bg-orange-50 transition-all duration-300"
+                  className="px-8 py-3 bg-white text-orange-500 border-2 border-orange-500 rounded-full font-semibold hover:bg-orange-50 transition-all duration-300"
                 >
-                  Discover Now
+                  Explore Recipes
                 </Link>
-              </motion.div>
-            </div>
-            <div className="lg:w-1/2 mt-12 lg:mt-0">
-              <motion.div
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ delay: 0.5, duration: 0.8 }}
-                className="relative rounded-lg overflow-hidden shadow-2xl"
-              >
+              </div>
+            </motion.div>
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.8, delay: 0.2 }}
+              className="lg:w-1/2 mt-12 lg:mt-0"
+            >
+              <div className="relative">
                 <img
                   src="https://images.unsplash.com/photo-1504674900247-0877df9cc836"
-                  alt="Culinary masterpiece"
-                  className="w-full h-auto object-cover"
+                  alt="Culinary dish"
+                  className="w-full h-auto rounded-2xl shadow-2xl"
                 />
-              </motion.div>
-            </div>
+                <div className="absolute -bottom-4 -right-4 bg-orange-500 text-white px-6 py-2 rounded-full font-semibold">
+                  Discover Now
+                </div>
+              </div>
+            </motion.div>
           </div>
         </div>
       </motion.section>
 
       {/* Features Section */}
-      <section className="py-20 bg-gray-50">
+      <section className="py-24 bg-white">
         <div className="container mx-auto px-6">
           <motion.div
-            initial={{ opacity: 0, y: 30 }}
+            initial={{ opacity: 0, y: 50 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.8 }}
             className="text-center mb-16"
           >
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-              Your Culinary Journey Starts Here
+            <h2 className="text-4xl font-bold text-gray-900 mb-4">
+              Everything You Need to Master Your Kitchen
             </h2>
             <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-              Unleash your inner chef with professional tools and a community designed for food lovers.
+              From recipe sharing to AI-powered meal planning and local dining, our platform has it all.
             </p>
           </motion.div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {features.map((feature, index) => (
               <motion.div
-                key={index}
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.6, delay: index * 0.15 }}
-                className="bg-white p-8 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 border-t-4 border-orange-500"
-              >
-                <div className="flex flex-col items-center text-center">
-                  <div className="mb-4">
-                    {feature.icon}
-                  </div>
-                  <h3 className="text-xl font-semibold text-gray-900 mb-3">
-                    {feature.title}
-                  </h3>
-                  <p className="text-gray-600">{feature.description}</p>
-                </div>
-              </motion.div>
+  key={index}
+  initial={{ opacity: 0, y: 50 }}
+  whileInView={{ opacity: 1, y: 0 }}
+  viewport={{ once: true }}
+  transition={{ duration: 0.6, delay: index * 0.1 }}
+  className="bg-gray-50 p-8 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 border border-orange-100 relative overflow-hidden"
+>
+  {/* Orange horizontal line */}
+  <div className="absolute top-0 left-0 w-full h-1 bg-orange-500 rounded-t-2xl" />
+
+  <div className="flex items-center justify-center mb-4 mt-2">
+    {feature.icon}
+  </div>
+  <h3 className="text-2xl font-semibold text-gray-900 mb-3 text-center">
+    {feature.title}
+  </h3>
+  <p className="text-gray-600 text-center">{feature.description}</p>
+  <div className="mt-4 text-center">
+    <Link
+      to="/features"
+      className="text-orange-500 font-medium hover:underline"
+    >
+      Learn More
+    </Link>
+  </div>
+</motion.div>
+
             ))}
           </div>
         </div>
       </section>
 
       {/* Cuisines Section */}
-      <section className="py-20 bg-white">
+      <section className="py-24 bg-gray-50">
         <div className="container mx-auto px-6">
           <motion.div
-            initial={{ opacity: 0, y: 30 }}
+            initial={{ opacity: 0, y: 50 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.8 }}
             className="text-center mb-16"
           >
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-              Explore Global Cuisines
+            <h2 className="text-4xl font-bold text-gray-900 mb-4">
+              A World of Flavors Awaits
             </h2>
             <p className="text-lg text-gray-600 max-w-3xl mx-auto">
               From spicy curries to delicate sushi, discover dishes that will expand your culinary horizons.
             </p>
           </motion.div>
-
           <div className="relative overflow-hidden py-4" ref={containerRef}>
             <div 
               className="flex space-x-6"
@@ -356,97 +292,117 @@ const Home = () => {
         </div>
       </section>
 
-      {/* Testimonials Section */}
-      <section className="py-20 bg-gray-50">
+      {/* How It Works Section */}
+      <section className="py-24 bg-white">
         <div className="container mx-auto px-6">
-          <motion.h2
-            initial={{ opacity: 0, y: 30 }}
+          <motion.div
+            initial={{ opacity: 0, y: 50 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.8 }}
-            className="text-3xl md:text-4xl font-bold text-center text-gray-900 mb-16"
+            className="text-center mb-16"
           >
-            What Our Community Says
-          </motion.h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {testimonials.map((testimonial, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.6, delay: index * 0.2 }}
-                className="bg-white p-6 rounded-lg shadow-lg border-l-4 border-orange-500"
-              >
-                <FaQuoteLeft className="text-orange-400 text-2xl mb-4" />
-                <p className="text-gray-700 mb-4 italic">"{testimonial.quote}"</p>
-                <p className="text-orange-600 font-medium">{testimonial.author}</p>
-              </motion.div>
-            ))}
+            <h2 className="text-4xl font-bold text-gray-900 mb-4">
+              How It Works
+            </h2>
+            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+              From uploading recipes to planning your meals and enjoying cheat days, here’s how we make it seamless.
+            </p>
+          </motion.div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
+            <motion.div
+              initial={{ opacity: 0, y: 50 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6 }}
+              className="text-center"
+            >
+              <div className="bg-orange-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                <span className="text-2xl font-bold text-orange-500">1</span>
+              </div>
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">Share & Discover</h3>
+              <p className="text-gray-600">
+                Upload your recipes with photos and get nutritional analysis. Browse thousands of community recipes.
+              </p>
+            </motion.div>
+            <motion.div
+              initial={{ opacity: 0, y: 50 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+              className="text-center"
+            >
+              <div className="bg-orange-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                <span className="text-2xl font-bold text-orange-500">2</span>
+              </div>
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">Plan & Shop</h3>
+              <p className="text-gray-600">
+                Use our AI to create meal plans and generate shopping lists with nearby store locations.
+              </p>
+            </motion.div>
+            <motion.div
+              initial={{ opacity: 0, y: 50 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6, delay: 0.4 }}
+              className="text-center"
+            >
+              <div className="bg-orange-100 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                <span className="text-2xl font-bold text-orange-500">3</span>
+              </div>
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">Enjoy Cheat Days</h3>
+              <p className="text-gray-600">
+                Pick a cuisine and find the best local restaurants for a delightful dining experience.
+              </p>
+            </motion.div>
           </div>
         </div>
       </section>
 
       {/* CTA Section */}
-      <section className="py-20 bg-white border-t border-gray-200">
-        <div className="container mx-auto px-6 text-center max-w-4xl">
+      <section className="py-24 bg-gradient-to-r from-orange-100 to-orange-200 text-gray-900">
+        <div className="container mx-auto px-6 text-center">
           <motion.h2
-            initial={{ opacity: 0, y: 30 }}
+            initial={{ opacity: 0, y: 50 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.8 }}
-            className="text-3xl md:text-4xl font-bold text-gray-900 mb-6"
+            className="text-4xl font-bold mb-6"
           >
-            Join Our Culinary Community Today
+            Ready to Transform Your Culinary Experience?
           </motion.h2>
           <motion.p
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 50 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.8, delay: 0.2 }}
-            className="text-lg text-gray-600 mb-10"
+            className="text-lg text-gray-700 mb-10 max-w-2xl mx-auto"
           >
-            Become part of a network where every dish tells a story. Start sharing your recipes and culinary experiences.
+            Join our community to share recipes, plan meals with AI, and discover local dining options.
           </motion.p>
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 50 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.8, delay: 0.4 }}
-            className="flex flex-wrap justify-center gap-6"
+            className="flex flex-col sm:flex-row gap-4 justify-center"
           >
+            {/* <Link
+              to="/signup"
+              className="px-8 py-3 bg-orange-500 text-white rounded-full font-semibold hover:bg-orange-600 transition-all duration-300 shadow-lg"
+            >
+              Join Now 
+            </Link> */}
             <Link
               to="/signup"
-              className="px-8 py-3 bg-orange-500 text-white rounded-md font-medium hover:bg-orange-600 transition-all duration-300 shadow-md flex items-center"
+              className="px-8 py-3 bg-orange-500 text-white border-2 border-orange-500 rounded-full font-semibold hover:bg-orange-600 transition-all duration-300"
             >
-              Join Now <FaArrowRight className="ml-2" />
-            </Link>
-            <Link
-              to="/posts"
-              className="px-8 py-3 bg-white border border-gray-300 text-gray-700 rounded-md font-medium hover:bg-gray-50 hover:border-gray-400 transition-all duration-300"
-            >
-              Browse Recipes
+              → Join Now
             </Link>
           </motion.div>
         </div>
       </section>
     </div>
-  );
-};
-
-const NavItem = ({ icon, text, to, onClick, scrollY, extraClass = '' }) => {
-  return (
-    <Link
-      to={to}
-      onClick={onClick}
-      className={`flex items-center space-x-2 text-gray-700 px-4 py-2 rounded-md 
-        transition-all duration-300 hover:bg-orange-50 hover:text-orange-600 ${extraClass} ${
-          scrollY > 50 ? 'text-sm' : 'text-base'
-        }`}
-    >
-      <span>{icon}</span>
-      <span>{text}</span>
-    </Link>
   );
 };
 

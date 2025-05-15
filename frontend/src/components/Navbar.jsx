@@ -44,13 +44,14 @@ const Navbar = () => {
             {/* Logo Section with enhanced styling */}
             <Link to="/" className="flex items-center space-x-3 group">
               <div className="relative">
-                <div className="absolute -inset-2 bg-orange-100 rounded-full blur-sm group-hover:bg-orange-200 transition-colors duration-300" />
-                <FaUtensils 
+                <div className="absolute -inset-2  duration-300" />
+                {/* <FaUtensils 
                   className="h-8 w-8 text-orange-500 relative transition-all duration-300 group-hover:scale-110" 
-                />
+                /> */}
+                <img src="/videos/dishcovery.png" alt="Logo" className="h-12 w-12 relative transition-all duration-300 group-hover:scale-110" />
               </div>
               <span className="text-2xl font-bold bg-gradient-to-r from-orange-600 to-orange-500 bg-clip-text text-transparent">
-                Gourmet Link
+                Dishcovery
               </span>
             </Link>
 

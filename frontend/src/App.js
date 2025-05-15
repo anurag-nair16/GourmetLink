@@ -17,6 +17,7 @@ import MealPlannerCreator from './components/MealPlanCreator';
 import MealPlannerViewer from './components/MealPlanViewer';
 import RecipeGenerator from './components/RecipeGenerator';
 import Navigation from './components/Navigation';
+import CheatDay from './components/CheatDay';
 
 const App = () => {
   useEffect(() => {
@@ -101,6 +102,10 @@ const App = () => {
           <Route 
             path="/recipe-generator"
             element={<ProtectedRoute element={<RecipeGenerator />} />}
+          />
+          <Route 
+            path="/cheat-day"
+            element={<ProtectedRoute element={<CheatDay />} />}
           />
         </Routes>
       </main>

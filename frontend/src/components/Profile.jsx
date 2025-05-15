@@ -35,6 +35,7 @@ const Profile = () => {
   const [showMap, setShowMap] = useState(false);
   const [userLocation, setUserLocation] = useState(null);
   const [nearbyStores, setNearbyStores] = useState([]);
+  const [showLocationConsent, setShowLocationConsent] = useState(false);
   const navigate = useNavigate();
   const sectionRefs = useRef([]);
 
@@ -63,6 +64,44 @@ const Profile = () => {
 
     fetchProfileData();
   }, []);
+
+  const fetchUserLocation = () => {
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const { latitude, longitude } = position.coords;
+        setUserLocation({ lat: latitude, lng: longitude });
+        fetchNearbyStores(latitude, longitude);
+      },
+      () => {
+        // Fallback to a default location (e.g., New York City)
+        setUserLocation({ lat: 40.7128, lng: -74.0060 });
+        fetchNearbyStores(40.7128, -74.0060);
+      }
+    );
+  };
+
+  const handleLocationConsent = (allow) => {
+    if (allow) {
+      localStorage.setItem("locationConsent", "granted");
+      fetchUserLocation();
+    } else {
+      localStorage.setItem("locationConsent", "denied");
+      setUserLocation({ lat: 40.7128, lng: -74.0060 }); // Default location
+      fetchNearbyStores(40.7128, -74.0060);
+    }
+    setShowLocationConsent(false);
+  };
+
+
+  // Check if user has previously consented to location access
+  useEffect(() => {
+    const consent = localStorage.getItem("locationConsent");
+    if (showIngredients && showMap && consent === "granted") {
+      fetchUserLocation();
+    } else if (showIngredients && showMap && !consent) {
+      setShowLocationConsent(true); // Show consent modal if no prior consent
+    }
+  }, [showIngredients, showMap]);
 
   useEffect(() => {
     // Fetch user location for map
@@ -217,7 +256,7 @@ const Profile = () => {
     hidden: { opacity: 0, scale: 0.95 },
     visible: { opacity: 1, scale: 1, transition: { duration: 0.3, ease: "easeOut" } },
     exit: { opacity: 0, scale: 0.95, transition: { duration: 0.2 } },
-  };
+  };  
 
   const mapContainerStyle = {
     width: "100%",

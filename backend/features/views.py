@@ -27,7 +27,7 @@ from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
 import io
 import os
-
+from decouple import config
 
 class TranslateContent(APIView):
     parser_classes = [JSONParser]
@@ -38,7 +38,7 @@ class TranslateContent(APIView):
             "example_payload": {
                 "target_language": "es",
                 "content": {
-                    "brand_name": "Gourmet Link",
+                    "brand_name": "Dishcovery",
                     "nav_home": "Home"
                 }
             }
@@ -272,3 +272,58 @@ class MealPlanViewSet(viewsets.ModelViewSet):
         response = HttpResponse(buffer, content_type='application/pdf')
         response['Content-Disposition'] = f'attachment; filename="shopping_list_{meal_plan.id}.pdf"'
         return response
+    
+
+class CheatDayAPIView(APIView):
+    def post(self, request):
+        cuisine = request.data.get('cuisine', '')
+        dish = request.data.get('dish', '')
+        latitude = request.data.get('latitude')
+        longitude = request.data.get('longitude')
+
+        # Require latitude, longitude, and at least one of cuisine or dish
+        if not (latitude and longitude and (cuisine or dish)):
+            return Response(
+                {'error': 'At least one of cuisine or dish is required, along with latitude and longitude'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        try:
+            restaurants = self.get_serpapi_restaurants(cuisine, dish, latitude, longitude)
+            return Response({'restaurants': restaurants}, status=status.HTTP_200_OK)
+        except Exception as e:
+            logger.error(f"SerpApi error: {str(e)}")
+            return Response(
+                {'error': f"Failed to fetch restaurants: {str(e)}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+    def get_serpapi_restaurants(self, cuisine, dish, latitude, longitude):
+        api_key = config('SERPAPI_KEY')
+        url = 'https://serpapi.com/search'
+        # Use cuisine if provided, otherwise use dish
+        query = f"{cuisine or dish} restaurants"
+        params = {
+            'engine': 'google_maps',
+            'q': query,
+            'll': f'@{latitude},{longitude},15z',
+            'type': 'search',
+            'api_key': api_key,
+        }
+
+        response = requests.get(url, params=params)
+        response.raise_for_status()
+        results = response.json().get('local_results', [])
+
+        # Format top 5 restaurants, sorted by rating
+        restaurants = [
+            {
+                'name': place.get('title'),
+                'rating': float(place.get('rating', 0)),
+                'user_ratings_total': place.get('reviews', 0),
+                'vicinity': place.get('address'),
+            }
+            for place in sorted(results, key=lambda x: float(x.get('rating', 0)), reverse=True)[:5]
+            if float(place.get('rating', 0)) >= 4.0
+        ]
+        return restaurants
