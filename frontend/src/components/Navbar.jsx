@@ -51,7 +51,7 @@ const Navbar = () => {
                 <img src="/videos/dishcovery.png" alt="Logo" className="h-12 w-12 relative transition-all duration-300 group-hover:scale-110" />
               </div>
               <span className="text-2xl font-bold bg-gradient-to-r from-orange-600 to-orange-500 bg-clip-text text-transparent">
-                Dishcovery
+                Gourmet Link
               </span>
             </Link>
 

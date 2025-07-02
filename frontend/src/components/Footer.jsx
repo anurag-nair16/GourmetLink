@@ -8,7 +8,7 @@ const Footer = () => {
         <div className="flex flex-col items-center space-y-4">
           {/* Logo or Brand Name */}
           <div className="text-primary-main font-semibold text-lg">
-            Dishcovery
+            Gourmet Link
           </div>
 
           {/* Navigation Links */}
@@ -41,7 +41,7 @@ const Footer = () => {
 
           {/* Copyright */}
           <div className="text-sm text-neutral-500">
-            © {new Date().getFullYear()} Dishcovery. All rights reserved.
+            © {new Date().getFullYear()} Gourmet Link. All rights reserved.
           </div>
         </div>
       </div>

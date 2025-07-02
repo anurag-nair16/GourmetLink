@@ -38,7 +38,7 @@ class TranslateContent(APIView):
             "example_payload": {
                 "target_language": "es",
                 "content": {
-                    "brand_name": "Dishcovery",
+                    "brand_name": "Gourmet Link",
                     "nav_home": "Home"
                 }
             }
