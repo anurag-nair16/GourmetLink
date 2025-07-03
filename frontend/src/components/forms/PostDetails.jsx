@@ -1,170 +1,64 @@
 import { useEffect, useState, useRef } from "react";
 import axios from "axios";
-import { FaTimes, FaCheck, FaChevronLeft, FaChevronRight, FaStar, FaRegStar, FaAppleAlt, FaComment, FaClock } from "react-icons/fa";
+import { FaTimes, FaCheck, FaStar, FaRegStar, FaAppleAlt, FaComment, FaClock, FaImage } from "react-icons/fa";
 import Avatar from "react-avatar";
 import { Oval } from "react-loader-spinner";
 import ReactMarkdown from "react-markdown";
-import { useTranslation } from "../../context/TranslationContext";
-import TranslatedText from "../../context/TranslatedText";
 import { motion, AnimatePresence } from "framer-motion";
 
-const RecipeModal = ({
-  selectedRecipe,
-  currentIndex,
-  posts,
-  onClose,
-  onNavigate,
-  onRate,
-  onComment,
-  rating,
-  setRating,
-  commentText,
-  setCommentText,
-}) => {
-  const [isLeaving, setIsLeaving] = useState(false);
-  const [slideDirection, setSlideDirection] = useState(null);
-  const [isImageFullScreen, setIsImageFullScreen] = useState(false);
+const PostDetails = ({ post, posts, currentIndex, onClose, onRate, onComment, rating, setRating, commentText, setCommentText, hideCommentsAndRating = false }) => {
   const [showComments, setShowComments] = useState(false);
-  const [imageHeight, setImageHeight] = useState(null);
-  const [isExpanded, setIsExpanded] = useState(false);
-  const [isRatingSubmitted, setIsRatingSubmitted] = useState(false);
-  const [isCommentSubmitting, setIsCommentSubmitting] = useState(false);
-  const modalRef = useRef(null);
-  const imageRef = useRef(null);
-  const touchStartX = useRef(null);
-  const touchEndX = useRef(null);
-  const minSwipeDistance = 50;
-  const scrollableRef = useRef(null);
+  const [showImagePopup, setShowImagePopup] = useState(false); // State for image popup
+  
+  // Rating state
+  const [isRating, setIsRating] = useState(false);
+  const [ratingSuccess, setRatingSuccess] = useState(false);
+  const [hoverRating, setHoverRating] = useState(0);
 
-  const [nutrition, setNutrition] = useState(null);
-  const [showNutritionModal, setShowNutritionModal] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [recommendation, setRecommendation] = useState("");
-
-  const { currentLanguage, translateRecipe } = useTranslation();
-  const [translatedRecipe, setTranslatedRecipe] = useState(null);
-  const detailsRef = useRef(null); // New ref for details section
+  // Commenting state
+  const [isCommenting, setIsCommenting] = useState(false);
+  
+  const detailsRef = useRef(null);
+  
+  const recipe = post.recipe;
 
   useEffect(() => {
-    const fetchTranslation = async () => {
-      if (selectedRecipe && currentLanguage !== "en") {
-        const translated = await translateRecipe(selectedRecipe.id, currentLanguage);
-        if (translated) {
-          setTranslatedRecipe(translated);
-        }
-      } else {
-        setTranslatedRecipe(null);
-      }
-    };
-    fetchTranslation();
-  }, [selectedRecipe, currentLanguage]);
-
-  useEffect(() => {
-    const img = imageRef.current;
-    if (img) {
-      img.onload = () => {
-        const aspectRatio = img.naturalWidth / img.naturalHeight;
-        const maxWidth = window.innerWidth >= 1024 ? window.innerWidth * 0.5 : window.innerWidth - 32;
-        const calculatedHeight = Math.min(maxWidth / aspectRatio, window.innerHeight * 0.4);
-        setImageHeight(calculatedHeight);
-      };
-      if (img.complete) {
-        const aspectRatio = img.naturalWidth / img.naturalHeight;
-        const maxWidth = window.innerWidth >= 1024 ? window.innerWidth * 0.5 : window.innerWidth - 32;
-        const calculatedHeight = Math.min(maxWidth / aspectRatio, window.innerHeight * 0.4);
-        setImageHeight(calculatedHeight);
-      }
-    }
-  }, [selectedRecipe]);
-
-  const recipeContent = translatedRecipe || selectedRecipe;
-
-  useEffect(() => {
-    document.body.classList.add("no-scroll");
-    return () => document.body.classList.remove("no-scroll");
+    document.body.style.overflow = 'hidden';
+    return () => { document.body.style.overflow = 'auto'; };
   }, []);
 
   useEffect(() => {
-  if (detailsRef.current) {
-    detailsRef.current.scrollTop = 0;
-  }
-}, [selectedRecipe]);
-
-  const fetchNutrition = async () => {
-    setShowNutritionModal(true);
-    setLoading(true);
-    const token = localStorage.getItem("token");
-    try {
-      const response = await axios.post(
-        `${process.env.REACT_APP_API_URL}/nutrition/`,
-        { ingredients: selectedRecipe.ingredients, recipeName: selectedRecipe.name },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      const nutritionData = response.data;
-      setNutrition(nutritionData);
-
-      const recommendationResponse = await axios.post(
-        `${process.env.REACT_APP_API_URL}/recommendation/`,
-        { nutrition: nutritionData, recipeName: selectedRecipe.name },
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      setRecommendation(recommendationResponse.data.recommendation);
-      setLoading(false);
-    } catch (error) {
-      console.error("Error fetching nutritional information:", error);
-      setLoading(false);
+    if (detailsRef.current) {
+      detailsRef.current.scrollTop = 0;
     }
+    // Only reset rating if hideCommentsAndRating is false and setRating is provided
+    if (!hideCommentsAndRating && setRating) {
+      setRating(0);
+    }
+  }, [post.id, hideCommentsAndRating, setRating]);
+
+  const handleClose = () => onClose();
+
+  const handleRateSubmit = async (newRating) => {
+    if (isRating || !onRate) return;
+    setIsRating(true);
+    if (setRating) {
+      setRating(newRating);
+    }
+    
+    await onRate(post.id, newRating);
+    
+    setIsRating(false);
+    setRatingSuccess(true);
+    setTimeout(() => setRatingSuccess(false), 2000);
   };
 
-  const handleClose = () => {
-    setIsLeaving(true);
-    setTimeout(() => {
-      onClose();
-      setIsLeaving(false);
-    }, 300);
-  };
-
-  const handleNavigation = (direction) => {
-    setSlideDirection(direction);
-    onNavigate(direction);
-    setTimeout(() => setSlideDirection(null), 300);
-  };
-
-  const handleTouchStart = (e) => {
-    touchStartX.current = e.touches[0].clientX;
-  };
-
-  const handleTouchMove = (e) => {
-    touchEndX.current = e.touches[0].clientX;
-  };
-
-  const handleTouchEnd = () => {
-    if (!touchStartX.current || !touchEndX.current) return;
-    const distance = touchStartX.current - touchEndX.current;
-    const isLeftSwipe = distance > minSwipeDistance;
-    const isRightSwipe = distance < -minSwipeDistance;
-
-    if (isLeftSwipe) handleNavigation("right");
-    else if (isRightSwipe) handleNavigation("left");
-
-    touchStartX.current = null;
-    touchEndX.current = null;
-  };
-
-  const handleImageClick = () => setIsImageFullScreen(true);
-  const handleImageClose = () => setIsImageFullScreen(false);
-
-  const handleRateSubmit = () => {
-    setIsRatingSubmitted(true);
-    onRate(selectedRecipe.id, rating);
-    setTimeout(() => setIsRatingSubmitted(false), 1000);
-  };
-
-  const handleCommentSubmit = () => {
-    setIsCommentSubmitting(true);
-    onComment(posts[currentIndex].id);
-    setCommentText("");
-    setTimeout(() => setIsCommentSubmitting(false), 800);
+  const handleCommentSubmit = async (e) => {
+    e.preventDefault();
+    if (isCommenting || !commentText?.trim() || !onComment) return;
+    setIsCommenting(true);
+    await onComment(post.id);
+    setIsCommenting(false);
   };
 
   const modalVariants = {
@@ -173,370 +67,149 @@ const RecipeModal = ({
     exit: { opacity: 0, scale: 0.95, transition: { duration: 0.3, ease: "easeIn" } },
   };
 
-  const slideVariants = {
-    enter: (direction) => ({
-      x: direction === "right" ? 1000 : -1000,
-      opacity: 0,
-    }),
-    center: { x: 0, opacity: 1 },
-    exit: (direction) => ({
-      x: direction === "right" ? -1000 : 1000,
-      opacity: 0,
-    }),
-  };
-
-  const buttonVariants = {
-    initial: { scale: 1 },
-    animate: { scale: 1.1, transition: { duration: 0.2 } },
-    exit: { scale: 1, transition: { duration: 0.2 } },
-  };
-
-  const checkVariants = {
-    initial: { scale: 1, rotate: 0 },
-    animate: { scale: 1.2, rotate: 360, transition: { duration: 0.4 } },
-  };
-
   return (
-    <motion.div
-      className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4 sm:p-6"
-      initial="hidden"
-      animate="visible"
-      exit="exit"
-      variants={modalVariants}
-    >
+    <>
       <motion.div
-        className="relative bg-neutral-900 rounded-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden shadow-xl border border-neutral-700"
-        ref={modalRef}
-        onTouchStart={handleTouchStart}
-        onTouchMove={handleTouchMove}
-        onTouchEnd={handleTouchEnd}
-        custom={slideDirection}
-        variants={slideVariants}
-        initial="enter"
-        animate="center"
-        exit="exit"
-        transition={{ duration: 0.3, ease: "easeInOut" }}
+        className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4"
+        initial="hidden" animate="visible" exit="exit" variants={modalVariants}
       >
-        <div className="flex justify-between items-center p-4 sm:p-6 bg-neutral-800/95 backdrop-blur-sm border-b border-neutral-700">
-          <h2 className="text-xl sm:text-2xl font-bold text-emerald-300 truncate">{recipeContent.name}</h2>
-          <div className="flex items-center gap-4">
-            <button
-              onClick={fetchNutrition}
-              className="text-neutral-300 hover:text-emerald-400 transition-colors flex items-center gap-2"
-            >
-              <FaAppleAlt size={20} className="text-emerald-400" />
-              <span className="hidden sm:inline text-neutral-200">Nutrition</span>
-            </button>
-            <button onClick={handleClose} className="text-neutral-300 hover:text-emerald-400 transition-colors">
+        <div className="relative bg-white rounded-2xl w-full max-w-5xl h-[90vh] overflow-hidden shadow-2xl flex flex-col">
+          {/* Header */}
+          <header className="flex-shrink-0 p-4 border-b border-neutral-200 flex justify-between items-center">
+            <h2 className="text-2xl font-bold text-neutral-800 truncate">{recipe.name}</h2>
+            <button onClick={handleClose} className="text-neutral-500 hover:text-emerald-600 transition-colors p-2 rounded-full">
               <FaTimes size={24} />
             </button>
-          </div>
-        </div>
+          </header>
 
-        <div className="flex flex-col lg:flex-row h-[calc(90vh-72px)] overflow-hidden">
-          <div className="lg:w-1/2 flex flex-col">
-            <div
-              className="relative overflow-hidden transition-all duration-300"
-              style={{ height: isExpanded ? "auto" : "280px" }}
-            >
-              <img
-                ref={imageRef}
-                src={recipeContent.image}
-                alt={recipeContent.name}
-                className="w-full h-full object-contain cursor-pointer"
-                onClick={() => setIsExpanded(true)}
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-neutral-900/70 to-transparent" />
-              <div className="absolute bottom-4 left-4 flex items-center gap-2 bg-emerald-700/90 px-3 py-1 rounded-full text-sm text-neutral-100">
-                <FaClock className="text-emerald-300" /> {recipeContent.prep_time || "N/A"} mins
-              </div>
-              {!isExpanded && imageHeight && (
-                <button
-                  onClick={() => setIsExpanded(true)}
-                  className="absolute bottom-4 right-4 bg-neutral-800/80 hover:bg-neutral-700 text-neutral-100 px-3 py-1 rounded-full text-sm flex items-center gap-2 transition-colors"
-                >
-                  <FaChevronRight className="text-emerald-400" /> Full Image
-                </button>
-              )}
-              {isExpanded && (
-                <button
-                  onClick={() => setIsExpanded(false)}
-                  className="absolute top-4 right-4 bg-neutral-800/80 hover:bg-neutral-700 text-neutral-100 p-2 rounded-full transition-colors"
-                >
-                  <FaTimes size={20} className="text-emerald-400" />
-                </button>
-              )}
-            </div>
-            <div className="p-4 bg-neutral-800 border-t border-neutral-700">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2 bg-neutral-900 p-2 rounded-lg">
-                  {[1, 2, 3, 4, 5].map((star) => (
-                    <button
-                      key={star}
-                      onClick={() => setRating(star)}
-                      className="hover:scale-110 transition-transform duration-200"
-                    >
-                      {star <= rating ? (
-                        <FaStar size={20} className="text-yellow-400" />
-                      ) : (
-                        <FaRegStar size={20} className="text-neutral-500" />
-                      )}
-                    </button>
-                  ))}
+          {/* Content */}
+          <div className="flex-grow flex flex-col lg:flex-row overflow-hidden">
+            <div className="w-full h-full flex flex-col lg:flex-row">
+              {/* Left Side: Image and Rating */}
+              <div className="lg:w-1/2 flex flex-col bg-neutral-100">
+                <div className="relative flex-grow">
+                  <img
+                    src={recipe.image}
+                    alt={recipe.name}
+                    className="absolute inset-0 w-full h-full object-contain max-h-[50vh] lg:max-h-[70vh] max-w-full"
+                  />
+                  <button
+                    onClick={() => setShowImagePopup(true)}
+                    className="sm:hidden absolute bottom-4 right-4 bg-emerald-600 text-white rounded-lg px-4 py-2 flex items-center gap-2 font-semibold hover:bg-emerald-700 transition"
+                  >
+                    <FaImage /> View Image
+                  </button>
                 </div>
-                <motion.button
-                  onClick={handleRateSubmit}
-                  className="bg-emerald-600 hover:bg-emerald-700 text-neutral-100 px-4 py-1 rounded-full text-sm transition-colors"
-                  variants={buttonVariants}
-                  initial="initial"
-                  animate={isRatingSubmitted ? "animate" : "initial"}
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  {isRatingSubmitted ? (
-                    <span className="flex items-center gap-2">
-                      <FaCheck className="text-neutral-100" /> Rated!
-                    </span>
-                  ) : (
-                    "Rate"
-                  )}
-                </motion.button>
+                {!hideCommentsAndRating && (
+                  <div className="flex-shrink-0 p-4 border-t border-neutral-200 bg-white">
+                    <h3 className="font-semibold text-neutral-700 mb-2">Rate this recipe</h3>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2" onMouseLeave={() => setHoverRating(0)}>
+                        {[1, 2, 3, 4, 5].map((star) => (
+                          <button
+                            key={star}
+                            disabled={isRating || ratingSuccess}
+                            onClick={() => handleRateSubmit(star)}
+                            onMouseEnter={() => setHoverRating(star)}
+                            className="transition-transform duration-200 hover:scale-110 disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            <FaStar size={28} className={
+                              (hoverRating || rating) >= star ? 'text-yellow-400' : 'text-neutral-300'
+                            }/>
+                          </button>
+                        ))}
+                      </div>
+                      {isRating && <Oval height={24} width={24} color="#10B981" strokeWidth={4} secondaryColor="#a7f3d0"/>}
+                      {ratingSuccess && <motion.div initial={{scale:0}} animate={{scale:1}} className="flex items-center gap-2 text-emerald-600 font-semibold"><FaCheck /> Rated!</motion.div>}
+                    </div>
+                  </div>
+                )}
               </div>
-            </div>
-          </div>
 
-          <div className="lg:w-1/2 p-4 sm:p-6 overflow-y-auto custom-scrollbar bg-neutral-900 " ref={detailsRef}>
-            <div className="space-y-6">
-              <div>
-                <h3 className="text-lg font-semibold text-emerald-400 mb-2">Ingredients</h3>
-                <ul className="list-disc list-inside text-neutral-200 space-y-1 text-sm sm:text-base">
-                  {recipeContent.ingredients?.split(",").map((ingredient, idx) => (
-                    <li key={idx}>{ingredient.trim()}</li>
-                  ))}
-                </ul>
+              {/* Right Side: Details and Comments */}
+              <div ref={detailsRef} className="lg:w-1/2 p-6 overflow-y-auto custom-scrollbar flex flex-col">
+                <div className="space-y-6 flex-grow">
+                  <div>
+                    <h3 className="text-xl font-bold text-neutral-800 mb-2">Ingredients</h3>
+                    <ul className="list-disc list-inside text-neutral-600 space-y-1.5 marker:text-emerald-500">
+                      {recipe.ingredients?.split(",").map((ing, idx) => <li key={idx}>{ing.trim()}</li>)}
+                    </ul>
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-bold text-neutral-800 mb-2">Instructions</h3>
+                    <div className="prose prose-sm text-neutral-600 whitespace-pre-line">{recipe.instructions}</div>
+                  </div>
+                </div>
+
+                {/* Comments Section */}
+                {!hideCommentsAndRating && (
+                  <div className="flex-shrink-0 mt-8 pt-6 border-t border-neutral-200">
+                    <h3 className="text-xl font-bold text-neutral-800 mb-4">Comments ({post.comments?.length || 0})</h3>
+                    <div className="space-y-4 max-h-48 overflow-y-auto pr-2 mb-4">
+                      {post.comments?.length > 0 ? post.comments.map(c => (
+                        <div key={c.id} className="flex items-start gap-3">
+                          <Avatar name={c.user} size="36" round={true} className="flex-shrink-0" />
+                          <div className="flex-1 bg-neutral-100 p-3 rounded-lg">
+                            <p className="text-sm font-semibold text-neutral-800">{c.user}</p>
+                            <p className="text-sm text-neutral-600">{c.text}</p>
+                          </div>
+                        </div>
+                      )) : <p className="text-neutral-500 text-sm">No comments yet. Be the first!</p>}
+                    </div>
+                    <form onSubmit={handleCommentSubmit} className="flex flex-col gap-2">
+                      <textarea
+                        value={commentText || ''} // Fallback to empty string if undefined
+                        onChange={(e) => setCommentText && setCommentText(e.target.value)}
+                        placeholder="Add a public comment..."
+                        rows="3"
+                        className="w-full p-2 border border-neutral-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition"
+                      />
+                      <button type="submit" disabled={isCommenting} className="self-end px-6 py-2 bg-emerald-600 text-white rounded-lg font-semibold hover:bg-emerald-700 transition disabled:bg-emerald-300">
+                        {isCommenting ? 'Posting...' : 'Post Comment'}
+                      </button>
+                    </form>
+                  </div>
+                )}
               </div>
-              <div>
-                <h3 className="text-lg font-semibold text-emerald-400 mb-2">Instructions</h3>
-                <p className="text-neutral-200 whitespace-pre-line text-sm sm:text-base">{recipeContent.instructions}</p>
-              </div>
-              <div className="flex flex-wrap gap-3">
-                <span className="px-3 py-1 bg-emerald-700/30 text-emerald-300 rounded-full text-sm">
-                  🍽️ {recipeContent.servings || "N/A"} servings
-                </span>
-              </div>
-              <button
-                onClick={() => setShowComments(true)}
-                className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-neutral-800 hover:bg-neutral-700 text-neutral-100 rounded-lg transition-colors"
-              >
-                <FaComment size={20} className="text-emerald-400" /> View Comments ({posts[currentIndex]?.comments.length || 0})
-              </button>
             </div>
           </div>
         </div>
-
-        <button
-          onClick={() => handleNavigation("left")}
-          className="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 bg-neutral-800/80 hover:bg-neutral-700 text-neutral-100 shadow-lg p-2 sm:p-3 rounded-full transition-colors"
-        >
-          <FaChevronLeft size={20} className="text-emerald-400" />
-        </button>
-        <button
-          onClick={() => handleNavigation("right")}
-          className="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 bg-neutral-800/80 hover:bg-neutral-700 text-neutral-100 p-2 sm:p-3 rounded-full transition-colors"
-        >
-          <FaChevronRight size={20} className="text-emerald-400" />
-        </button>
       </motion.div>
 
+      {/* Image Popup for Small Devices */}
       <AnimatePresence>
-        {isImageFullScreen && (
+        {showImagePopup && (
           <motion.div
-            className="fixed inset-0 bg-black/95 flex items-center justify-center z-50"
+            className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.3 }}
+            onClick={() => setShowImagePopup(false)}
           >
-            <button
-              onClick={handleImageClose}
-              className="absolute top-4 right-4 text-neutral-100 bg-neutral-800/80 hover:bg-neutral-700 p-2 rounded-full transition-colors"
+            <motion.div
+              className="relative bg-white rounded-lg p-4 max-w-[90vw] max-h-[90vh]"
+              initial={{ scale: 0.95 }}
+              animate={{ scale: 1 }}
+              exit={{ scale: 0.95 }}
+              onClick={(e) => e.stopPropagation()}
             >
-              <FaTimes size={24} className="text-emerald-400" />
-            </button>
-            <img
-              src={recipeContent.image}
-              alt={recipeContent.name}
-              className="w-full h-auto max-h-[90vh] object-contain"
-            />
+              <button
+                onClick={() => setShowImagePopup(false)}
+                className="absolute top-2 right-2 text-neutral-500 hover:text-emerald-600 transition-colors p-2 rounded-full"
+              >
+                <FaTimes size={24} />
+              </button>
+              <img
+                src={recipe.image}
+                alt={recipe.name}
+                className="w-full h-auto max-h-[80vh] max-w-[80vw] object-contain"
+              />
+            </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
-
-      <AnimatePresence>
-        {showComments && (
-          <motion.div
-            className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4"
-            initial={{ opacity: 0, y: 50 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 50 }}
-            transition={{ duration: 0.3 }}
-          >
-            <div className="bg-neutral-900 rounded-2xl w-full max-w-md max-h-[80vh] overflow-hidden shadow-xl border border-emerald-500/30">
-              <div className="p-4 border-b border-neutral-700 flex justify-between items-center">
-                <h3 className="text-lg font-semibold text-emerald-400">Comments</h3>
-                <button
-                  onClick={() => setShowComments(false)}
-                  className="text-neutral-300 hover:text-emerald-400 transition-colors"
-                >
-                  <FaTimes size={20} />
-                </button>
-              </div>
-              <div className="p-4 max-h-[50vh] overflow-y-auto custom-scrollbar space-y-4">
-                {posts[currentIndex]?.comments.length === 0 ? (
-                  <p className="text-neutral-400 text-center">No comments yet. Be the first!</p>
-                ) : (
-                  posts[currentIndex]?.comments.map((comment, idx) => (
-                    <div key={idx} className="flex items-start gap-3">
-                      <Avatar name={comment.user} size="36" round={true} className="flex-shrink-0" />
-                      <div className="flex-1">
-                        <p className="text-sm font-medium text-neutral-100">{comment.user}</p>
-                        <p className="text-sm text-neutral-300 break-words">{comment.text}</p>
-                      </div>
-                    </div>
-                  ))
-                )}
-              </div>
-              <div className="p-4 border-b border-neutral-700 flex items-center gap-3">
-                <input
-                  type="text"
-                  value={commentText}
-                  onChange={(e) => setCommentText(e.target.value)}
-                  placeholder="Add a comment..."
-                  className={`flex-1 bg-neutral-800 text-neutral-100 border border-neutral-600 rounded-full px-4 py-2 text-sm focus:outline-none focus:ring-2 transition-all ${
-                    isCommentSubmitting ? "ring-2 ring-emerald-500" : "focus:ring-emerald-500"
-                  }`}
-                />
-                <motion.button
-                  onClick={handleCommentSubmit}
-                  className="bg-emerald-600 hover:bg-emerald-700 text-neutral-100 p-2 rounded-full transition-colors"
-                  variants={checkVariants}
-                  initial="initial"
-                  animate={isCommentSubmitting ? "animate" : "initial"}
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.9 }}
-                >
-                  <FaCheck size={16} />
-                </motion.button>
-              </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      <AnimatePresence>
-        {showNutritionModal && (
-          <motion.div
-            className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4"
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.95 }}
-            transition={{ duration: 0.3 }}
-          >
-            <div className="bg-neutral-900 rounded-2xl w-full max-w-md max-h-[80vh] overflow-y-auto custom-scrollbar">
-              <div className="p-4 sm:p-6 border-b border-neutral-700 flex justify-between items-center">
-                <h2 className="text-xl sm:text-2xl font-bold text-emerald-400">Nutrition Info</h2>
-                <button
-                  onClick={() => setShowNutritionModal(false)}
-                  className="text-neutral-300 hover:text-emerald-400 transition-colors"
-                >
-                  <FaTimes size={20} />
-                </button>
-              </div>
-              <div className="p-4 sm:p-6">
-                {loading ? (
-                  <div className="flex flex-col items-center justify-center py-8">
-                    <Oval
-                      height={60}
-                      width={60}
-                      color="#10B981"
-                      visible={true}
-                      ariaLabel="oval-loading"
-                      secondaryColor="#10B981"
-                      strokeWidth={3}
-                      strokeWidthSecondary={3}
-                    />
-                    <p className="text-neutral-300 mt-4 text-sm text-center">
-                      Analyzing nutrition...
-                    </p>
-                  </div>
-                ) : (
-                  nutrition && (
-                    <div className="space-y-6">
-                      <div className="grid grid-cols-2 gap-4 text-sm">
-                        {Object.entries({
-                          Calories: nutrition.calories,
-                          Carbohydrates: `${nutrition.carbohydrates}g`,
-                          Protein: `${nutrition.protein}g`,
-                          Fat: `${nutrition.fat}g`,
-                          Fiber: `${nutrition.fiber}g`,
-                          Vitamins: `${nutrition.vitamins}g`,
-                        }).map(([key, value]) => (
-                          parseFloat(value) > 0 && (
-                            <div key={key} className="bg-neutral-800 p-3 rounded-lg border border-neutral-600">
-                              <p className="text-neutral-400 text-xs">{key}</p>
-                              <p className="text-neutral-100 font-semibold">{value}</p>
-                            </div>
-                          )
-                        ))}
-                      </div>
-                      {recommendation && (
-                        <div>
-                          <h3 className="text-lg font-semibold text-emerald-400 mb-2">Recommendation</h3>
-                          <ReactMarkdown
-                            components={{
-                              p: ({ node, ...props }) => <p className="text-neutral-300 text-sm mb-2" {...props} />,
-                              ul: ({ node, ...props }) => (
-                                <ul className="list-disc list-inside text-neutral-300 space-y-1" {...props} />
-                              ),
-                              li: ({ node, ...props }) => <li className="text-neutral-300" {...props} />,
-                              strong: ({ node, ...props }) => (
-                                <strong className="text-emerald-400 font-semibold" {...props} />
-                              ),
-                            }}
-                          >
-                            {recommendation}
-                          </ReactMarkdown>
-                        </div>
-                      )}
-                    </div>
-                  )
-                )}
-              </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </motion.div>
+    </>
   );
 };
 
-export default RecipeModal;
-
-const customScrollbarStyles = `
-  .custom-scrollbar::-webkit-scrollbar {
-    width: 8px;
-  }
-  .custom-scrollbar::-webkit-scrollbar-track {
-    background: #1f2937;
-  }
-  .custom-scrollbar::-webkit-scrollbar-thumb {
-    background: #10B981;
-    border-radius: 4px;
-  }
-  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-    background: #059669;
-  }
-`;
-const styleSheet = document.createElement("style");
-styleSheet.textContent = customScrollbarStyles;
-document.head.appendChild(styleSheet);
+export default PostDetails;

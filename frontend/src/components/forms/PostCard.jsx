@@ -1,83 +1,88 @@
-import React, { useEffect, useState } from 'react';
-import axios from 'axios';
-import Avatar from 'react-avatar';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { FaStar, FaHeart, FaRegHeart, FaComment } from 'react-icons/fa';
 import { formatDistanceToNow } from 'date-fns';
-import { useTranslation } from '../../context/TranslationContext'; // Import the useTranslation hook
-import TranslatedText from '../../context/TranslatedText'; // Import the TranslatedText component
+import axios from 'axios';
 
-const PostCard = ({ post, index, onOpenModal, onLike, profileData, renderRatingStars }) => {
-  const [userProfile, setUserProfile] = useState(null);
-  const { currentLanguage, translateRecipe } = useTranslation(); // Add translation context
-  const [translatedRecipe, setTranslatedRecipe] = useState(null);
+// In-memory cache to store user data by email
+const userCache = {};
 
+const PostCard = ({ post, index, onOpenModal, onLike, profileData, userProfile }) => {
+  // State for user data
+  const [userData, setUserData] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  // Fetch user details using the endpoint
   useEffect(() => {
-    const fetchUserProfile = async () => {
-      if (post.user) {
-        const token = localStorage.getItem("token");
-        try {
-          const profileResponse = await axios.get(`${process.env.REACT_APP_API_URL}/profile/${post.user}/`, {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          });
-          setUserProfile(profileResponse.data);
-        } catch (error) {
-          console.error("Error fetching user profile data:", error);
+    // Skip fetching if userProfile is missing
+    if (!userProfile) {
+      setIsLoading(false);
+      setError('No user profile provided');
+      return;
+    }
+
+    const fetchUserData = async () => {
+      try {
+        const email = post.recipe.user;
+        if (!email) {
+          setError('No user email provided');
+          setIsLoading(false);
+          return;
         }
-      } else {
-        console.error("User email is not available");
+
+        // Check cache first
+        if (userCache[email]) {
+          setUserData(userCache[email]);
+          setIsLoading(false);
+          return;
+        }
+
+        const token = localStorage.getItem('token');
+        if (!token) {
+          throw new Error('No access token found');
+        }
+        const headers = { Authorization: `Bearer ${token}` };
+        const response = await axios.get(
+          `${process.env.REACT_APP_API_URL}/profile/${email}/`,
+          { headers }
+        );
+        const data = response.data;
+        // Store in cache
+        userCache[email] = data;
+        setUserData(data);
+        // console.log('User data fetched:', data);
+      } catch (err) {
+        console.error('Error fetching user data:', err);
+        setError(err.message || 'Failed to fetch user data');
+      } finally {
+        setIsLoading(false);
       }
     };
 
-    fetchUserProfile();
-  }, [post.user]);
+    fetchUserData();
+  }, [post.recipe.user, userProfile]); // Include userProfile in dependencies
 
-  // Add effect for translation
-  useEffect(() => {
-    const fetchTranslation = async () => {
-      if (post.recipe && currentLanguage !== 'en') {
-        const translated = await translateRecipe(post.recipe.id, currentLanguage);
-        if (translated) {
-          setTranslatedRecipe(translated);
-        }
-      } else {
-        setTranslatedRecipe(null);
-      }
-    };
-
-    fetchTranslation();
-  }, [post.recipe, currentLanguage]);
-
+  // Skip rendering if no userProfile
   if (!userProfile) {
-    return <div className="bg-gray-800 rounded-xl h-full"></div>;
+    return null;
   }
 
-  // Use translated content or fallback to original
-  const recipeContent = translatedRecipe || post.recipe;
+  const recipeContent = post.recipe;
 
   // Handle date parsing and formatting
   let formattedDate;
-  console.log(recipeContent.created_at);
-  console.log(formattedDate);
   try {
     formattedDate = formatDistanceToNow(new Date(recipeContent.created_at), { addSuffix: true });
   } catch (error) {
-    console.error("Invalid date value:", error);
-    formattedDate = 'Invalid date';
+    console.error('Invalid date value:', error);
+    formattedDate = 'Unknown date';
   }
-
-  console.log(recipeContent);
-  console.log(recipeContent.image);
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5, delay: index * 0.1 }}
-      viewport={{ once: true }}  // Add this line
-      onClick={() => onOpenModal(post.recipe, index)}
+      initial={{ opacity: 1, y: 0 }}
+      onClick={() => onOpenModal(post, index)}
       className="bg-white rounded-xl shadow-sm hover:shadow-lg border border-neutral-200 
         transition-all duration-300 overflow-hidden cursor-pointer group hover:transform 
         hover:scale-105"
@@ -98,21 +103,20 @@ const PostCard = ({ post, index, onOpenModal, onLike, profileData, renderRatingS
           <div className="flex items-center">
             <div className="flex items-center space-x-1">
               <FaStar className="text-yellow-400" size={16} />
-              <span className="text-white">{post.average_rating}</span>
+              <span className="text-white">{post.average_rating || 0}</span>
               <span className="text-white/80 text-xs">
                 ({post.ratings.length} ratings)
               </span>
             </div>
             <div className="ml-auto">
               <span className="text-white/90 text-sm">
-                by {userProfile.username}
+                by {isLoading ? 'Loading...' : error ? 'Unknown User' : userData?.username || 'Unknown User'}
               </span>
             </div>
           </div>
-  
           <div className="mt-2 flex items-center justify-between gap-2">
             <div className="flex flex-wrap gap-1">
-              {recipeContent.tags?.split(",").map((tag, i) => (
+              {recipeContent.tags?.split(',').map((tag, i) => (
                 <span
                   key={i}
                   className="px-2 py-1 bg-primary-main/20 text-white rounded-full text-xs"
@@ -144,7 +148,6 @@ const PostCard = ({ post, index, onOpenModal, onLike, profileData, renderRatingS
               )}
               <span>{post.likes_count}</span>
             </button>
-  
             <div className="flex items-center space-x-1">
               <FaComment />
               <span>{post.comments.length}</span>

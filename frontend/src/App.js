@@ -9,9 +9,9 @@ import SignUp from './components/Signup';
 import ProtectedRoute from './components/ProtectedRoute';
 import Profile from './components/Profile';
 import HomePage from './components/HomePage';
-import PostDetailPage from './components/PostDetailPage';
+// import PostDetailPage from './components/PostDetailPage';
 import AllPosts from './components/AllPosts';
-import { TranslationProvider } from './context/TranslationContext';
+// import { TranslationProvider } from './context/TranslationContext';
 import LanguageSwitcher from './components/LanguageSwitcher';
 import MealPlannerCreator from './components/MealPlanCreator';
 import MealPlannerViewer from './components/MealPlanViewer';
@@ -58,7 +58,7 @@ const App = () => {
   }, [location]);
 
   return (
-    <TranslationProvider>
+    <>
       <Navbar />
       <main>
         {location.pathname !== "/profile" && <Navigation />}
@@ -83,10 +83,10 @@ const App = () => {
             path="/profile" 
             element={<ProtectedRoute element={<Profile />} />} 
           />
-          <Route 
+          {/* <Route 
             path="/post/:postId" 
             element={<ProtectedRoute element={<PostDetailPage />} />} 
-          />
+          /> */}
           <Route 
             path="/posts" 
             element={<ProtectedRoute element={<AllPosts />} />} 
@@ -111,7 +111,7 @@ const App = () => {
       </main>
       {location.pathname !== "/profile" && <Footer />}
       {/* <LanguageSwitcher/> */}
-    </TranslationProvider>
+    </>
   );
 };
 

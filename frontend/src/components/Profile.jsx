@@ -4,11 +4,12 @@ import { useNavigate, Link } from "react-router-dom";
 import Avatar from "react-avatar";
 import Skeleton from "react-loading-skeleton";
 import "react-loading-skeleton/dist/skeleton.css";
-import { FaClock, FaEdit, FaUtensils, FaStar, FaPlus, FaHeart, FaThumbsUp, FaShoppingCart, FaFilePdf, FaTimes, FaSpinner, FaCalendar, FaSearch, FaMagic, FaMapMarkerAlt } from "react-icons/fa";
+import { FaClock, FaEdit, FaUtensils, FaPlus, FaHeart, FaShoppingCart, FaFilePdf, FaTimes, FaSpinner, FaCalendar, FaSearch, FaMagic, FaMapMarkerAlt } from "react-icons/fa";
 import { motion, AnimatePresence } from "framer-motion";
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
+import PostDetails from "./forms/PostDetails";
 
 // Fix Leaflet marker icon issue
 delete L.Icon.Default.prototype._getIconUrl;
@@ -17,6 +18,104 @@ L.Icon.Default.mergeOptions({
   iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
   shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
 });
+
+const userCache = {};
+
+// New Card Component for Recipes, styled like PostCard.js
+const ProfileRecipeCard = ({ recipe, index, onOpenModal, profileData }) => {
+
+  const [userData, setUserData] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  // Fetch user details using the endpoint
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        const email = recipe.user; // Assuming recipe.user contains the email
+        if (!email) {
+          setError('No user email provided');
+          setIsLoading(false);
+          return;
+        }
+
+        // Check cache first
+        if (userCache[email]) {
+          setUserData(userCache[email]);
+          setIsLoading(false);
+          return;
+        }
+
+        // Retrieve the JWT token from localStorage
+        const token = localStorage.getItem('token');
+        if (!token) {
+          throw new Error('No access token found');
+        }
+        const headers = { Authorization: `Bearer ${token}` };
+
+        const response = await axios.get(
+          `${process.env.REACT_APP_API_URL}/profile/${email}/`,
+          { headers }
+        );
+        const data = response.data;
+        // Store in cache
+        userCache[email] = data;
+        setUserData(data);
+      } catch (err) {
+        console.error('Error fetching user data:', err);
+        setError(err.message || 'Failed to fetch user data');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchUserData();
+  }, [recipe.user]); // Dependency array includes recipe.user
+
+    return (
+        <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: index * 0.1 }}
+            viewport={{ once: true }}
+            onClick={() => onOpenModal(recipe, index)}
+            className="bg-white rounded-xl shadow-sm hover:shadow-lg border border-neutral-200 
+            transition-all duration-300 overflow-hidden cursor-pointer group hover:transform 
+            hover:scale-105"
+        >
+            <div className="relative aspect-[4/3]">
+                <img
+                    src={recipe.image || 'https://via.placeholder.com/400x300?text=No+Image'}
+                    alt={recipe.name}
+                    className="w-full h-full object-cover transition-transform duration-300"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/30 to-transparent" />
+                <div className="absolute bottom-0 left-0 p-4 w-full">
+                    <h3 className="text-xl font-semibold text-white mb-2 truncate">
+                        {recipe.name}
+                    </h3>
+                    <div className="flex items-center justify-between">
+                        <span className="text-white/90 text-sm">
+                          by {isLoading ? 'Loading...' : error ? 'Unknown User' : userData?.username || 'Unknown User'}
+                        </span>
+                    </div>
+                </div>
+            </div>
+            <div className="p-4 border-t border-neutral-200">
+                <p className="text-neutral-600 text-sm line-clamp-2 h-10">
+                    {recipe.description}
+                </p>
+                <div className="mt-3 flex items-center justify-between text-sm text-neutral-500">
+                    <span className="flex items-center">
+                        <FaClock className="inline mr-1" /> {recipe.prep_time || 'N/A'} mins
+                    </span>
+                    <div className="flex items-center space-x-2 text-neutral-600">
+                    </div>
+                </div>
+            </div>
+        </motion.div>
+    );
+};
 
 const Profile = () => {
   const [profileData, setProfileData] = useState(null);
@@ -35,14 +134,19 @@ const Profile = () => {
   const [showMap, setShowMap] = useState(false);
   const [userLocation, setUserLocation] = useState(null);
   const [nearbyStores, setNearbyStores] = useState([]);
-  const [showLocationConsent, setShowLocationConsent] = useState(false);
   const navigate = useNavigate();
+
+  // State for Recipe Modal
+  const [selectedRecipe, setSelectedRecipe] = useState(null);
+  const [currentIndex, setCurrentIndex] = useState(null);
+  const [activePostList, setActivePostList] = useState([]);
+  const [activeRecipeList, setActiveRecipeList] = useState([]);
+  const [showLocationConsent, setShowLocationConsent] = useState(false);
   const sectionRefs = useRef([]);
 
   useEffect(() => {
     const fetchProfileData = async () => {
       const token = localStorage.getItem("token");
-
       try {
         const [profileResponse, recipesResponse, favouritesResponse, mealPlansResponse] = await Promise.all([
           axios.get(`${process.env.REACT_APP_API_URL}/profile/`, { headers: { Authorization: `Bearer ${token}` } }),
@@ -50,20 +154,70 @@ const Profile = () => {
           axios.get(`${process.env.REACT_APP_API_URL}/favourites/`, { headers: { Authorization: `Bearer ${token}` } }),
           axios.get(`${process.env.REACT_APP_API_URL}/features/mealplans/`, { headers: { Authorization: `Bearer ${token}` } }),
         ]);
-
         setProfileData(profileResponse.data);
         setUserRecipes(recipesResponse.data);
         setFavouriteRecipes(favouritesResponse.data);
         setMealPlans(mealPlansResponse.data);
-        setLoading(false);
       } catch (error) {
         console.error("Error fetching profile data:", error);
+      } finally {
         setLoading(false);
       }
     };
-
     fetchProfileData();
   }, []);
+
+  // Handlers for Recipe Modal
+  const openModal = (recipe, index, list) => {
+    const transformedList = list.map(r => ({
+      id: r.post?.id || null,
+      recipe: r,
+      comments: [], // No comments needed
+      average_rating: 0, // No rating needed
+      likes_count: 0, // No likes needed
+      user: r.post?.user || profileData?.id,
+    }));
+
+    // Create a post-like object for the selected recipe
+    const selectedPost = {
+      id: recipe.post?.id || null,
+      recipe: recipe,
+      comments: [], // No comments needed
+      average_rating: 0, // No rating needed
+      likes_count: 0, // No likes needed
+      user: recipe.post?.user || profileData?.id,
+    };
+
+    setSelectedRecipe(selectedPost);
+    setCurrentIndex(index);
+    setActivePostList(transformedList);
+    setActiveRecipeList(list);
+  };
+
+  const closeModal = () => {
+    setSelectedRecipe(null);
+    setCurrentIndex(null);
+    setActivePostList([]);
+    setActiveRecipeList([]);
+  };
+
+  const handleArrowClick = (direction) => {
+    if (!activeRecipeList.length) return;
+    const newIndex = direction === "left"
+      ? (currentIndex - 1 + activeRecipeList.length) % activeRecipeList.length
+      : (currentIndex + 1) % activeRecipeList.length;
+    const selectedRecipe = activeRecipeList[newIndex];
+    const selectedPost = {
+      id: selectedRecipe.post?.id || null,
+      recipe: selectedRecipe,
+      comments: [], // No comments needed
+      average_rating: 0, // No rating needed
+      likes_count: 0, // No likes needed
+      user: selectedRecipe.post?.user || profileData?.id,
+    };
+    setSelectedRecipe(selectedPost);
+    setCurrentIndex(newIndex);
+  };
 
   const fetchUserLocation = () => {
     navigator.geolocation.getCurrentPosition(
@@ -73,7 +227,6 @@ const Profile = () => {
         fetchNearbyStores(latitude, longitude);
       },
       () => {
-        // Fallback to a default location (e.g., New York City)
         setUserLocation({ lat: 40.7128, lng: -74.0060 });
         fetchNearbyStores(40.7128, -74.0060);
       }
@@ -81,71 +234,34 @@ const Profile = () => {
   };
 
   const handleLocationConsent = (allow) => {
-    if (allow) {
-      localStorage.setItem("locationConsent", "granted");
-      fetchUserLocation();
-    } else {
-      localStorage.setItem("locationConsent", "denied");
-      setUserLocation({ lat: 40.7128, lng: -74.0060 }); // Default location
-      fetchNearbyStores(40.7128, -74.0060);
-    }
+    localStorage.setItem("locationConsent", allow ? "granted" : "denied");
     setShowLocationConsent(false);
+    fetchUserLocation();
   };
 
-
-  // Check if user has previously consented to location access
   useEffect(() => {
     const consent = localStorage.getItem("locationConsent");
-    if (showIngredients && showMap && consent === "granted") {
-      fetchUserLocation();
-    } else if (showIngredients && showMap && !consent) {
-      setShowLocationConsent(true); // Show consent modal if no prior consent
-    }
-  }, [showIngredients, showMap]);
-
-  useEffect(() => {
-    // Fetch user location for map
     if (showIngredients && showMap) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          const { latitude, longitude } = position.coords;
-          setUserLocation({ lat: latitude, lng: longitude });
-          fetchNearbyStores(latitude, longitude);
-        },
-        () => {
-          // Fallback to New York City if location access is denied
-          setUserLocation({ lat: 40.7128, lng: -74.0060 });
-          fetchNearbyStores(40.7128, -74.0060);
-        }
-      );
+      if (consent === "granted") {
+        fetchUserLocation();
+      } else if (!consent) {
+        setShowLocationConsent(true);
+      } else {
+        setUserLocation({ lat: 40.7128, lng: -74.0060 });
+        fetchNearbyStores(40.7128, -74.0060);
+      }
     }
   }, [showIngredients, showMap]);
 
   const fetchNearbyStores = async (lat, lng) => {
     try {
-      const overpassQuery = `
-        [out:json];
-        node
-          ["shop"="supermarket"]
-          (around:5000,${lat},${lng});
-        out body;
-      `;
+      const overpassQuery = `[out:json];node["shop"="supermarket"](around:5000,${lat},${lng});out body;`;
       const response = await axios.post("https://overpass-api.de/api/interpreter", overpassQuery);
-      const stores = response.data.elements.map((element) => ({
-        id: element.id,
-        lat: element.lat,
-        lng: element.lon,
-        name: element.tags.name || "Supermarket",
-      }));
-      setNearbyStores(stores);
+      setNearbyStores(response.data.elements.map(el => ({ id: el.id, lat: el.lat, lng: el.lon, name: el.tags.name || "Supermarket" })));
     } catch (error) {
       console.error("Error fetching nearby stores:", error);
       setNearbyStores([]);
     }
-  };
-
-  const handleRecipeClick = (recipeId) => {
-    navigate(`/recipe/${recipeId}`);
   };
 
   const fetchIngredients = async (planId) => {
@@ -153,17 +269,11 @@ const Profile = () => {
     setLoadingIngredients(true);
     setShowIngredients(true);
     try {
-      const response = await axios.get(
-        `${process.env.REACT_APP_API_URL}/features/mealplans/${planId}/ingredients/`,
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      const ingredientsData = response.data.items;
-      setIngredients(ingredientsData);
-      setCheckedIngredients(ingredientsData.map(() => false));
+      const response = await axios.get(`${process.env.REACT_APP_API_URL}/features/mealplans/${planId}/ingredients/`, { headers: { Authorization: `Bearer ${token}` } });
+      setIngredients(response.data.items);
+      setCheckedIngredients(response.data.items.map(() => false));
     } catch (error) {
       console.error("Error fetching ingredients:", error);
-      setIngredients([]);
-      setCheckedIngredients([]);
     } finally {
       setLoadingIngredients(false);
     }
@@ -173,12 +283,7 @@ const Profile = () => {
     const token = localStorage.getItem("token");
     setLoadingPdf((prev) => ({ ...prev, [planId]: true }));
     try {
-      const response = await axios({
-        url: `${process.env.REACT_APP_API_URL}/features/mealplans/${planId}/pdf/`,
-        method: "GET",
-        responseType: "blob",
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const response = await axios.get(`${process.env.REACT_APP_API_URL}/features/mealplans/${planId}/pdf/`, { headers: { Authorization: `Bearer ${token}` }, responseType: "blob" });
       const url = window.URL.createObjectURL(new Blob([response.data]));
       const link = document.createElement("a");
       link.href = url;
@@ -219,7 +324,7 @@ const Profile = () => {
             body { font-family: Arial, sans-serif; padding: 20px; }
             h1 { color: #2dd4bf; text-align: center; }
             ul { list-style: none; padding: 0; }
-            li { padding: 10px 0; font-size: 16px; }
+            li { padding: 10px 0; font-size: 16px; border-bottom: 1px solid #eee; }
             .item { display: flex; justify-content: space-between; }
           </style>
         </head>
@@ -246,24 +351,12 @@ const Profile = () => {
   const sections = [
     { id: "recipes", label: "Recipes", icon: <FaUtensils /> },
     { id: "favourites", label: "Favourites", icon: <FaHeart /> },
-    { id: "mealplans", label: "Meal Plans", icon: <FaCalendar /> },
+    { id: "mealplans", label: "Meal Plans", icon: <FaCalendar /> }
   ];
-
-  // Animation Variants
   const containerVariants = { hidden: { opacity: 0 }, visible: { opacity: 1, transition: { staggerChildren: 0.1 } } };
   const itemVariants = { hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } };
-  const modalVariants = {
-    hidden: { opacity: 0, scale: 0.95 },
-    visible: { opacity: 1, scale: 1, transition: { duration: 0.3, ease: "easeOut" } },
-    exit: { opacity: 0, scale: 0.95, transition: { duration: 0.2 } },
-  };  
-
-  const mapContainerStyle = {
-    width: "100%",
-    height: "300px",
-    borderRadius: "16px",
-    boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
-  };
+  const modalVariants = { hidden: { opacity: 0, scale: 0.95 }, visible: { opacity: 1, scale: 1, transition: { duration: 0.3, ease: "easeOut" } }, exit: { opacity: 0, scale: 0.95, transition: { duration: 0.2 } } };
+  const mapContainerStyle = { width: "100%", height: "300px", borderRadius: "16px", boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)" };
 
   if (loading) {
     return (
@@ -271,31 +364,20 @@ const Profile = () => {
         <div className="max-w-7xl mx-auto">
           <Skeleton height={250} className="rounded-3xl mb-8" />
           <Skeleton height={40} width={200} className="mb-6 mx-auto" />
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {Array(6)
-              .fill()
-              .map((_, i) => (
-                <Skeleton key={i} height={350} className="rounded-2xl" />
-              ))}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {Array(8).fill().map((_, i) => <Skeleton key={i} height={350} className="rounded-2xl" />)}
           </div>
         </div>
       </div>
     );
   }
 
-  const filteredRecipes = userRecipes.filter((recipe) =>
-    recipe.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-  const filteredFavourites = favouriteRecipes.filter((recipe) =>
-    recipe.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-  const filteredMealPlans = mealPlans.filter((plan) =>
-    plan.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredRecipes = userRecipes.filter((recipe) => recipe.name.toLowerCase().includes(searchQuery.toLowerCase()));
+  const filteredFavourites = favouriteRecipes.filter((recipe) => recipe.name.toLowerCase().includes(searchQuery.toLowerCase()));
+  const filteredMealPlans = mealPlans.filter((plan) => plan.name.toLowerCase().includes(searchQuery.toLowerCase()));
 
   return (
     <div className="min-h-screen bg-gray-100 font-sans text-gray-900">
-      {/* Sidebar for Desktop */}
       <motion.aside
         className="fixed top-0 left-0 h-full w-64 bg-white shadow-lg p-6 hidden lg:block"
         initial={{ x: "-100%" }}
@@ -331,16 +413,7 @@ const Profile = () => {
           ))}
         </nav>
       </motion.aside>
-
-      {/* Main Content */}
       <main className="lg:ml-64 p-4 sm:p-6 min-h-screen pb-[80px] lg:pb-0">
-        {/* Mobile Header */}
-        <header className="lg:hidden flex items-center justify-between mb-6">
-          <div className="w-6"></div>
-          <div className="w-6"></div>
-        </header>
-
-        {/* Profile Section */}
         <motion.section
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -410,7 +483,6 @@ const Profile = () => {
           </div>
         </motion.section>
 
-        {/* Search Bar */}
         <div className="mb-6">
           <div className="relative max-w-md mx-auto">
             <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
@@ -420,12 +492,10 @@ const Profile = () => {
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder={`Search ${activeSection}...`}
               className="w-full pl-10 pr-4 py-2 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-teal-500"
-              aria-label={`Search ${activeSection}`}
             />
           </div>
         </div>
 
-        {/* Content Sections */}
         <section>
           {activeSection === "recipes" && (
             <>
@@ -445,9 +515,7 @@ const Profile = () => {
                   className="text-center bg-white rounded-3xl p-12 text-gray-600 shadow-sm border border-gray-200"
                 >
                   <FaUtensils className="text-teal-500 text-4xl mx-auto mb-4" />
-                  <p className="text-lg">
-                    {searchQuery ? "No recipes match your search." : "You haven’t shared any recipes yet."}
-                  </p>
+                  <p className="text-lg">{searchQuery ? "No recipes match your search." : "You haven’t shared any recipes yet."}</p>
                   <Link
                     to="/submit-recipe"
                     className="mt-4 inline-block px-5 py-2.5 bg-teal-500 text-white rounded-lg hover:bg-teal-600 transition-all duration-300"
@@ -456,52 +524,15 @@ const Profile = () => {
                   </Link>
                 </motion.div>
               ) : (
-                <div className="columns-1 sm:columns-2 lg:columns-3 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                   {filteredRecipes.map((recipe, index) => (
-                    <motion.div
+                    <ProfileRecipeCard
                       key={recipe.id}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.5, delay: index * 0.1 }}
-                      className="bg-white rounded-2xl shadow-sm overflow-hidden cursor-pointer mb-6 break-inside-avoid"
-                    >
-                      <div className="relative aspect-[4/3]">
-                        {recipe.image ? (
-                          <img src={recipe.image} alt={recipe.name} className="w-full h-full object-cover" />
-                        ) : (
-                          <div className="w-full h-full bg-gray-200 flex items-center justify-center">
-                            <FaUtensils className="text-gray-400 text-4xl" />
-                          </div>
-                        )}
-                        <div className="absolute inset-0 bg-gradient-to-t from-gray-900/70 to-transparent" />
-                        <div className="absolute bottom-4 left-4 right-4">
-                          <h3 className="text-lg font-semibold text-white truncate">{recipe.name}</h3>
-                          <p className="text-sm text-gray-200 line-clamp-2">{recipe.description}</p>
-                        </div>
-                        <span className="absolute top-4 right-4 bg-teal-500 text-white px-2.5 py-1 rounded-full text-xs flex items-center gap-1">
-                          <FaClock /> {recipe.prep_time || "N/A"} mins
-                        </span>
-                      </div>
-                      <div className="p-4 flex justify-between items-center">
-                        <div className="flex gap-4 text-gray-600 text-sm">
-                          <span className="flex items-center gap-1">
-                            <FaThumbsUp className="text-teal-500" />
-                            {recipe.post?.likes?.length || 0}
-                          </span>
-                          <span className="flex items-center gap-1">
-                            <FaStar className="text-yellow-400" />
-                            {recipe.post?.average_rating || "N/A"}
-                          </span>
-                        </div>
-                        <motion.button
-                          onClick={() => handleRecipeClick(recipe.id)}
-                          className="text-teal-500 hover:text-teal-600"
-                          whileHover={{ scale: 1.1 }}
-                        >
-                          View
-                        </motion.button>
-                      </div>
-                    </motion.div>
+                      recipe={recipe}
+                      index={index}
+                      profileData={profileData}
+                      onOpenModal={() => openModal(recipe, index, filteredRecipes)}
+                    />
                   ))}
                 </div>
               )}
@@ -526,9 +557,7 @@ const Profile = () => {
                   className="text-center bg-white rounded-3xl p-12 text-gray-600 shadow-sm border border-gray-200"
                 >
                   <FaHeart className="text-red-400 text-4xl mx-auto mb-4" />
-                  <p className="text-lg">
-                    {searchQuery ? "No favorites match your search." : "No favorite recipes yet."}
-                  </p>
+                  <p className="text-lg">{searchQuery ? "No favorites match your search." : "No favorite recipes yet."}</p>
                   <Link
                     to="/posts"
                     className="mt-4 inline-block px-5 py-2.5 bg-teal-500 text-white rounded-lg hover:bg-teal-600 transition-all duration-300"
@@ -537,55 +566,15 @@ const Profile = () => {
                   </Link>
                 </motion.div>
               ) : (
-                <div className="columns-1 sm:columns-2 lg:columns-3 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                   {filteredFavourites.map((recipe, index) => (
-                    <motion.div
+                    <ProfileRecipeCard
                       key={recipe.id}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.5, delay: index * 0.1 }}
-                      className="bg-white rounded-2xl shadow-sm overflow-hidden cursor-pointer mb-6 break-inside-avoid"
-                    >
-                      <div className="relative aspect-[4/3]">
-                        {recipe.image ? (
-                          <img src={recipe.image} alt={recipe.name} className="w-full h-full object-cover" />
-                        ) : (
-                          <div className="w-full h-full bg-gray-200 flex items-center justify-center">
-                            <FaUtensils className="text-gray-400 text-4xl" />
-                          </div>
-                        )}
-                        <div className="absolute inset-0 bg-gradient-to-t from-gray-900/70 to-transparent" />
-                        <div className="absolute bottom-4 left-4 right-4">
-                          <h3 className="text-lg font-semibold text-white truncate">{recipe.name}</h3>
-                          <p className="text-sm text-gray-200 line-clamp-2">{recipe.description}</p>
-                        </div>
-                        <span className="absolute top-4 right-4 bg-teal-500 text-white px-2.5 py-1 rounded-full text-xs flex items-center gap-1">
-                          <FaClock /> {recipe.prep_time || "N/A"} mins
-                        </span>
-                        <span className="absolute top-4 left-4 bg-red-500/30 text-red-400 p-1.5 rounded-full">
-                          <FaHeart size={16} />
-                        </span>
-                      </div>
-                      <div className="p-4 flex justify-between items-center">
-                        <div className="flex gap-4 text-gray-600 text-sm">
-                          <span className="flex items-center gap-1">
-                            <FaThumbsUp className="text-teal-500" />
-                            {recipe.post?.likes?.length || 0}
-                          </span>
-                          <span className="flex items-center gap-1">
-                            <FaStar className="text-yellow-400" />
-                            {recipe.post?.average_rating || "N/A"}
-                          </span>
-                        </div>
-                        <motion.button
-                          onClick={() => handleRecipeClick(recipe.id)}
-                          className="text-teal-500 hover:text-teal-600"
-                          whileHover={{ scale: 1.1 }}
-                        >
-                          View
-                        </motion.button>
-                      </div>
-                    </motion.div>
+                      recipe={recipe}
+                      index={index}
+                      profileData={profileData}
+                      onOpenModal={() => openModal(recipe, index, filteredFavourites)}
+                    />
                   ))}
                 </div>
               )}
@@ -689,242 +678,45 @@ const Profile = () => {
                   </motion.div>
                 </div>
               )}
-
-              <AnimatePresence>
-                {selectedPlan && (
-                  <motion.div
-                    className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4 backdrop-blur-sm"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                  >
-                    <motion.div
-                      className="bg-white rounded-3xl w-full max-w-4xl max-h-[90vh] overflow-y-auto p-6 sm:p-8 shadow-2xl"
-                      variants={modalVariants}
-                    >
-                      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 gap-4">
-                        <h3 className="text-2xl font-bold text-gray-900">{selectedPlan.name}</h3>
-                        <motion.button
-                          onClick={() => setSelectedPlan(null)}
-                          className="text-gray-600 hover:text-teal-500 transition-colors"
-                          whileHover={{ rotate: 90 }}
-                          aria-label="Close modal"
-                        >
-                          <FaTimes size={24} />
-                        </motion.button>
-                      </div>
-                      <div className="flex flex-wrap gap-2 mb-6">
-                        {Array.from(
-                          {
-                            length:
-                              Math.ceil(
-                                (new Date(selectedPlan.end_date) - new Date(selectedPlan.start_date)) /
-                                  (1000 * 60 * 60 * 24)
-                              ) + 1,
-                          },
-                          (_, i) => i + 1
-                        ).map((day) => (
-                          <motion.button
-                            key={day}
-                            className="px-4 py-2 rounded-lg bg-gray-100 text-gray-700 hover:bg-teal-500 hover:text-white transition-colors text-sm"
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.95 }}
-                          >
-                            Day {day}
-                          </motion.button>
-                        ))}
-                      </div>
-                      <motion.div className="space-y-6" variants={containerVariants} initial="hidden" animate="visible">
-                        {Array.from(
-                          {
-                            length:
-                              Math.ceil(
-                                (new Date(selectedPlan.end_date) - new Date(selectedPlan.start_date)) /
-                                  (1000 * 60 * 60 * 24)
-                              ) + 1,
-                          },
-                          (_, i) => i + 1
-                        ).map((day) => (
-                          <motion.div
-                            key={day}
-                            className="bg-gray-50 rounded-2xl p-6 shadow-sm border border-gray-200"
-                            variants={itemVariants}
-                          >
-                            <h4 className="text-lg font-semibold text-gray-900 mb-4">
-                              Day {day} -{" "}
-                              {new Date(
-                                new Date(selectedPlan.start_date).getTime() + (day - 1) * 86400000
-                              ).toLocaleDateString()}
-                            </h4>
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                              {selectedPlan.entries.filter((e) => e.day === day).map((entry) => (
-                                <motion.div
-                                  key={entry.meal_type}
-                                  className="flex items-center bg-white rounded-lg p-4 shadow-sm border border-gray-200 hover:border-teal-200 transition-all duration-300"
-                                  initial={{ opacity: 0, x: -20 }}
-                                  animate={{ opacity: 1, x: 0 }}
-                                  transition={{ duration: 0.4 }}
-                                  whileHover={{ scale: 1.02 }}
-                                >
-                                  <img
-                                    src={entry.recipe?.image || "https://via.placeholder.com/80?text=No+Image"}
-                                    alt={entry.recipe?.name || "Recipe"}
-                                    className="w-16 h-16 object-cover rounded-lg mr-4 shadow-sm"
-                                    onError={(e) => (e.target.src = "https://via.placeholder.com/80?text=No+Image")}
-                                  />
-                                  <div className="flex-1">
-                                    <p className="text-gray-900 text-sm font-medium">
-                                      <span className="capitalize text-teal-500">{entry.meal_type}:</span>{" "}
-                                      {entry.recipe?.name || "No recipe selected"}
-                                    </p>
-                                  </div>
-                                </motion.div>
-                              ))}
-                            </div>
-                          </motion.div>
-                        ))}
-                      </motion.div>
-                    </motion.div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-
-              <AnimatePresence>
-                {showIngredients && (
-                  <motion.div
-                    className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4 backdrop-blur-sm"
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                  >
-                    <motion.div
-                      className="bg-white rounded-3xl w-full max-w-lg max-h-[85vh] overflow-y-auto p-6 shadow-2xl"
-                      variants={modalVariants}
-                    >
-                      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 gap-4">
-                        <h3 className="text-xl font-bold text-gray-900 flex items-center gap-2">
-                          <FaShoppingCart /> Shopping List
-                        </h3>
-                        <motion.button
-                          onClick={() => setShowIngredients(false)}
-                          className="text-gray-600 hover:text-teal-500 transition-colors"
-                          whileHover={{ rotate: 90 }}
-                          aria-label="Close shopping list"
-                        >
-                          <FaTimes size={24} />
-                        </motion.button>
-                      </div>
-                      {loadingIngredients ? (
-                        <div className="space-y-4">
-                          {Array(5)
-                            .fill()
-                            .map((_, i) => (
-                              <Skeleton key={i} height={40} className="rounded-lg" />
-                            ))}
-                        </div>
-                      ) : ingredients.length === 0 ? (
-                        <p className="text-gray-600 text-center py-6 text-sm">No ingredients available.</p>
-                      ) : (
-                        <motion.div
-                          className="space-y-4"
-                          variants={containerVariants}
-                          initial="hidden"
-                          animate="visible"
-                        >
-                          <div className="flex justify-between items-center">
-                            <span className="text-gray-600 text-sm">
-                              {ingredients.length} items
-                            </span>
-                            <div className="flex gap-2">
-                              <motion.button
-                                onClick={handleSelectAll}
-                                className="text-teal-500 hover:text-teal-600 text-sm"
-                                whileHover={{ scale: 1.1 }}
-                                whileTap={{ scale: 0.95 }}
-                              >
-                                {checkedIngredients.every((checked) => checked) ? "Deselect All" : "Select All"}
-                              </motion.button>
-                              <motion.button
-                                onClick={handlePrint}
-                                className="text-teal-500 hover:text-teal-600 text-sm"
-                                whileHover={{ scale: 1.1 }}
-                                whileTap={{ scale: 0.95 }}
-                              >
-                                Print Selected
-                              </motion.button>
-                            </div>
-                          </div>
-                          <motion.ul className="space-y-3">
-                            {ingredients.map((item, index) => (
-                              <motion.li
-                                key={index}
-                                className="flex items-center bg-gray-50 p-3 rounded-lg border border-gray-200"
-                                variants={itemVariants}
-                              >
-                                <input
-                                  type="checkbox"
-                                  checked={checkedIngredients[index]}
-                                  onChange={() => handleCheckboxChange(index)}
-                                  className="mr-3 h-4 w-4 text-teal-500 focus:ring-teal-500"
-                                  aria-label={`Check ${item.name}`}
-                                />
-                                <span className="flex-1 text-gray-900">{item.name}</span>
-                                <span className="text-gray-600 text-sm">
-                                  {item.quantity} {item.unit}
-                                </span>
-                              </motion.li>
-                            ))}
-                          </motion.ul>
-                          <motion.button
-                            onClick={() => setShowMap(!showMap)}
-                            className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-teal-500 text-white rounded-lg text-sm font-medium hover:bg-teal-600 transition-colors"
-                            whileHover={{ scale: 1.05 }}
-                            whileTap={{ scale: 0.95 }}
-                          >
-                            <FaMapMarkerAlt /> {showMap ? "Hide Nearby Stores" : "Show Nearby Stores"}
-                          </motion.button>
-                          {showMap && userLocation && (
-                            <motion.div
-                              initial={{ opacity: 0, height: 0 }}
-                              animate={{ opacity: 1, height: "auto" }}
-                              exit={{ opacity: 0, height: 0 }}
-                              transition={{ duration: 0.3 }}
-                            >
-                              <MapContainer
-                                center={[userLocation.lat, userLocation.lng]}
-                                zoom={14}
-                                style={mapContainerStyle}
-                              >
-                                <TileLayer
-                                  url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                                  attribution='© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                                />
-                                <Marker position={[userLocation.lat, userLocation.lng]}>
-                                  <Popup>You are here</Popup>
-                                </Marker>
-                                {nearbyStores.map((store) => (
-                                  <Marker
-                                    key={store.id}
-                                    position={[store.lat, store.lng]}
-                                  >
-                                    <Popup>{store.name}</Popup>
-                                  </Marker>
-                                ))}
-                              </MapContainer>
-                            </motion.div>
-                          )}
-                        </motion.div>
-                      )}
-                    </motion.div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
             </>
           )}
         </section>
       </main>
 
-      {/* Mobile Bottom Navigation */}
+      <AnimatePresence>
+        {selectedPlan && (
+          <motion.div
+            className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4 backdrop-blur-sm"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            <motion.div
+              className="bg-white rounded-3xl w-full max-w-4xl max-h-[90vh] overflow-y-auto p-6 sm:p-8 shadow-2xl"
+              variants={modalVariants}
+            >
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {showIngredients && (
+          <motion.div
+            className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4 backdrop-blur-sm"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            <motion.div
+              className="bg-white rounded-3xl w-full max-w-lg max-h-[85vh] overflow-y-auto p-6 shadow-2xl"
+              variants={modalVariants}
+            >
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <nav className="fixed bottom-0 left-0 right-0 bg-white shadow-lg p-4 flex justify-around lg:hidden">
         {sections.map((section) => (
           <motion.button
@@ -942,6 +734,19 @@ const Profile = () => {
           </motion.button>
         ))}
       </nav>
+
+      <AnimatePresence>
+        {selectedRecipe && (
+          <PostDetails
+            post={selectedRecipe}
+            posts={activePostList}
+            currentIndex={currentIndex}
+            onClose={closeModal}
+            onNavigate={handleArrowClick}
+            hideCommentsAndRating={true} // New prop to hide comments and rating
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 };
