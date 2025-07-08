@@ -4,71 +4,60 @@ import { FaStar, FaHeart, FaRegHeart, FaComment } from 'react-icons/fa';
 import { formatDistanceToNow } from 'date-fns';
 import axios from 'axios';
 
-// In-memory cache to store user data by email
-const userCache = {};
-
-const PostCard = ({ post, index, onOpenModal, onLike, profileData, userProfile }) => {
+const PostCard = ({ post, index, onOpenModal, onLike, profileData }) => {
   // State for user data
-  const [userData, setUserData] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(null);
+  // const [userData, setUserData] = useState(null);
+  // const [isLoading, setIsLoading] = useState(true);
+  // const [error, setError] = useState(null);
+  
 
-  // Fetch user details using the endpoint
-  useEffect(() => {
-    // Skip fetching if userProfile is missing
-    if (!userProfile) {
-      setIsLoading(false);
-      setError('No user profile provided');
-      return;
-    }
+  // // Fetch user details using the endpoint
+  // useEffect(() => {
+  //   // Skip fetching if userProfile is missing
 
-    const fetchUserData = async () => {
-      try {
-        const email = post.recipe.user;
-        if (!email) {
-          setError('No user email provided');
-          setIsLoading(false);
-          return;
-        }
+  //   const fetchUserData = async () => {
+  //     try {
+  //       const email = post.recipe.user;
+  //       if (!email) {
+  //         setError('No user email provided');
+  //         setIsLoading(false);
+  //         return;
+  //       }
 
-        // Check cache first
-        if (userCache[email]) {
-          setUserData(userCache[email]);
-          setIsLoading(false);
-          return;
-        }
+  //       // Check cache first
+  //       if (userCache[email]) {
+  //         setUserData(userCache[email]);
+  //         setIsLoading(false);
+  //         return;
+  //       }
 
-        const token = localStorage.getItem('token');
-        if (!token) {
-          throw new Error('No access token found');
-        }
-        const headers = { Authorization: `Bearer ${token}` };
-        const response = await axios.get(
-          `${process.env.REACT_APP_API_URL}/profile/${email}/`,
-          { headers }
-        );
-        const data = response.data;
-        // Store in cache
-        userCache[email] = data;
-        setUserData(data);
-        // console.log('User data fetched:', data);
-      } catch (err) {
-        console.error('Error fetching user data:', err);
-        setError(err.message || 'Failed to fetch user data');
-      } finally {
-        setIsLoading(false);
-      }
-    };
+  //       const token = localStorage.getItem('token');
+  //       if (!token) {
+  //         throw new Error('No access token found');
+  //       }
+  //       const headers = { Authorization: `Bearer ${token}` };
+  //       const response = await axios.get(
+  //         `${process.env.REACT_APP_API_URL}/profile/${email}/`,
+  //         { headers }
+  //       );
+  //       const data = response.data;
+  //       // Store in cache
+  //       userCache[email] = data;
+  //       setUserData(data);
+  //       // console.log('User data fetched:', data);
+  //     } catch (err) {
+  //       console.error('Error fetching user data:', err);
+  //       setError(err.message || 'Failed to fetch user data');
+  //     } finally {
+  //       setIsLoading(false);
+  //     }
+  //   };
 
-    fetchUserData();
-  }, [post.recipe.user, userProfile]); // Include userProfile in dependencies
-
-  // Skip rendering if no userProfile
-  if (!userProfile) {
-    return null;
-  }
+  //   fetchUserData();
+  // }, [post.user]); // Include userProfile in dependencies
 
   const recipeContent = post.recipe;
+  const user = post.user;
 
   // Handle date parsing and formatting
   let formattedDate;
@@ -89,9 +78,12 @@ const PostCard = ({ post, index, onOpenModal, onLike, profileData, userProfile }
     >
       <div className="relative aspect-[4/3]">
         <img
-          src={recipeContent.image}
+          src={recipeContent.image_thumbnail || recipeContent.image}
           alt={recipeContent.name}
           className="w-full h-full object-cover transition-transform duration-300"
+          loading="lazy"
+          width="400"
+          height="300"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/30 to-transparent" />
         <div className="absolute bottom-0 left-0 p-4 w-full">
@@ -110,7 +102,7 @@ const PostCard = ({ post, index, onOpenModal, onLike, profileData, userProfile }
             </div>
             <div className="ml-auto">
               <span className="text-white/90 text-sm">
-                by {isLoading ? 'Loading...' : error ? 'Unknown User' : userData?.username || 'Unknown User'}
+                by {user?.username || 'Unknown User'}
               </span>
             </div>
           </div>

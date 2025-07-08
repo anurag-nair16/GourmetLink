@@ -19,59 +19,11 @@ L.Icon.Default.mergeOptions({
   shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
 });
 
-const userCache = {};
+// REMOVED: userCache is no longer needed as data is embedded.
 
 // New Card Component for Recipes, styled like PostCard.js
-const ProfileRecipeCard = ({ recipe, index, onOpenModal, profileData }) => {
-
-  const [userData, setUserData] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(null);
-
-  // Fetch user details using the endpoint
-  useEffect(() => {
-    const fetchUserData = async () => {
-      try {
-        const email = recipe.user; // Assuming recipe.user contains the email
-        if (!email) {
-          setError('No user email provided');
-          setIsLoading(false);
-          return;
-        }
-
-        // Check cache first
-        if (userCache[email]) {
-          setUserData(userCache[email]);
-          setIsLoading(false);
-          return;
-        }
-
-        // Retrieve the JWT token from localStorage
-        const token = localStorage.getItem('token');
-        if (!token) {
-          throw new Error('No access token found');
-        }
-        const headers = { Authorization: `Bearer ${token}` };
-
-        const response = await axios.get(
-          `${process.env.REACT_APP_API_URL}/profile/${email}/`,
-          { headers }
-        );
-        const data = response.data;
-        // Store in cache
-        userCache[email] = data;
-        setUserData(data);
-      } catch (err) {
-        console.error('Error fetching user data:', err);
-        setError(err.message || 'Failed to fetch user data');
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchUserData();
-  }, [recipe.user]); // Dependency array includes recipe.user
-
+const ProfileRecipeCard = ({ recipe, index, onOpenModal }) => {
+    // REMOVED: All useState and useEffect for fetching user data is gone. It's now instant.
     return (
         <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -85,9 +37,12 @@ const ProfileRecipeCard = ({ recipe, index, onOpenModal, profileData }) => {
         >
             <div className="relative aspect-[4/3]">
                 <img
-                    src={recipe.image || 'https://via.placeholder.com/400x300?text=No+Image'}
+                    src={recipe.image_thumbnail || recipe.image || 'https://via.placeholder.com/400x300?text=No+Image'}
                     alt={recipe.name}
                     className="w-full h-full object-cover transition-transform duration-300"
+                    loading="lazy"
+                    width="400"
+                    height="300"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/30 to-transparent" />
                 <div className="absolute bottom-0 left-0 p-4 w-full">
@@ -96,7 +51,8 @@ const ProfileRecipeCard = ({ recipe, index, onOpenModal, profileData }) => {
                     </h3>
                     <div className="flex items-center justify-between">
                         <span className="text-white/90 text-sm">
-                          by {isLoading ? 'Loading...' : error ? 'Unknown User' : userData?.username || 'Unknown User'}
+                          {/* Use the embedded user data directly from the recipe object */}
+                          by {recipe.user?.username || 'Unknown User'}
                         </span>
                     </div>
                 </div>
@@ -175,7 +131,7 @@ const Profile = () => {
       comments: [], // No comments needed
       average_rating: 0, // No rating needed
       likes_count: 0, // No likes needed
-      user: r.post?.user || profileData?.id,
+      user: r.user || profileData, // Use the embedded user object
     }));
 
     // Create a post-like object for the selected recipe
@@ -185,7 +141,7 @@ const Profile = () => {
       comments: [], // No comments needed
       average_rating: 0, // No rating needed
       likes_count: 0, // No likes needed
-      user: recipe.post?.user || profileData?.id,
+      user: recipe.user || profileData, // Use the embedded user object
     };
 
     setSelectedRecipe(selectedPost);
@@ -213,7 +169,7 @@ const Profile = () => {
       comments: [], // No comments needed
       average_rating: 0, // No rating needed
       likes_count: 0, // No likes needed
-      user: selectedRecipe.post?.user || profileData?.id,
+      user: selectedRecipe.user || profileData, // Use the embedded user object
     };
     setSelectedRecipe(selectedPost);
     setCurrentIndex(newIndex);
@@ -530,7 +486,6 @@ const Profile = () => {
                       key={recipe.id}
                       recipe={recipe}
                       index={index}
-                      profileData={profileData}
                       onOpenModal={() => openModal(recipe, index, filteredRecipes)}
                     />
                   ))}
@@ -572,7 +527,6 @@ const Profile = () => {
                       key={recipe.id}
                       recipe={recipe}
                       index={index}
-                      profileData={profileData}
                       onOpenModal={() => openModal(recipe, index, filteredFavourites)}
                     />
                   ))}

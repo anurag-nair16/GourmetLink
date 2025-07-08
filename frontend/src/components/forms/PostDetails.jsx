@@ -9,7 +9,6 @@ import { motion, AnimatePresence } from "framer-motion";
 const PostDetails = ({ post, posts, currentIndex, onClose, onRate, onComment, rating, setRating, commentText, setCommentText, hideCommentsAndRating = false }) => {
   const [showComments, setShowComments] = useState(false);
   const [showImagePopup, setShowImagePopup] = useState(false); // State for image popup
-  
   // Rating state
   const [isRating, setIsRating] = useState(false);
   const [ratingSuccess, setRatingSuccess] = useState(false);
@@ -89,7 +88,7 @@ const PostDetails = ({ post, posts, currentIndex, onClose, onRate, onComment, ra
               <div className="lg:w-1/2 flex flex-col bg-neutral-100">
                 <div className="relative flex-grow">
                   <img
-                    src={recipe.image}
+                    src={recipe.image_large || recipe.image}
                     alt={recipe.name}
                     className="absolute inset-0 w-full h-full object-contain max-h-[50vh] lg:max-h-[70vh] max-w-full"
                   />
@@ -148,9 +147,9 @@ const PostDetails = ({ post, posts, currentIndex, onClose, onRate, onComment, ra
                     <div className="space-y-4 max-h-48 overflow-y-auto pr-2 mb-4">
                       {post.comments?.length > 0 ? post.comments.map(c => (
                         <div key={c.id} className="flex items-start gap-3">
-                          <Avatar name={c.user} size="36" round={true} className="flex-shrink-0" />
+                          <Avatar name={c.user?.username} src={c.user?.profile_image} size="36" round={true} className="flex-shrink-0" />
                           <div className="flex-1 bg-neutral-100 p-3 rounded-lg">
-                            <p className="text-sm font-semibold text-neutral-800">{c.user}</p>
+                            <p className="text-sm font-semibold text-neutral-800">{c.user?.username}</p>
                             <p className="text-sm text-neutral-600">{c.text}</p>
                           </div>
                         </div>

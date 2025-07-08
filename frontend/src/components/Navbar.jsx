@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { FaHome, FaUtensils, FaSignInAlt, FaUserPlus, FaUser, FaSignOutAlt, FaTimes, FaBars } from "react-icons/fa";
+import { FaHome, FaUtensils, FaSignInAlt, FaUserPlus, FaUser, FaSignOutAlt, FaTimes, FaBars, FaCompass } from "react-icons/fa";
 import { Link } from "react-router-dom";
 import LogoutPopup from "./forms/LogoutPopup";
 
@@ -61,6 +61,7 @@ const Navbar = () => {
                 {isAuthenticated ? (
                   <>
                     <NavItem icon={<FaHome />} text="Home" to="/" scrollY={scrollY} />
+                    <NavItem icon={<FaCompass />} text="Explore" to="/posts" scrollY={scrollY} />
                     {/* <NavItem icon={<FaUtensils />} text="Submit" to="/submit-recipe" scrollY={scrollY} /> */}
                     {/* <NavItem icon={<FaUser />} text="Meal Plan" to="/meal-planner" scrollY={scrollY} /> */}
                     {/* <NavItem icon={<FaUser />} text="Recipe Generator" to="/recipe-generator" scrollY={scrollY} /> */}
@@ -138,6 +139,7 @@ const Navbar = () => {
               {isAuthenticated ? (
                 <>
                   <SidebarItem icon={<FaHome />} text="Home" to="/" onClick={toggleMenu} />
+                  <SidebarItem icon={<FaCompass />} text="Explore" to="/posts" onClick={toggleMenu} />
                   {/* <SidebarItem icon={<FaUtensils />} text="Submit Recipe" to="/submit-recipe" onClick={toggleMenu} /> */}
                   {/* <SidebarItem icon={<FaUser />} text="Meal Plan" to="/meal-planner" onClick={toggleMenu} /> */}
                   {/* <SidebarItem icon={<FaUser />} text="Recipe generator" to="/recipe-generator" onClick={toggleMenu} /> */}

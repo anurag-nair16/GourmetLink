@@ -14,6 +14,8 @@ from .models import Post, Rating, Comment, CustomUser, Recipe
 from .serializers import PostSerializer, RatingSerializer, CommentSerializer, UserSerializer, RecipeSerializer, CustomUserSerializer
 from rest_framework import status
 import google.generativeai as genai
+from django.db.models import Count, Avg, FloatField, Prefetch # <-- Import FloatField
+from django.db.models.functions import Coalesce 
 
 class UserProfileDetailView(generics.RetrieveAPIView):
     queryset = CustomUser.objects.all()
@@ -61,6 +63,7 @@ def user_profile(request):
     user = request.user
     if user.is_authenticated:
         return Response({
+            "id": user.id,
             "username": user.username,
             "email": user.email,
         })
@@ -87,7 +90,7 @@ class RecipeSubmitView(APIView):
         
         if serializer.is_valid():
             recipe = serializer.save(user=request.user)
-            Post.objects.create(recipe=recipe, user=request.user)
+            Post.objects.create(recipe=recipe)
             return Response({'message': 'Recipe submitted successfully!', 'data': serializer.data}, status=201)
         return Response({'errors': serializer.errors}, status=400)
     
@@ -96,29 +99,45 @@ class RecipeSubmitView(APIView):
 @permission_classes([IsAuthenticated])
 def get_user_recipes(request):
     if request.user.is_authenticated:
-        recipes = Recipe.objects.filter(user=request.user)
+        recipes = Recipe.objects.filter(user=request.user).select_related('user')
         serializer = RecipeSerializer(recipes, many=True)
         return Response(serializer.data)
     else:
         return Response({"detail": "Authentication credentials were not provided."}, status=401)
 
 class PostViewSet(viewsets.ModelViewSet):
-    queryset = Post.objects.all().order_by('-created_at')
+    queryset = Post.objects.all().select_related(
+        'recipe', 
+        'recipe__user'
+    ).prefetch_related(
+        'likes',
+        # Apply the fix here too
+        Prefetch('comments', queryset=Comment.objects.select_related('user').order_by('-created_at')),
+        Prefetch('ratings', queryset=Rating.objects.select_related('user'))
+    ).annotate(
+        likes_count=Count('likes'),
+        average_rating=Coalesce(
+            Avg('ratings__value'), 
+            0.0,
+            output_field=FloatField()
+        )
+    ).order_by('-created_at')
+
     serializer_class = PostSerializer
     permission_classes = [IsAuthenticatedOrReadOnly]
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
 
-    @action(detail=True, methods=['post'])
-    def like(self, request, pk=None):
-        post = self.get_object()
-        user = request.user
-        if user in post.likes.all():
-            post.likes.remove(user)
-        else:
-            post.likes.add(user)
-        return Response({'likes_count': post.total_likes()})
+    # @action(detail=True, methods=['post'])
+    # def like(self, request, pk=None):
+    #     post = self.get_object()
+    #     user = request.user
+    #     if user in post.likes.all():
+    #         post.likes.remove(user)
+    #     else:
+    #         post.likes.add(user)
+    #     return Response({'likes_count': post.total_likes()})
 
 class RatingViewSet(viewsets.ModelViewSet):
     queryset = Rating.objects.all()
@@ -127,7 +146,7 @@ class RatingViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
-        serializer.instance.post.update_average_rating()
+        # serializer.instance.post.update_average_rating()
 
 class CommentViewSet(viewsets.ModelViewSet):
     queryset = Comment.objects.all().order_by('-created_at')
@@ -140,9 +159,39 @@ class CommentViewSet(viewsets.ModelViewSet):
 @api_view(['GET'])
 @permission_classes([IsAuthenticatedOrReadOnly])  # Allow everyone to view, but only authenticated users can post
 def get_all_posts(request):
-    posts = Post.objects.all().order_by('-created_at')  # Get all posts, ordered by creation date
-    serializer = PostSerializer(posts, many=True)  # Serialize the posts
-    return Response(serializer.data)  # Return the serialized data as a response
+    try:
+        posts = Post.objects.all().select_related(
+            'recipe', 
+            'recipe__user'
+        ).prefetch_related(
+            'likes', 
+            
+            # --- THE FIX IS HERE ---
+            # Instead of just 'comments', we use a Prefetch object to also grab the user for each comment.
+            Prefetch('comments', queryset=Comment.objects.select_related('user').order_by('-created_at')),
+
+            # We can do the same for ratings to be safe
+            Prefetch('ratings', queryset=Rating.objects.select_related('user'))
+
+        ).annotate(
+            likes_count=Count('likes'),
+            average_rating=Coalesce(
+                Avg('ratings__value'), 
+                0.0, 
+                output_field=FloatField()
+            )
+        ).order_by('-created_at')
+
+        serializer = PostSerializer(posts, many=True)
+        return Response(serializer.data)
+
+    except Exception as e:
+        # This will now give you the exact serializer error if one still exists
+        print(f"ERROR DURING SERIALIZATION: {e}")
+        import traceback
+        traceback.print_exc()
+        return Response({"error": "Failed during serialization."}, status=500)
+
 
 
 @api_view(['POST'])
@@ -153,15 +202,30 @@ def like_post(request, post_id):
     except Post.DoesNotExist:
         return Response({"error": "Post not found"}, status=status.HTTP_404_NOT_FOUND)
 
-    if request.user in post.likes.all():
-        post.likes.remove(request.user)
-        liked = False
+    user = request.user
+    if user in post.likes.all():
+        post.likes.remove(user)
     else:
-        post.likes.add(request.user)
-        liked = True
+        post.likes.add(user)
 
-    post.save()
-    return Response({"liked": liked, "total_likes": post.total_likes()}, status=status.HTTP_200_OK)
+    # --- THIS IS THE UPGRADE ---
+    # After updating the likes, re-fetch this single post with all its optimized data
+    # This ensures the response is the single source of truth for the post's new state.
+    updated_post = Post.objects.select_related(
+        'recipe', 
+        'recipe__user'
+    ).prefetch_related(
+        'likes',
+        Prefetch('comments', queryset=Comment.objects.select_related('user').order_by('-created_at')),
+        Prefetch('ratings', queryset=Rating.objects.select_related('user'))
+    ).annotate(
+        likes_count=Count('likes'),
+        average_rating=Coalesce(Avg('ratings__value'), 0.0, output_field=FloatField())
+    ).get(id=post_id)
+
+    # Serialize the single, updated post object and return it
+    serializer = PostSerializer(updated_post)
+    return Response(serializer.data, status=status.HTTP_200_OK)
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
@@ -181,23 +245,23 @@ class FavouriteRecipesView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        # Get posts liked by the authenticated user
-        liked_posts = Post.objects.filter(likes=request.user)
-        # Extract recipes from these posts
+        liked_posts = Post.objects.filter(likes=request.user).select_related('recipe', 'recipe__user')
+        
+        # This part is now super efficient as the data is already fetched
         recipes = [post.recipe for post in liked_posts]
-        # Serialize the recipe data
+        
         serializer = RecipeSerializer(recipes, many=True)
         return Response(serializer.data)
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def rate_post(request, post_id):
-    print("hello")
+    # print("hello")
     post = Post.objects.get(recipe_id=post_id)
-    print(post)
+    # print(post)
     user = request.user
     value = request.data.get('value')
-    print("post",post, user, value)
+    # print("post",post, user, value)
     if value is None or not (1 <= int(value) <= 5):
         return Response({'error': 'Invalid rating value'}, status=400)
 
@@ -206,8 +270,8 @@ def rate_post(request, post_id):
         rating.value = value
         rating.save()
 
-    post.update_average_rating()
-    return Response({'average_rating': post.average_rating})
+    # post.update_average_rating()
+    return Response({'status': 'rating updated successfully'}, status=status.HTTP_200_OK)
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])

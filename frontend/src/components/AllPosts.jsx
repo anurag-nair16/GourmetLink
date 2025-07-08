@@ -1,11 +1,14 @@
 // src/pages/AllPostsPage.js
 
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, lazy, Suspense } from "react";
 import axios from "axios";
 import { FaSearch, FaSlidersH, FaStar, FaChevronUp, FaChevronDown } from "react-icons/fa";
 import { motion, AnimatePresence } from "framer-motion";
 import PostCard from "./forms/PostCard";
-import PostDetails from "./forms/PostDetails";
+import { Oval } from 'react-loader-spinner';
+
+
+const PostDetails = lazy(() => import("./forms/PostDetails"));
 
 // Loading bar component
 const LoadingBar = () => (
@@ -39,7 +42,7 @@ const AllPostsPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [profileData, setProfileData] = useState({});
-  const [userProfiles, setUserProfiles] = useState({}); // Cached user profiles
+  // const [userProfiles, setUserProfiles] = useState({}); // Cached user profiles
 
   // Modal State
   const [selectedPost, setSelectedPost] = useState(null);
@@ -71,29 +74,13 @@ const AllPostsPage = () => {
         const headers = { Authorization: `Bearer ${token}` };
         
         // Fetch posts
-        const postsResponse = await axios.get(`${process.env.REACT_APP_API_URL}/posts/`, { headers });
-        const postsData = postsResponse.data;
+        const [postsResponse, profileResponse] = await Promise.all([
+          axios.get(`${process.env.REACT_APP_API_URL}/posts/`, { headers }),
+          axios.get(`${process.env.REACT_APP_API_URL}/profile/`, { headers })
+        ]);
 
-        // Get unique user IDs from posts' recipes
-        const userIds = [...new Set(postsData.map(post => post.recipe.user).filter(id => id))];
-
-        // Fetch all user profiles in a single batch
-        const profilePromises = userIds.map(id =>
-          axios.get(`${process.env.REACT_APP_API_URL}/profile/${id}/`, { headers })
-            .catch(() => ({ data: { id, username: 'Unknown User' } })) // Fallback for failed requests
-        );
-        const profiles = await Promise.all(profilePromises);
-        const profilesMap = profiles.reduce((acc, response) => {
-          acc[response.data.id] = response.data;
-          return acc;
-        }, {});
-
-        // Fetch current user's profile
-        const profileResponse = await axios.get(`${process.env.REACT_APP_API_URL}/profile/`, { headers });
-
+        setPosts(postsResponse.data);
         setProfileData(profileResponse.data);
-        setUserProfiles(profilesMap);
-        setPosts(postsData);
       } catch (err) {
         console.error("Error fetching initial data:", err);
         setError("Failed to load posts. Please try again later.");
@@ -121,7 +108,7 @@ const AllPostsPage = () => {
     }
     if (filters.myPosts) {
       // FIX: Use recipe's user ID for comparison
-      tempPosts = tempPosts.filter(post => post.recipe.user === profileData.id);
+      tempPosts = tempPosts.filter(post => post.user.id === profileData.id);
     }
     if (filters.likedByMe) {
       tempPosts = tempPosts.filter(post => post.likes.includes(profileData.id));
@@ -156,6 +143,9 @@ const AllPostsPage = () => {
   // Handlers for Post Interactions
   const updatePostInState = (updatedPost) => {
     setPosts(prev => prev.map(p => p.id === updatedPost.id ? updatedPost : p));
+    if (selectedPost && selectedPost.id === updatedPost.id) {
+      setSelectedPost(updatedPost);
+    }
   };
 
   const handleLike = async (postId) => {
@@ -166,17 +156,17 @@ const AllPostsPage = () => {
         {}, 
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      const currentPost = posts.find(p => p.id === postId);
-      const updatedPost = {
-        ...currentPost,
-        likes_count: response.data.total_likes,
-        likes: response.data.liked 
-          ? [...currentPost.likes, profileData.id] 
-          : currentPost.likes.filter(id => id !== profileData.id)
-      };
-      updatePostInState(updatedPost);
+
+      // --- SIMPLIFIED LOGIC ---
+      // The response.data is now the complete, updated post object.
+      // We can just use it directly to update our state.
+      // No more manual state building on the client!
+      updatePostInState(response.data);
+
     } catch (err) {
       console.error("Error liking post:", err);
+      // Optional: Add user feedback for failed likes
+      alert("Failed to update like status. Please try again.");
     }
   };
 
@@ -312,29 +302,6 @@ const AllPostsPage = () => {
                       <option value="highestRated">Highest Rated</option>
                     </select>
                   </div>
-                  <div>
-                    <label className="text-neutral-700 font-medium">Other</label>
-                    <div className="flex flex-col gap-2 mt-2">
-                      <label className="flex items-center gap-2 cursor-pointer">
-                        <input 
-                          type="checkbox" 
-                          checked={filters.likedByMe} 
-                          onChange={(e) => handleFilterChange('likedByMe', e.target.checked)} 
-                          className="w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500" 
-                        /> 
-                        Liked by me 
-                      </label>
-                      <label className="flex items-center gap-2 cursor-pointer">
-                        <input 
-                          type="checkbox" 
-                          checked={filters.myPosts} 
-                          onChange={(e) => handleFilterChange('myPosts', e.target.checked)} 
-                          className="w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500" 
-                        /> 
-                        My recipes
-                      </label>
-                    </div>
-                  </div>
                 </div>
                 <div className="mt-6">
                   <label className="text-neutral-700 font-medium block mb-3">Filter by Tags</label>
@@ -387,7 +354,7 @@ const AllPostsPage = () => {
                   post={post}
                   profileData={profileData}
                   // FIX: Use the recipe's user ID to find the correct profile
-                  userProfile={userProfiles[post.recipe.user] || { username: 'Unknown User' }}
+                  // userProfile={userProfiles[post.recipe.user] || { username: 'Unknown User' }}
                   onLike={handleLike}
                   onOpenModal={() => openModal(post, index)}
                   index={index}
@@ -400,6 +367,7 @@ const AllPostsPage = () => {
 
       <AnimatePresence>
         {selectedPost && (
+          <Suspense fallback={<div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center"><Oval color="#fff" /></div>}>
           <PostDetails
             post={selectedPost}
             posts={filteredPosts}
@@ -413,6 +381,7 @@ const AllPostsPage = () => {
             commentText={commentText}
             setCommentText={setCommentText}
           />
+          </Suspense>
         )}
       </AnimatePresence>
     </div>

@@ -110,16 +110,16 @@ class Recipe(models.Model):
 
 class Post(models.Model):
     recipe = models.OneToOneField(Recipe, on_delete=models.CASCADE, related_name='post')
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='posts')
+    # user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='posts')
     likes = models.ManyToManyField(settings.AUTH_USER_MODEL, related_name='liked_posts', blank=True)
-    average_rating = models.FloatField(default=0.0)
+    # average_rating = models.FloatField(default=0.0)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
-    def update_average_rating(self):
-        ratings = self.ratings.all()
-        self.average_rating = ratings.aggregate(models.Avg('value'))['value__avg'] or 0.0
-        self.save()
+    # def update_average_rating(self):
+    #     ratings = self.ratings.all()
+    #     self.average_rating = ratings.aggregate(models.Avg('value'))['value__avg'] or 0.0
+    #     self.save()
 
     def total_likes(self):
         return self.likes.count()
