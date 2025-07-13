@@ -56,48 +56,48 @@ class Recipe(models.Model):
 
     translations = models.JSONField(default=dict, blank=True)
 
-    def get_translation(self, language_code):
-        print(f"Getting translation for {self.name} in {language_code}")
-        base_data = {
-            'image': self.image.url if self.image else None,
-            'created_at': self.created_at.isoformat(),
-        }
+    # def get_translation(self, language_code):
+    #     print(f"Getting translation for {self.name} in {language_code}")
+    #     base_data = {
+    #         'image': self.image.url if self.image else None,
+    #         'created_at': self.created_at.isoformat(),
+    #     }
         
-        if language_code == 'en':
-            base_data.update({
-                'name': self.name,
-                'ingredients': self.ingredients,
-                'description': self.description,
-                'instructions': self.instructions,
-            })
-            return base_data
+    #     if language_code == 'en':
+    #         base_data.update({
+    #             'name': self.name,
+    #             'ingredients': self.ingredients,
+    #             'description': self.description,
+    #             'instructions': self.instructions,
+    #         })
+    #         return base_data
         
-        cache_key = f'recipe_translation_{self.id}_{language_code}'
-        cached_translation = cache.get(cache_key)
-        if cached_translation:
-            base_data.update(cached_translation)
-            return base_data
+    #     cache_key = f'recipe_translation_{self.id}_{language_code}'
+    #     cached_translation = cache.get(cache_key)
+    #     if cached_translation:
+    #         base_data.update(cached_translation)
+    #         return base_data
 
-        translation = self.translations.get(language_code, {})
-        if translation:
-            cache.set(cache_key, translation, timeout=86400)
-            base_data.update(translation)
-            return base_data
+    #     translation = self.translations.get(language_code, {})
+    #     if translation:
+    #         cache.set(cache_key, translation, timeout=86400)
+    #         base_data.update(translation)
+    #         return base_data
 
-        print(f"No translation found for {self.name} in {language_code}")
-        return None
+    #     print(f"No translation found for {self.name} in {language_code}")
+    #     return None
 
-    def set_translation(self, language_code, translated_data):
-        print(f"Setting translation for {self.name} in {language_code}")
-        if language_code != 'en':  # Don't store English translations
-            if not self.translations:
-                self.translations = {}
-            self.translations[language_code] = translated_data
-            self.save()
+    # def set_translation(self, language_code, translated_data):
+    #     print(f"Setting translation for {self.name} in {language_code}")
+    #     if language_code != 'en':  # Don't store English translations
+    #         if not self.translations:
+    #             self.translations = {}
+    #         self.translations[language_code] = translated_data
+    #         self.save()
 
-            # Update cache
-            cache_key = f'recipe_translation_{self.id}_{language_code}'
-            cache.set(cache_key, translated_data, timeout=86400)
+    #         # Update cache
+    #         cache_key = f'recipe_translation_{self.id}_{language_code}'
+    #         cache.set(cache_key, translated_data, timeout=86400)
 
     def __str__(self):
         return self.name

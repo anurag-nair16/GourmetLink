@@ -59,6 +59,7 @@ const MealPlannerCreator = ({ onPlanCreated }) => {
         `${process.env.REACT_APP_API_URL}/features/recipes/`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
+      // console.log("Fetched recipes:", response.data);
       setRecipes(response.data);
     } catch (error) {
       console.error("Error fetching recipes:", error);
@@ -326,7 +327,7 @@ const MealPlannerCreator = ({ onPlanCreated }) => {
                   }`}
                 >
                   {entry.recipe_id
-                    ? recipes.find(r => r.recipe.id === entry.recipe_id)?.recipe.name
+                    ? recipes.find(r => r.id === entry.recipe_id)?.name
                     : `Select ${entry.meal_type}`}
                 </button>
                 
@@ -423,7 +424,7 @@ const MealPlannerCreator = ({ onPlanCreated }) => {
                 {formData.entries
                   .filter(entry => entry.day === day)
                   .map((entry) => {
-                    const recipe = recipes.find(r => r.recipe.id === entry.recipe_id)?.recipe;
+                    const recipe = recipes.find(r => r.id === entry.recipe_id)  ;
                     return (
                       <div 
                         key={`${entry.day}-${entry.meal_type}`}
@@ -542,18 +543,18 @@ const MealPlannerCreator = ({ onPlanCreated }) => {
                 <div className="max-h-[60vh] overflow-y-auto">
                   {recipes
                     .filter(recipe => 
-                      recipe.recipe.name
+                      recipe.name
                         .toLowerCase()
                         .includes((searchTerms[searchOpen] || "").toLowerCase())
                     )
                     .map(recipe => (
                       <button
-                        key={recipe.recipe.id}
+                        key={recipe.id}
                         onClick={() => {
                           const [day, mealType] = searchOpen.split("-");
                           const newEntries = formData.entries.map(entry =>
                             entry.day === parseInt(day) && entry.meal_type === mealType
-                              ? { ...entry, recipe_id: recipe.recipe.id }
+                              ? { ...entry, recipe_id: recipe.id }
                               : entry
                           );
                           setFormData({ ...formData, entries: newEntries });

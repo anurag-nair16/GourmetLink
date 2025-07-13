@@ -124,54 +124,54 @@ class TranslateContent(APIView):
 
 logger = logging.getLogger(__name__)
 
-class RecipeTranslationView(APIView):
-    def get(self, request, pk):
-        try:
-            language = request.query_params.get('language', 'en')
-            recipe = get_object_or_404(Recipe, pk=pk)
+# class RecipeTranslationView(APIView):
+#     def get(self, request, pk):
+#         try:
+#             language = request.query_params.get('language', 'en')
+#             recipe = get_object_or_404(Recipe, pk=pk)
             
-            recipe_data = RecipeSerializer(recipe).data  # Full serialized data
+#             recipe_data = RecipeSerializer(recipe).data  # Full serialized data
             
-            if language == 'en':
-                return Response(recipe_data)
+#             if language == 'en':
+#                 return Response(recipe_data)
             
-            # Try cache or stored translation
-            cache_key = f'recipe_translation_{pk}_{language}'
-            cached_translation = cache.get(cache_key)
+#             # Try cache or stored translation
+#             cache_key = f'recipe_translation_{pk}_{language}'
+#             cached_translation = cache.get(cache_key)
             
-            if cached_translation:
-                recipe_data['name'] = cached_translation['name']
-                recipe_data['ingredients'] = cached_translation['ingredients']
-                recipe_data['description'] = cached_translation['description']
-                recipe_data['instructions'] = cached_translation['instructions']
-                return Response(recipe_data)
+#             if cached_translation:
+#                 recipe_data['name'] = cached_translation['name']
+#                 recipe_data['ingredients'] = cached_translation['ingredients']
+#                 recipe_data['description'] = cached_translation['description']
+#                 recipe_data['instructions'] = cached_translation['instructions']
+#                 return Response(recipe_data)
             
-            translation = recipe.get_translation(language)
-            if translation:
-                recipe_data['name'] = translation['name']
-                recipe_data['ingredients'] = translation['ingredients']
-                recipe_data['description'] = translation['description']
-                recipe_data['instructions'] = translation['instructions']
-                cache.set(cache_key, translation, timeout=86400)
-                return Response(recipe_data)
+#             translation = recipe.get_translation(language)
+#             if translation:
+#                 recipe_data['name'] = translation['name']
+#                 recipe_data['ingredients'] = translation['ingredients']
+#                 recipe_data['description'] = translation['description']
+#                 recipe_data['instructions'] = translation['instructions']
+#                 cache.set(cache_key, translation, timeout=86400)
+#                 return Response(recipe_data)
             
-            # Create new translation
-            translated_data = translate_recipe(recipe, language)
-            if translated_data:
-                recipe.set_translation(language, translated_data)
-                cache.set(cache_key, translated_data, timeout=86400)
-                recipe_data['name'] = translated_data['name']
-                recipe_data['ingredients'] = translated_data['ingredients']
-                recipe_data['description'] = translated_data['description']
-                recipe_data['instructions'] = translated_data['instructions']
-                return Response(recipe_data)
-            else:
-                return Response(recipe_data)
+#             # Create new translation
+#             translated_data = translate_recipe(recipe, language)
+#             if translated_data:
+#                 recipe.set_translation(language, translated_data)
+#                 cache.set(cache_key, translated_data, timeout=86400)
+#                 recipe_data['name'] = translated_data['name']
+#                 recipe_data['ingredients'] = translated_data['ingredients']
+#                 recipe_data['description'] = translated_data['description']
+#                 recipe_data['instructions'] = translated_data['instructions']
+#                 return Response(recipe_data)
+#             else:
+#                 return Response(recipe_data)
                     
-        except Exception as e:
-            message = f"Translation error for recipe {pk}: {str(e)}"
-            logger.error(message)
-            return Response({'error': message}, status=500)
+#         except Exception as e:
+#             message = f"Translation error for recipe {pk}: {str(e)}"
+#             logger.error(message)
+#             return Response({'error': message}, status=500)
 
 class RecipeDetailView(APIView):
     def get(self, request, pk):
@@ -190,8 +190,8 @@ genai.configure(api_key=os.getenv("GOOGLE_GENAI_API_KEY"))
 model = genai.GenerativeModel("gemini-2.0-flash")
 
 class RecipeViewSet(viewsets.ReadOnlyModelViewSet):
-    queryset = Post.objects.all()
-    serializer_class = PostSerializer
+    queryset = Recipe.objects.all()
+    serializer_class = RecipeSerializer
     permission_classes = [IsAuthenticated]
 
 class MealPlanViewSet(viewsets.ModelViewSet):

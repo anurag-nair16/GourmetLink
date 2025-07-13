@@ -23,56 +23,56 @@ const AIMealPlanner = ({
   });
 
   const handleGenerate = async () => {
-    setIsGenerating(true);
-    try {
-      const token = localStorage.getItem('token');
-      const payload = {
-        start_date: startDate,
-        end_date: endDate,
-        preferences: {
-          dietaryRestrictions: preferences.dietaryRestrictions,
-          cuisinePreference: preferences.cuisinePreference,
-          calories: preferences.calories,
-          allergies: preferences.allergies.filter(a => a && a !== 'None')
+  setIsGenerating(true);
+  try {
+    const token = localStorage.getItem('token');
+    const payload = {
+      start_date: startDate,
+      end_date: endDate,
+      preferences: {
+        dietaryRestrictions: preferences.dietaryRestrictions,
+        cuisinePreference: preferences.cuisinePreference,
+        calories: preferences.calories,
+        allergies: preferences.allergies.filter(a => a && a !== 'None')
+      },
+      recipes: recipes.map(recipe => ({
+        recipe: {
+          id: recipe.id, // Use recipe.id directly
+          name: recipe.name // Use recipe.name directly
         },
-        recipes: recipes.map(recipe => ({
-          recipe: {
-            id: recipe.recipe.id,
-            name: recipe.recipe.name
-          },
-          average_rating: recipe.average_rating || 0
-        }))
-      };
-  
-      const response = await axios.post(
-        `${process.env.REACT_APP_API_URL}/ai/generate-meal-plan/`,
-        payload,
-        {
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          }
+        average_rating: recipe.average_rating || 0 // Default to 0 if average_rating is missing
+      }))
+    };
+
+    const response = await axios.post(
+      `${process.env.REACT_APP_API_URL}/ai/generate-meal-plan/`,
+      payload,
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
         }
-      );
-  
-      if (response.data && response.data.entries) {
-        onPlanGenerated(response.data);
-        onClose();
-        toast.success('Meal plan generated successfully!');
-      } else {
-        throw new Error('Invalid response format from server');
       }
-    } catch (error) {
-      console.error('Error generating meal plan:', error);
-      toast.error(
-        error.response?.data?.detail || 
-        error.response?.data?.error || 
-        'Failed to generate meal plan. Please try again.'
-      );
-    } finally {
-      setIsGenerating(false);
+    );
+
+    if (response.data && response.data.entries) {
+      onPlanGenerated(response.data);
+      onClose();
+      toast.success('Meal plan generated successfully!');
+    } else {
+      throw new Error('Invalid response format from server');
     }
-  };
+  } catch (error) {
+    console.error('Error generating meal plan:', error);
+    toast.error(
+      error.response?.data?.detail || 
+      error.response?.data?.error || 
+      'Failed to generate meal plan. Please try again.'
+    );
+  } finally {
+    setIsGenerating(false);
+  }
+};
 
   return (
     <AnimatePresence>
