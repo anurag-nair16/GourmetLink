@@ -26,7 +26,7 @@ def generate_ai_meal_plan(request):
     try:
         # Configure Gemini
         genai.configure(api_key=settings.GOOGLE_GENAI_API_KEY_2)
-        model = genai.GenerativeModel('gemini-1.5-flash')
+        model = genai.GenerativeModel('gemini-2.5-flash')
 
         # Get data from request
         start_date = request.data.get('start_date')
