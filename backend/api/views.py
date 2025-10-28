@@ -368,7 +368,7 @@ def generate_recommendation(request):
             # print("Generated prompt:", prompt)
 
             # Generate response using Gemini API
-            model = genai.GenerativeModel('gemini-2.0-flash')
+            model = genai.GenerativeModel('gemini-2.5-flash')
             response = model.generate_content(prompt)
 
             # Check if response is valid
