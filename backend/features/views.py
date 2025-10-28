@@ -187,7 +187,7 @@ class RecipeDetailView(APIView):
 
 load_dotenv()
 genai.configure(api_key=os.getenv("GOOGLE_GENAI_API_KEY"))
-model = genai.GenerativeModel("gemini-2.0-flash")
+model = genai.GenerativeModel("gemini-2.5-flash")
 
 class RecipeViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Recipe.objects.all()
